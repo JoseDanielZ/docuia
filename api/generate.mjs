@@ -9,42 +9,34 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing prompt' });
   }
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-  if (!GEMINI_API_KEY) {
+  if (!GROQ_API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-    const response = await fetch(url, {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        systemInstruction: {
-          role: 'user',
-          parts: [{ text: system || '' }],
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }],
-          },
+        model: 'mixtral-8x7b-32768',
+        messages: [
+          { role: 'system', content: system || '' },
+          { role: 'user', content: prompt },
         ],
-        generationConfig: {
-          maxOutputTokens: 4000,
-          temperature: 1,
-        },
+        max_tokens: 4000,
+        temperature: 1,
       }),
     });
 
     const data = await response.json();
 
-    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content?.parts) {
-      const text = data.candidates[0].content.parts.map(p => p.text || '').join('\n');
+    if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
+      const text = data.choices[0].message.content;
       return res.status(200).json({ text });
     } else {
       const errMsg = data.error?.message || JSON.stringify(data);
