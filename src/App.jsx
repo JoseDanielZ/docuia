@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 // ===== SUPABASE CONFIG =====
 // Option 1: Set these directly here
@@ -144,7 +145,9 @@ export default function App() {
   const canSubmit = form.docente && form.curso && form.periodo;
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif", color: "#1a1a1a", background: "#fff", minHeight: "100vh" }}>
+    <>
+      <Analytics />
+      <div style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif", color: "#1a1a1a", background: "#fff", minHeight: "100vh" }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -412,6 +415,7 @@ export default function App() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
