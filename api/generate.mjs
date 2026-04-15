@@ -9,32 +9,42 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing prompt' });
   }
 
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!GEMINI_API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4000,
-        system: system || '',
-        messages: [{ role: 'user', content: prompt }],
+        systemInstruction: {
+          role: 'user',
+          parts: [{ text: system || '' }],
+        },
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 4000,
+          temperature: 1,
+        },
       }),
     });
 
     const data = await response.json();
 
-    if (data.content && data.content.length > 0) {
-      const text = data.content.map(c => c.text || '').join('\n');
+    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content?.parts) {
+      const text = data.candidates[0].content.parts.map(p => p.text || '').join('\n');
       return res.status(200).json({ text });
     } else {
       const errMsg = data.error?.message || JSON.stringify(data);
