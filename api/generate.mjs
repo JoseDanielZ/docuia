@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 4000,
         system: system || '',
         messages: [{ role: 'user', content: prompt }],
@@ -37,7 +37,8 @@ export default async function handler(req, res) {
       const text = data.content.map(c => c.text || '').join('\n');
       return res.status(200).json({ text });
     } else {
-      return res.status(500).json({ error: 'No response from AI', details: data });
+      const errMsg = data.error?.message || JSON.stringify(data);
+      return res.status(500).json({ error: `Error de IA: ${errMsg}` });
     }
   } catch (error) {
     return res.status(500).json({ error: 'Failed to generate report', details: error.message });
