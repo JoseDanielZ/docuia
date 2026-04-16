@@ -184,6 +184,26 @@ function printReport(text) {
   downloadPDF(text, 'DocuIA_Reporte');
 }
 
+// ===== FIELD COMPONENT (must be outside App to avoid remount on each keystroke) =====
+function Field({ label, k, ph, area, req, half, form, set }) {
+  return (
+    <div style={{ marginBottom: 14, gridColumn: half ? undefined : "1 / -1" }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>
+        {label} {req && <span style={{ color: "#EF4444" }}>*</span>}
+      </label>
+      {area ? (
+        <textarea value={form[k] || ""} onChange={e => set(k, e.target.value)} placeholder={ph} rows={3}
+          style={{ width: "100%", padding: "10px 12px", border: "2px solid #E5E7EB", borderRadius: 10, fontSize: 13, fontFamily: "inherit", background: "#FAFBFF", outline: "none", boxSizing: "border-box", resize: "vertical" }}
+          onFocus={e => e.target.style.borderColor = "#4A5FE0"} onBlur={e => e.target.style.borderColor = "#E5E7EB"} />
+      ) : (
+        <input value={form[k] || ""} onChange={e => set(k, e.target.value)} placeholder={ph}
+          style={{ width: "100%", padding: "10px 12px", border: "2px solid #E5E7EB", borderRadius: 10, fontSize: 13, fontFamily: "inherit", background: "#FAFBFF", outline: "none", boxSizing: "border-box" }}
+          onFocus={e => e.target.style.borderColor = "#4A5FE0"} onBlur={e => e.target.style.borderColor = "#E5E7EB"} />
+      )}
+    </div>
+  );
+}
+
 // ===== MAIN APP =====
 export default function App() {
   const [view, setView] = useState("landing");
@@ -240,23 +260,6 @@ export default function App() {
 
   const canSubmit = form.docente && form.curso && form.periodo;
   const fileName = `DocuIA_${REPORT_TYPES.find(r => r.id === reportType)?.label || 'Reporte'}_${form.curso || ''}_${form.periodo || ''}`.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_\- ]/g, '').replace(/\s+/g, '_');
-
-  const Field = ({ label, k, ph, area, req, half }) => (
-    <div style={{ marginBottom: 14, gridColumn: half ? undefined : "1 / -1" }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>
-        {label} {req && <span style={{ color: "#EF4444" }}>*</span>}
-      </label>
-      {area ? (
-        <textarea value={form[k] || ""} onChange={e => set(k, e.target.value)} placeholder={ph} rows={3}
-          style={{ width: "100%", padding: "10px 12px", border: "2px solid #E5E7EB", borderRadius: 10, fontSize: 13, fontFamily: "inherit", background: "#FAFBFF", outline: "none", boxSizing: "border-box", resize: "vertical" }}
-          onFocus={e => e.target.style.borderColor = "#4A5FE0"} onBlur={e => e.target.style.borderColor = "#E5E7EB"} />
-      ) : (
-        <input value={form[k] || ""} onChange={e => set(k, e.target.value)} placeholder={ph}
-          style={{ width: "100%", padding: "10px 12px", border: "2px solid #E5E7EB", borderRadius: 10, fontSize: 13, fontFamily: "inherit", background: "#FAFBFF", outline: "none", boxSizing: "border-box" }}
-          onFocus={e => e.target.style.borderColor = "#4A5FE0"} onBlur={e => e.target.style.borderColor = "#E5E7EB"} />
-      )}
-    </div>
-  );
 
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", color: "#1a1a1a", background: "#fff", minHeight: "100vh" }}>
@@ -373,19 +376,19 @@ export default function App() {
                   {/* DATOS DEL DOCENTE */}
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#4A5FE0", letterSpacing: 1.5, marginBottom: 10, marginTop: 4 }}>DATOS DEL DOCENTE</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-                    {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} half />)}
+                    {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
                   </div>
 
                   {/* DATOS DEL CURSO */}
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#4A5FE0", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>DATOS DEL CURSO / PERÍODO</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-                    {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} half />)}
+                    {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
                   </div>
 
                   {/* SPECIFIC FIELDS */}
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#4A5FE0", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>INFORMACIÓN ESPECÍFICA DEL REPORTE</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-                    {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} />)}
+                    {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} />)}
                   </div>
 
                   <button className="btn" onClick={generate} disabled={!canSubmit}
