@@ -127,6 +127,7 @@ function buildPrompt(type, data) {
   else if (type === "asistencia") p += "Genera registro de asistencia con: 1) Datos informativos, 2) Resumen cuantitativo del período, 3) Detalle de inasistencias, 4) Análisis de patrones de ausentismo, 5) Acciones realizadas, 6) Acciones pendientes, 7) Recomendaciones y alertas, 8) Seguimiento propuesto.";
   else if (type === "dece") p += "Genera informe DECE con: 1) Datos informativos, 2) Motivo de atención, 3) Antecedentes relevantes, 4) Descripción de la intervención (cronológica), 5) Hallazgos y análisis profesional, 6) Acuerdos y compromisos, 7) Derivaciones, 8) Plan de seguimiento, 9) Nota de confidencialidad.";
   else if (type === "planificacion") p += "Genera PUD completo con: 1) Datos informativos, 2) Objetivos de la unidad, 3) Destrezas con criterio de desempeño, 4) Ejes transversales, 5) Estrategias metodológicas (desglosadas por semana), 6) Recursos, 7) Criterios e instrumentos de evaluación, 8) Adaptaciones curriculares, 9) Bibliografía.";
+  p += "\n\nADVERTENCIA IMPORTANTE: Incluye un mensaje claro al final del informe que indique que el docente debe revisar el contenido y no confiar en la IA al 100%.";
   return p;
 }
 
@@ -463,6 +464,9 @@ export default function App() {
             </div>
           </div>
 
+          <div style={{ padding: "18px 20px", background: "#FEF3C7", borderRadius: 14, border: "1px solid #FCD34D", color: "#92400E", fontSize: 14, marginBottom: 16, lineHeight: 1.6 }}>
+            <strong>⚠️ Revisa el informe antes de enviarlo:</strong> comprueba todos los datos y no confíes en la IA al 100%.
+          </div>
           {/* Report content */}
           <div style={{ background: "#fff", borderRadius: 16, padding: "32px 28px", border: "1px solid rgba(0,0,0,.04)", boxShadow: "0 4px 20px rgba(0,0,0,.04)", fontSize: 14, color: "#1a1a1a", lineHeight: 1.8, whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: 500, overflowY: "auto" }}>
             {report}
