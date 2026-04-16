@@ -400,13 +400,6 @@ export default function App() {
           </section>
 
           {/* QUOTE + CTA + FOOTER */}
-          <section style={{ padding: "50px 24px", background: "#fff" }}>
-            <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
-              <div style={{ fontSize: 48, marginBottom: 12, opacity: .15 }}>"</div>
-              <p style={{ fontSize: 20, fontWeight: 500, color: "#4A4A4A", lineHeight: 1.6, fontStyle: "italic", margin: "0 0 16px" }}>Los informes son diarios. Todos los días ciertos reportes son repetidos. Durante toda la mañana.</p>
-              <p style={{ fontSize: 14, color: "#757575" }}>— Ivette Proaño, Inspectora General, Fe y Alegría</p>
-            </div>
-          </section>
           <section style={{ padding: "50px 24px", background: "linear-gradient(135deg,#0F1419,#2D3561)" }}>
             <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
               <h2 style={{ fontSize: 24, fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>¿Quieres DocuIA para toda tu institución?</h2>
