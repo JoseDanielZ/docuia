@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-import { SYSTEM_PROMPT, REPORT_TYPES, FORM_FIELDS, buildPrompt, getRequiredFields } from "./reportConfig";
+import { SYSTEM_PROMPT, REPORT_TYPES, FORM_FIELDS, buildPrompt, getRequiredFields } from "./config";
 import { saveToSupabase } from "./utils/supabase.js";
 import { getUser, logout } from "./utils/auth.js";
 
@@ -101,7 +101,8 @@ export default function App() {
     setFormState({});
   };
 
-  const canSubmit = !!(form.docente && form.curso && form.periodo);
+  const requiredFields = reportType ? getRequiredFields(reportType) : ["docente","curso","periodo"];
+  const canSubmit = requiredFields.every(k => form[k]?.trim());
 
   const fileName = `DocuIA_${REPORT_TYPES.find(r => r.id === reportType)?.label || "Reporte"}_${form.curso || ""}_${form.periodo || ""}`
     .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_\- ]/g, "")
