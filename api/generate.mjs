@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
   if (!GROQ_API_KEY) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
   }
 
   try {
@@ -24,23 +24,24 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
+        max_tokens: 6000,
+        temperature: 0.3,
         messages: [
           { role: 'system', content: system || '' },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 4000,
-        temperature: 1,
       }),
     });
 
     const data = await response.json();
 
-    if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
-      const text = data.choices[0].message.content;
-      return res.status(200).json({ text });
+    if (data.choices && data.choices[0]?.message?.content) {
+      return res.status(200).json({ text: data.choices[0].message.content });
     } else {
-      const errMsg = data.error?.message || JSON.stringify(data);
-      return res.status(500).json({ error: `Error de IA: ${errMsg}` });
+      return res.status(500).json({
+        error: data.error?.message || 'No response from AI',
+        details: JSON.stringify(data).substring(0, 500),
+      });
     }
   } catch (error) {
     return res.status(500).json({ error: 'Failed to generate report', details: error.message });
