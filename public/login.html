@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>DocuIA — Acceso</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1F3A;--ink-2:#122a4e;--paper:#F5F1E8;--paper-2:#EFE9DB;--paper-3:#E4DCC8;
+    --line:#D8CFB7;--muted:#6b6552;--text:#0B1F3A;
+    --accent:oklch(55% 0.14 250);--accent-soft:oklch(92% 0.04 250);--accent-ink:oklch(30% 0.09 250);
+    --danger:#9A2A2A;--ok:#2F6A4A;--radius:14px;
+    --shadow-deep:0 1px 0 rgba(11,31,58,.05),0 30px 70px -28px rgba(11,31,58,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+  .serif{font-family:'Source Serif 4',Georgia,serif;font-optical-sizing:auto;letter-spacing:-.01em}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+  .container{
+    width:min(1080px,100%);min-height:640px;
+    background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    overflow:hidden;box-shadow:var(--shadow-deep);
+    display:grid;grid-template-columns:1.05fr 1fr;
+  }
+
+  /* LEFT VISUAL */
+  .visual{
+    background:var(--ink);color:var(--paper);position:relative;overflow:hidden;
+    padding:48px;display:flex;flex-direction:column;justify-content:space-between;
+    border-right:1px solid var(--line);
+  }
+  .visual::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(600px 400px at 20% 10%,color-mix(in srgb,var(--accent) 35%,transparent),transparent 60%),
+    radial-gradient(700px 500px at 90% 100%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 60%);
+    opacity:.55;pointer-events:none;
+  }
+  .visual::after{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(to right,color-mix(in srgb,var(--paper) 4%,transparent) 1px,transparent 1px);
+    background-size:44px 100%;mask-image:linear-gradient(to bottom,black,transparent 85%);pointer-events:none;
+  }
+  .v-head{position:relative;z-index:2;display:flex;align-items:center;gap:10px;font-weight:600}
+  .v-head .mark{width:28px;height:28px;border-radius:7px;background:var(--paper);color:var(--ink);display:grid;place-items:center;font-family:'Source Serif 4';font-weight:700;font-size:16px}
+  .v-title{position:relative;z-index:2;margin-top:auto;margin-bottom:18px}
+  .v-title h2{font-family:'Source Serif 4';font-weight:400;font-size:40px;line-height:1.06;letter-spacing:-.02em;margin:0 0 14px}
+  .v-title h2 em{font-style:italic;color:color-mix(in srgb,var(--accent) 80%,var(--paper))}
+  .v-title p{max-width:34ch;color:color-mix(in srgb,var(--paper) 70%,var(--ink));font-size:14px;line-height:1.55;margin:0}
+  .v-foot{position:relative;z-index:2;display:flex;justify-content:space-between;font-size:12px;color:color-mix(in srgb,var(--paper) 50%,transparent);font-family:'IBM Plex Mono'}
+  .v-foot .dot{width:6px;height:6px;border-radius:50%;background:color-mix(in srgb,var(--accent) 80%,var(--paper));display:inline-block;margin-right:6px;animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* RIGHT PANEL */
+  .panel{padding:56px 60px;display:flex;flex-direction:column;position:relative;overflow-y:auto}
+  .panel .top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted)}
+  .panel .top a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px;cursor:pointer}
+  .panel .top a:hover{border-color:var(--accent)}
+  .panel h1{font-family:'Source Serif 4';font-weight:400;font-size:34px;line-height:1.1;letter-spacing:-.02em;margin:40px 0 8px}
+  .panel h1 em{font-style:italic}
+  .panel .sub{color:var(--muted);font-size:14px;line-height:1.55;max-width:40ch;margin:0 0 24px}
+
+  .form{display:flex;flex-direction:column;gap:14px;max-width:400px}
+  .field{display:flex;flex-direction:column;gap:6px;position:relative}
+  .field label{font-size:12px;color:var(--muted);letter-spacing:.02em;text-transform:uppercase;font-weight:500}
+  .field input,.field select{
+    all:unset;background:transparent;border:1px solid var(--line);border-radius:10px;
+    padding:13px 14px;font-size:15px;color:var(--text);font-family:inherit;transition:all .18s ease;width:100%;box-sizing:border-box;
+  }
+  .field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 15%,transparent)}
+  .field input::placeholder{color:color-mix(in srgb,var(--muted) 70%,transparent)}
+  .field .toggle-pw{position:absolute;right:12px;top:32px;font-size:12px;color:var(--muted);cursor:pointer;padding:4px}
+  .field .toggle-pw:hover{color:var(--text)}
+
+  .check{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+  .check input{appearance:none;width:16px;height:16px;border:1px solid var(--line);border-radius:4px;margin-top:1px;flex-shrink:0;cursor:pointer;position:relative;background:transparent}
+  .check input:checked{background:var(--accent);border-color:var(--accent)}
+  .check input:checked::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid var(--paper);border-width:0 2px 2px 0;transform:rotate(45deg)}
+
+  .btn{all:unset;cursor:pointer;text-align:center;padding:14px 18px;border-radius:11px;font-weight:500;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s ease,background .18s ease}
+  .btn-primary{background:var(--ink);color:var(--paper);box-shadow:0 8px 20px -10px color-mix(in srgb,var(--ink) 80%,transparent)}
+  .btn-primary:hover{transform:translateY(-1px)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  .btn-ghost{border:1px solid var(--line);color:var(--text);background:transparent}
+  .btn-ghost:hover{border-color:var(--text)}
+  .btn .spinner{width:14px;height:14px;border:2px solid color-mix(in srgb,var(--paper) 40%,transparent);border-top-color:var(--paper);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:6px 0}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .sso{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sso .btn-ghost{padding:12px;font-size:13px}
+
+  .alt{margin-top:auto;padding-top:22px;font-size:13px;color:var(--muted)}
+  .alt a{color:var(--text);font-weight:500;text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px;cursor:pointer}
+
+  .link{color:var(--text);font-size:13px;text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px;cursor:pointer}
+
+  .msg{padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.5;margin-top:8px;display:none}
+  .msg.error{background:#fef2f2;color:var(--danger);border:1px solid #f5c6c6;display:block}
+  .msg.success{background:var(--accent-soft);color:var(--accent-ink);display:block}
+
+  .screen{display:none}.screen.active{display:flex;flex-direction:column}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .screen.active{animation:fadeIn .3s ease}
+
+  @media(max-width:860px){
+    .container{grid-template-columns:1fr;min-height:auto}
+    .visual{display:none}
+    .panel{padding:36px 28px}
+    .panel h1{font-size:28px;margin-top:20px}
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- LEFT VISUAL -->
+  <div class="visual">
+    <div class="v-head"><div class="mark serif">D</div> DocuIA</div>
+    <div class="v-title">
+      <h2 id="visual-title">Informes que <em>se escriben solos.</em></h2>
+      <p id="visual-desc">DocuIA convierte tus notas y observaciones en informes académicos listos para firmar.</p>
+    </div>
+    <div class="v-foot"><span><i class="dot"></i> Activo · Cifrado TLS 1.3</span><span>docuia · 2026</span></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+
+    <!-- SCREEN: LOGIN -->
+    <div class="screen active" id="screen-login">
+      <div class="top">
+        <span>¿Nuevo aquí?</span>
+        <a onclick="showScreen('signup')">Crea tu cuenta →</a>
+      </div>
+      <h1 class="serif">Inicia <em>sesión</em>.</h1>
+      <p class="sub">Usa tu correo institucional para acceder a DocuIA.</p>
+
+      <div class="form">
+        <div class="field">
+          <label>Correo institucional</label>
+          <input type="email" id="login-email" placeholder="m.gonzalez@feyalegria.edu.ec" required />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="login-pw" placeholder="••••••••" required />
+          <span class="toggle-pw" onclick="togglePw('login-pw',this)">mostrar</span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label class="check"><input type="checkbox" id="login-remember" checked /> <span>Mantener sesión</span></label>
+          <a class="link" onclick="showScreen('recover')">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <div id="login-msg" class="msg"></div>
+
+        <button class="btn btn-primary" id="login-btn" onclick="handleLogin()" style="margin-top:8px">Entrar a DocuIA</button>
+
+        <div class="divider">o</div>
+        <div class="sso">
+          <button class="btn btn-ghost" onclick="showScreen('signup')">Crear cuenta nueva</button>
+          <button class="btn btn-ghost" onclick="window.location.href='/'">Usar sin cuenta</button>
+        </div>
+      </div>
+
+      <div class="alt">
+        ¿Problemas para entrar? <a href="mailto:docuia.feyalegria@gmail.com">Escríbenos a soporte</a>.
+      </div>
+    </div>
+
+    <!-- SCREEN: SIGNUP -->
+    <div class="screen" id="screen-signup">
+      <div class="top">
+        <span>¿Ya tienes cuenta?</span>
+        <a onclick="showScreen('login')">Inicia sesión →</a>
+      </div>
+      <h1 class="serif">Crea tu <em>cuenta</em>.</h1>
+      <p class="sub">Empieza gratis. Sin tarjeta, sin letra chica.</p>
+
+      <div class="form">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" id="signup-name" placeholder="María González Pérez" required />
+        </div>
+        <div class="field">
+          <label>Correo institucional</label>
+          <input type="email" id="signup-email" placeholder="m.gonzalez@feyalegria.edu.ec" required />
+        </div>
+        <div class="field">
+          <label>Rol</label>
+          <select id="signup-role">
+            <option>Docente</option>
+            <option>Coordinación académica</option>
+            <option>Dirección</option>
+            <option>Personal administrativo</option>
+            <option>Orientación / DECE</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="signup-pw" placeholder="Mínimo 6 caracteres" required />
+          <span class="toggle-pw" onclick="togglePw('signup-pw',this)">mostrar</span>
+        </div>
+
+        <label class="check"><input type="checkbox" id="signup-terms" /> <span>Acepto los términos y la política de privacidad. Mis datos académicos no se usan para entrenar modelos.</span></label>
+
+        <div id="signup-msg" class="msg"></div>
+
+        <button class="btn btn-primary" id="signup-btn" onclick="handleSignup()" style="margin-top:6px">Crear cuenta</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: RECOVER -->
+    <div class="screen" id="screen-recover">
+      <div class="top">
+        <a onclick="showScreen('login')">← Volver a inicio de sesión</a>
+      </div>
+      <h1 class="serif">Recupera tu <em>acceso</em>.</h1>
+      <p class="sub">Escribe el correo de tu cuenta y te enviamos un enlace para crear una nueva contraseña.</p>
+
+      <div class="form">
+        <div class="field">
+          <label>Correo institucional</label>
+          <input type="email" id="recover-email" placeholder="m.gonzalez@feyalegria.edu.ec" required />
+        </div>
+
+        <div id="recover-msg" class="msg"></div>
+
+        <button class="btn btn-primary" id="recover-btn" onclick="handleRecover()">Enviar enlace de recuperación</button>
+
+        <div class="alt" style="font-size:13px">
+          ¿No usas correo institucional? <a href="mailto:docuia.feyalegria@gmail.com">Contacta a soporte</a>.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Check if already logged in
+  const token = localStorage.getItem('docuia_token');
+  if (token) window.location.href = '/';
+
+  // Screen navigation
+  const titles = {
+    login: ['Bienvenida de <em>vuelta</em>, Prof.', 'Tu espacio de trabajo tiene informes esperándote.'],
+    signup: ['Dedica tu tiempo a <em>enseñar</em>, no a redactar.', 'Más de 160,000 docentes en el sistema fiscal ecuatoriano podrían beneficiarse de DocuIA.'],
+    recover: ['Todo el mundo <em>olvida</em>.', 'Te enviamos un enlace seguro. En 2 minutos estás de vuelta.'],
+  };
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    document.getElementById('visual-title').innerHTML = titles[id][0];
+    document.getElementById('visual-desc').textContent = titles[id][1];
+    // Clear messages
+    document.querySelectorAll('.msg').forEach(m => { m.className = 'msg'; m.textContent = ''; });
+  }
+
+  function togglePw(id, el) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; el.textContent = 'ocultar'; }
+    else { input.type = 'password'; el.textContent = 'mostrar'; }
+  }
+
+  function showMsg(elId, text, type) {
+    const el = document.getElementById(elId);
+    el.className = 'msg ' + type;
+    el.textContent = text;
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+      btn.disabled = true;
+      btn.dataset.text = btn.textContent;
+      btn.innerHTML = '<span class="spinner"></span> Procesando...';
+    } else {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.text;
+    }
+  }
+
+  // ===== AUTH HANDLERS =====
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pw = document.getElementById('login-pw').value;
+    if (!email || !pw) { showMsg('login-msg', 'Complete todos los campos.', 'error'); return; }
+
+    setLoading('login-btn', true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem('docuia_token', data.access_token);
+        localStorage.setItem('docuia_user', JSON.stringify(data.user));
+        window.location.href = '/';
+      } else {
+        showMsg('login-msg', data.error || 'Credenciales incorrectas.', 'error');
+      }
+    } catch (e) {
+      showMsg('login-msg', 'Error de conexión. Intente nuevamente.', 'error');
+    }
+    setLoading('login-btn', false);
+  }
+
+  async function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const role = document.getElementById('signup-role').value;
+    const pw = document.getElementById('signup-pw').value;
+    const terms = document.getElementById('signup-terms').checked;
+
+    if (!name || !email || !pw) { showMsg('signup-msg', 'Complete todos los campos.', 'error'); return; }
+    if (pw.length < 6) { showMsg('signup-msg', 'La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+    if (!terms) { showMsg('signup-msg', 'Debe aceptar los términos y condiciones.', 'error'); return; }
+
+    setLoading('signup-btn', true);
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw, name, role }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (data.session?.access_token) {
+          localStorage.setItem('docuia_token', data.session.access_token);
+          localStorage.setItem('docuia_user', JSON.stringify(data.user));
+          window.location.href = '/';
+        } else {
+          showMsg('signup-msg', 'Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.', 'success');
+          setTimeout(() => showScreen('login'), 3000);
+        }
+      } else {
+        showMsg('signup-msg', data.error || 'Error al crear la cuenta.', 'error');
+      }
+    } catch (e) {
+      showMsg('signup-msg', 'Error de conexión. Intente nuevamente.', 'error');
+    }
+    setLoading('signup-btn', false);
+  }
+
+  async function handleRecover() {
+    const email = document.getElementById('recover-email').value.trim();
+    if (!email) { showMsg('recover-msg', 'Ingrese su correo.', 'error'); return; }
+
+    setLoading('recover-btn', true);
+    try {
+      const res = await fetch('/api/auth/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      showMsg('recover-msg', 'Enviado. Revisa tu correo. Si no lo ves, busca en spam.', 'success');
+    } catch (e) {
+      showMsg('recover-msg', 'Error de conexión.', 'error');
+    }
+    setLoading('recover-btn', false);
+  }
+
+  // Enter key support
+  document.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const screen = inp.closest('.screen');
+        if (screen.id === 'screen-login') handleLogin();
+        else if (screen.id === 'screen-signup') handleSignup();
+        else if (screen.id === 'screen-recover') handleRecover();
+      }
+    });
+  });
+</script>
+</body>
+</html>
