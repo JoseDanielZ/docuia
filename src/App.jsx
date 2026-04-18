@@ -15,6 +15,16 @@ async function saveToSupabase(table, data) {
   } catch {}
 }
 
+// ===== AUTH =====
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('docuia_user') || 'null'); } catch { return null; }
+}
+function logout() {
+  localStorage.removeItem('docuia_token');
+  localStorage.removeItem('docuia_user');
+  window.location.href = '/login.html';
+}
+
 // ===== REPORT CONFIG =====
 const SYSTEM_PROMPT = `Eres un asistente de redacción institucional para docentes de Fe y Alegría Ecuador. Generas reportes educativos completos, profesionales y listos para enviar a coordinación.
 
@@ -218,7 +228,12 @@ export default function App() {
 
   const msgs = ["Analizando datos del curso...", "Estructurando el reporte...", "Redactando contenido institucional...", "Añadiendo recomendaciones pedagógicas...", "Verificando formato de Fe y Alegría...", "Formateando documento final..."];
 
-  useEffect(() => { saveToSupabase("visitas", { referrer: document.referrer || "directo" }); }, []);
+  const user = getUser();
+
+  useEffect(() => {
+    if (user) setForm(p => ({ ...p, docente: user.user_metadata?.name || '', email: user.email || '' }));
+    saveToSupabase("visitas", { referrer: document.referrer || "directo" });
+  }, []);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -288,9 +303,16 @@ export default function App() {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#1E3A5F,#6C7AE0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📄</div>
             <span style={{ fontSize: 20, fontWeight: 800, color: "#0F1419" }}>DocuIA</span>
           </div>
-          <button className="btn" onClick={scrollToForm} style={{ padding: "10px 22px", background: "linear-gradient(135deg,#1E3A5F,#6C7AE0)", color: "#fff", fontSize: 14, fontWeight: 700, borderRadius: 10 }}>
-            Generar reporte gratis
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {user && <span style={{ fontSize: 12, color: "#757575" }}>{user.email}</span>}
+            {user
+              ? <button className="btn" onClick={logout} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #D0D5DD", color: "#4A4A4A", fontSize: 13, fontWeight: 600, borderRadius: 8 }}>Salir</button>
+              : <a href="/login.html" className="btn" style={{ padding: "8px 16px", background: "transparent", border: "1px solid #D0D5DD", color: "#4A4A4A", fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: "none" }}>Iniciar sesión</a>
+            }
+            <button className="btn" onClick={scrollToForm} style={{ padding: "10px 22px", background: "linear-gradient(135deg,#1E3A5F,#6C7AE0)", color: "#fff", fontSize: 14, fontWeight: 700, borderRadius: 10 }}>
+              Generar reporte gratis
+            </button>
+          </div>
         </div>
       </nav>
 
