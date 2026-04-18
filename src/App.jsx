@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-import { SYSTEM_PROMPT, REPORT_TYPES, buildPrompt } from "./config.js";
+import { SYSTEM_PROMPT, REPORT_TYPES, FORM_FIELDS, buildPrompt, getRequiredFields } from "./reportConfig";
 import { saveToSupabase } from "./utils/supabase.js";
 import { getUser, logout } from "./utils/auth.js";
 
