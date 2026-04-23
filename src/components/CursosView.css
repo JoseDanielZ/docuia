@@ -1,0 +1,188 @@
+.cursos-section {
+  padding: 60px 28px;
+  background: #F8F7F4;
+  min-height: 80vh;
+}
+
+.cursos-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.cursos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.cursos-title {
+  font-size: 26px;
+  font-weight: 400;
+  color: #0A2240;
+  margin: 0 0 4px;
+}
+
+.cursos-subtitle {
+  color: #888;
+  font-size: 13px;
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.cursos-add-btn {
+  padding: 10px 20px;
+  background: #0A2240;
+  color: #C5A55A;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+}
+
+.cursos-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #aaa;
+}
+
+.cursos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.curso-card {
+  background: #fff;
+  border: 1px solid #E8E4DE;
+  border-radius: 6px;
+  padding: 18px 20px;
+}
+
+.curso-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.curso-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0A2240;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.curso-card-delete {
+  all: unset;
+  cursor: pointer;
+  color: #999;
+  font-size: 18px;
+}
+
+.curso-card-meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.curso-card-details {
+  font-size: 11px;
+  color: #aaa;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Modal */
+.curso-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.curso-modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 28px;
+  width: min(500px, 90%);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.curso-modal-title {
+  font-size: 20px;
+  font-weight: 400;
+  color: #0A2240;
+  margin: 0 0 20px;
+}
+
+.curso-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.curso-modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.curso-modal-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3D4F5F;
+  display: block;
+  margin-bottom: 4px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.curso-modal-label-req {
+  color: #B8860B;
+}
+
+.curso-modal-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #D0D5DD;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Segoe UI', sans-serif;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.curso-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.curso-modal-btn-create {
+  flex: 1;
+  padding: 12px;
+  background: #0A2240;
+  color: #C5A55A;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+}
+
+.curso-modal-btn-cancel {
+  padding: 12px;
+  background: #F8F7F4;
+  color: #0A2240;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+}

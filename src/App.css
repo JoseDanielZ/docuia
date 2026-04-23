@@ -1,3 +1,10 @@
+.app-root {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  color: var(--text);
+  background: var(--paper);
+  min-height: 100vh;
+}
+
 :root {
   --ink:         #0B1F3A;
   --ink-2:       #122a4e;

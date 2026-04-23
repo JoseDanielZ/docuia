@@ -96,6 +96,14 @@
           </select>
         </div>
         <div class="field">
+          <label>Institución</label>
+          <input type="text" id="signup-institucion" placeholder="Ej: Unidad Educativa Fe y Alegría La Dolorosa" required />
+        </div>
+        <div class="field">
+          <label>Cargo / Función</label>
+          <input type="text" id="signup-cargo" placeholder="Ej: Docente de Matemáticas - Básica Superior" />
+        </div>
+        <div class="field">
           <label>Contraseña</label>
           <input type="password" id="signup-pw" placeholder="Mínimo 6 caracteres" required />
           <span class="toggle-pw" onclick="togglePw('signup-pw',this)">mostrar</span>
@@ -214,10 +222,12 @@
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     const role = document.getElementById('signup-role').value;
+    const institucion = document.getElementById('signup-institucion').value.trim();
+    const cargo = document.getElementById('signup-cargo').value.trim();
     const pw = document.getElementById('signup-pw').value;
     const terms = document.getElementById('signup-terms').checked;
 
-    if (!name || !email || !pw) { showMsg('signup-msg', 'Complete todos los campos.', 'error'); return; }
+    if (!name || !email || !pw || !institucion) { showMsg('signup-msg', 'Complete todos los campos obligatorios.', 'error'); return; }
     if (pw.length < 6) { showMsg('signup-msg', 'La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
     if (!terms) { showMsg('signup-msg', 'Debe aceptar los términos y condiciones.', 'error'); return; }
 
@@ -226,7 +236,7 @@
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw, name, role }),
+        body: JSON.stringify({ email, password: pw, name, role, institucion, cargo: cargo || role }),
       });
       const data = await res.json();
 

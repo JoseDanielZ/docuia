@@ -33,6 +33,8 @@ export default async function handler(req, res) {
           email,
           name: name || '',
           role: role || 'Docente',
+          institucion: req.body.institucion || '',
+          cargo: req.body.cargo || role || 'Docente',
         }),
       });
     }
