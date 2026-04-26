@@ -3,6 +3,8 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+import { applySecurityHeaders } from './lib/server/securityHeaders.js';
+
 import authHandler              from './api/auth.js';
 import generateHandler          from './api/generate.mjs';
 import cursosHandler            from './api/cursos.js';
@@ -17,6 +19,11 @@ const app = express();
 
 const jsonDefault = express.json({ limit: '2mb' });
 const jsonLarge = express.json({ limit: '12mb' });
+
+app.use((req, res, next) => {
+  applySecurityHeaders(res);
+  next();
+});
 
 app.use((req, res, next) => {
   if (req.path === '/api/upload-formato' && req.method === 'POST') {

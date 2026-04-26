@@ -662,9 +662,17 @@ function FormSection({
         <p style={{
           textAlign: "center", color: "var(--muted)",
           fontFamily: "'IBM Plex Sans', sans-serif",
-          fontSize: 14, marginBottom: 32,
+          fontSize: 14, marginBottom: 16,
         }}>
           A mayor detalle, mayor precisión en el documento generado.
+        </p>
+        <p style={{
+          textAlign: "center", color: "var(--muted)",
+          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontSize: 12, lineHeight: 1.55, marginBottom: 28, maxWidth: 520, marginLeft: "auto", marginRight: "auto",
+        }}>
+          Privacidad: el contenido del formulario se envía de forma cifrada (HTTPS) a nuestros servidores y a un proveedor de IA para redactar el informe.
+          No incluyas contraseñas, datos bancarios ni información que tu institución prohíba compartir con terceros. Revisa siempre el texto antes de enviarlo oficialmente.
         </p>
 
         {!reportType ? (

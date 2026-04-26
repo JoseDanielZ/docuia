@@ -38,6 +38,10 @@ GROQ_API_KEY=gsk_...
 
 **Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **8** funciones en `/api` (`auth`, `generate`, `cursos`, `upload-formato`, `formatos`, `plantillas`, `reportes`, `telemetry`). Los helpers compartidos están en `lib/server/` (no cuentan como función). Auth unificado: **`POST /api/auth`** con `action: 'login'|'signup'|'recover'`.
 
+**CSP y cabeceras:** `vercel.json` aplica Content-Security-Policy, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` y `Permissions-Policy`. En local, `server.js` usa la misma política vía `lib/server/securityHeaders.js`. La página de login carga `login-main.js` (sin scripts inline) para poder usar `script-src 'self'`.
+
+**RLS en Supabase:** ejecuta `supabase-rls-hardening.sql` en el SQL Editor para cerrar inserciones anónimas en tablas que solo debe escribir el backend y, si existe la columna `user_id` en `reportes`, permitir lectura/escritura al dueño autenticado.
+
 ### 3. Configurar Supabase
 
 > Si ya tenías la base anterior, ejecuta el archivo `migrations.sql` (en la raíz del repo) en el SQL Editor de Supabase. Trae los cambios para **formatos compartidos por institución**, **plantillas** e **historial por usuario**.
