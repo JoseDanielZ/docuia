@@ -18,7 +18,7 @@ const LOAD_MSGS = [
   "Estructurando el reporte...",
   "Redactando contenido institucional...",
   "Añadiendo recomendaciones pedagógicas...",
-  "Verificando formato de Fe y Alegría...",
+  "Verificando formato institucional...",
   "Formateando documento final...",
 ];
 

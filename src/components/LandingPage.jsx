@@ -82,7 +82,7 @@ function HeroSection({ scrollToForm }) {
           letterSpacing: ".12em", textTransform: "uppercase",
           marginBottom: 28,
         }}>
-          Plataforma de gestión documental — Fe y Alegría Ecuador
+          Plataforma profesional de generación documental con IA
         </p>
 
         <h1 ref={titleRef} className="hero-t" style={{
@@ -220,15 +220,6 @@ function StatsSection() {
           <StatItem key={i} stat={s} index={i} triggered={triggered} />
         ))}
       </div>
-      <p style={{
-        textAlign: "center", paddingBottom: 18,
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: 11, color: "var(--muted)",
-        borderTop: "1px solid var(--line)",
-        paddingTop: 14,
-      }}>
-        Encuesta a 19 docentes de Fe y Alegría — abril 2026
-      </p>
     </section>
   );
 }
@@ -236,7 +227,7 @@ function StatsSection() {
 // ── How it works ──────────────────────────────────────────────────────────────
 const STEPS = [
   { num: "01", t: "Ingrese los datos",   d: "Complete el formulario con la información de su curso, asignatura y período." },
-  { num: "02", t: "La IA redacta",       d: "DocuIA genera el informe completo en el formato institucional de Fe y Alegría." },
+  { num: "02", t: "La IA redacta",       d: "DocuIA genera el informe completo siguiendo el formato institucional que necesite." },
   { num: "03", t: "Descargue y envíe",   d: "Obtenga su reporte en Word, PDF o Excel. Listo para coordinación." },
 ];
 
@@ -705,33 +696,6 @@ function FormSection({
   );
 }
 
-// ── Quote ─────────────────────────────────────────────────────────────────────
-function QuoteSection() {
-  const ref = useRef(null);
-  useScrollReveal(ref, { y: 22, duration: 800 });
-  return (
-    <section style={{ padding: "64px 32px", background: "var(--paper)", borderBottom: "1px solid var(--line)" }}>
-      <div ref={ref} style={{ maxWidth: 580, margin: "0 auto", textAlign: "center", willChange: "transform, opacity" }}>
-        <div style={{ width: 32, height: 1, background: "var(--line)", margin: "0 auto 24px" }} />
-        <p style={{
-          fontFamily: "'Source Serif 4', Georgia, serif",
-          fontWeight: 400, fontSize: 20, fontStyle: "italic",
-          color: "var(--ink)", lineHeight: 1.65,
-          margin: "0 0 18px", letterSpacing: "-.01em",
-        }}>
-          "Los informes son diarios. Todos los días ciertos reportes son repetidos. Durante toda la mañana."
-        </p>
-        <p style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, color: "var(--muted)", letterSpacing: ".04em",
-        }}>
-          Ivette Proaño — Inspectora General, Fe y Alegría
-        </p>
-      </div>
-    </section>
-  );
-}
-
 // ── CTA ───────────────────────────────────────────────────────────────────────
 function CtaSection() {
   const ref = useRef(null);
@@ -762,7 +726,7 @@ function CtaSection() {
             Un solo pago. Reportes ilimitados para todos los docentes.
           </p>
           <a
-            href="mailto:docuia.feyalegria@gmail.com?subject=Interés en DocuIA institucional"
+            href="mailto:contacto@docuia.app?subject=Interés en DocuIA institucional"
             className="btn"
             style={{
               display: "inline-flex", padding: "12px 28px",
@@ -783,7 +747,7 @@ function CtaSection() {
           fontSize: 11, color: "rgba(245,241,232,.2)",
           margin: 0, letterSpacing: ".04em",
         }}>
-          DocuIA · Fe y Alegría · PUCE Emprendimiento Tecnológico 2026 · Piñero · Heredia · Zumárraga · Iza
+          © {new Date().getFullYear()} DocuIA · Todos los derechos reservados
         </p>
       </footer>
     </>
@@ -837,7 +801,6 @@ export default function LandingPage(props) {
         plantillas={plantillas}
         loadTemplate={loadTemplate}
       />
-      <QuoteSection />
       <CtaSection />
     </>
   );

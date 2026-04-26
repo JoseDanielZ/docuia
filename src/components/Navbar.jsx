@@ -16,6 +16,8 @@ export default function Navbar({
   const logoRef = useRef(null);
   const itemsRef = useRef(null);
 
+  // Solo se anima UNA vez al montar. No se vuelve a disparar con re-renders
+  // ni cuando cambia `user` (login/logout) ni cuando cambian props como cursos.
   useEffect(() => {
     if (!navRef.current) return;
 
@@ -31,13 +33,15 @@ export default function Navbar({
       duration: 720,
       ease: "outExpo",
     });
-    animate(logoRef.current, {
-      opacity: [0, 1],
-      translateX: [-10, 0],
-      duration: 700,
-      delay: 220,
-      ease: "outExpo",
-    });
+    if (logoRef.current) {
+      animate(logoRef.current, {
+        opacity: [0, 1],
+        translateX: [-10, 0],
+        duration: 700,
+        delay: 220,
+        ease: "outExpo",
+      });
+    }
     if (itemsRef.current) {
       animate(itemsRef.current.children, {
         opacity: [0, 1],
@@ -47,7 +51,7 @@ export default function Navbar({
         ease: "outExpo",
       });
     }
-  }, [user]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navBtnStyle = {
     padding: "7px 14px",
@@ -106,11 +110,6 @@ export default function Navbar({
             fontWeight: 600, fontSize: 16,
             color: "var(--paper)", letterSpacing: ".01em",
           }}>DocuIA</span>
-          <span style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 11, color: "rgba(245,241,232,.35)",
-            marginLeft: 2,
-          }}>Fe y Alegría</span>
         </div>
 
         <div ref={itemsRef} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
