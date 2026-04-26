@@ -1,15 +1,15 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// DocuIA — Configuración de Reportes v2
-// Prompt institucional, campos por tipo y constructor de prompts
+// DocuIA — Configuración de Reportes v3
+// Prompt institucional, campos por tipo y constructor de prompts.
+// El SYSTEM_PROMPT es CONDICIONAL: si el docente subió un formato propio,
+// el modelo recibe instrucciones distintas que dan prioridad absoluta a ese
+// formato (no impone la estructura por defecto).
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const SYSTEM_PROMPT = `Eres el motor de redacción institucional de DocuIA, una plataforma usada por docentes de Fe y Alegría Ecuador. Tu única función es generar reportes educativos completos, profesionales y listos para enviar a coordinación académica, rectorado o al DECE.
+// ── Prompt por defecto (no hay formato del usuario) ─────────────────────────
+const SYSTEM_PROMPT_DEFAULT = `Eres el motor de redacción institucional de DocuIA, una plataforma para docentes en Ecuador. Tu única función es generar reportes educativos completos, profesionales y listos para enviar a coordinación académica, rectorado o al DECE.
 
-═══ FORMATO OBLIGATORIO ═══
-
-ENCABEZADO — siempre las dos primeras líneas:
-  Línea 1: FE Y ALEGRÍA — UNIDAD EDUCATIVA [nombre de la institución]
-  Línea 2: [TIPO DE REPORTE] | Período: [período] | Docente: [nombre]
+═══ FORMATO POR DEFECTO ═══
 
 ESTRUCTURA:
   - Cada sección principal: ## N. TÍTULO EN MAYÚSCULAS (ej: ## 1. DATOS INFORMATIVOS)
@@ -48,13 +48,63 @@ EXTENSIÓN:
 
 ═══ CONTEXTO INSTITUCIONAL ═══
 
-  - Fe y Alegría opera en sectores vulnerables de Ecuador
   - La escala de calificaciones es sobre 10: Sobresaliente (9-10), Muy Buena (8-8.99), Buena (7-7.99), Regular (5-6.99), Insuficiente (<5)
   - El aprobado es 7/10
   - El currículo nacional del Ecuador organiza los aprendizajes en Destrezas con Criterio de Desempeño (DCD) codificadas
   - Los períodos académicos se dividen en quimestres, parciales y semanas
   - El DECE (Departamento de Consejería Estudiantil) maneja casos según los Protocolos de Actuación del MINEDUC
   - Las planificaciones usan el formato PUD (Planificación de Unidad Didáctica) del MINEDUC`;
+
+// ── Prompt cuando el docente subió SU formato (modo estricto) ───────────────
+const SYSTEM_PROMPT_CON_FORMATO = `Eres el motor de redacción institucional de DocuIA, una plataforma para docentes en Ecuador. Tu trabajo es replicar EXACTAMENTE el formato institucional que el docente ha subido, llenándolo con los datos que él proporciona.
+
+═══ REGLA #1 — EL FORMATO DEL DOCENTE MANDA ═══
+
+  - El docente proporciona un FORMATO INSTITUCIONAL DE REFERENCIA al final de este mensaje.
+  - Tu trabajo NO es generar un reporte con tu estructura por defecto. Tu trabajo es REPLICAR el formato del docente.
+  - Conserva EXACTAMENTE: títulos, subtítulos, numeración, orden de secciones, encabezados y campos del formato del docente.
+  - Si el formato tiene tablas o listas, mantén ese mismo tipo de estructura.
+  - Si el formato tiene un encabezado institucional, escríbelo IGUAL (mismas palabras, mismo orden).
+  - NO añadas secciones que no estén en el formato del docente.
+  - NO omitas secciones que sí estén en el formato del docente.
+
+═══ REGLA #2 — RELLENA CON LOS DATOS DEL DOCENTE ═══
+
+  - Para cada campo del formato, busca el dato correspondiente entre los datos que proporcionó el docente.
+  - Si un dato existe → escríbelo en el lugar correcto del formato.
+  - Si un dato NO existe → escribe "(Sin información proporcionada)" en ese campo. NO inventes datos.
+  - Cuando el formato pida análisis o redacción libre, usa los datos del docente para generar 2-4 párrafos profesionales basados estrictamente en hechos.
+
+═══ REGLA #3 — TONO Y ESTILO ═══
+
+  - Español ecuatoriano institucional: formal, directo, sin rodeos.
+  - Prohibido: "es importante destacar", "cabe mencionar", "en este sentido", frases de relleno.
+  - Prohibido: adjetivos calificativos simples ("bueno", "malo", "regular") — usa descripciones basadas en hechos observables.
+  - Cuando hay números: calcula porcentajes, promedios, comparaciones (ej. "22 de 32 aprobados" → 68.75%).
+
+═══ REGLA #4 — NO INVENCIÓN ═══
+
+  - NUNCA inventes nombres, fechas, calificaciones, porcentajes, instituciones ni datos no proporcionados.
+  - Si el formato pide algo que el docente no aportó, marca explícitamente "(Sin información proporcionada)".
+
+═══ CONTEXTO ECUATORIANO (úsalo sólo si el formato lo pide) ═══
+
+  - Escala de calificaciones sobre 10: Sobresaliente (9-10), Muy Buena (8-8.99), Buena (7-7.99), Regular (5-6.99), Insuficiente (<5). El aprobado es 7/10.
+  - Currículo nacional: Destrezas con Criterio de Desempeño (DCD) con códigos oficiales.
+  - DECE: maneja casos según Protocolos de Actuación del MINEDUC.
+  - Planificaciones: formato PUD (Planificación de Unidad Didáctica) del MINEDUC.`;
+
+/**
+ * Devuelve el SYSTEM_PROMPT correcto según haya formato institucional o no.
+ * @param {Object} opts
+ * @param {boolean} [opts.hasFormato=false] - true si el docente subió un formato propio.
+ */
+export function getSystemPrompt({ hasFormato = false } = {}) {
+  return hasFormato ? SYSTEM_PROMPT_CON_FORMATO : SYSTEM_PROMPT_DEFAULT;
+}
+
+// Backwards compat: re-exporta el default para llamadas existentes
+export const SYSTEM_PROMPT = SYSTEM_PROMPT_DEFAULT;
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -385,15 +435,55 @@ export function getRequiredFields(type) {
 // CONSTRUCTOR DE PROMPT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function buildPrompt(type, data) {
+/**
+ * Construye el prompt para el LLM.
+ *
+ * @param {string} type        - id del tipo de reporte (semanal, calificaciones, ...)
+ * @param {Object} data        - datos ingresados por el docente
+ * @param {Object} [opts={}]
+ * @param {string} [opts.formatoTexto] - Texto del formato institucional subido. Si está
+ *   presente, se ignora la estructura hardcodeada y se le indica al modelo que
+ *   replique EXACTAMENTE el formato del docente.
+ * @param {string} [opts.modo='estricto']  - 'estricto' (replica el formato 1:1) o 'guia' (lo usa como referencia)
+ */
+export function buildPrompt(type, data, opts = {}) {
+  const { formatoTexto = "", modo = "estricto" } = opts;
   const rt = REPORT_TYPES.find(r => r.id === type);
-  let p = `Genera un ${rt.label} COMPLETO con formato institucional de Fe y Alegría Ecuador.\n\n`;
+
+  // ── Caso A: el docente subió SU formato institucional ─────────────────────
+  if (formatoTexto && formatoTexto.trim()) {
+    let p = `Genera un ${rt?.label || type} replicando EXACTAMENTE el formato institucional del docente que se proporciona al final de este mensaje.\n\n`;
+
+    p += `═══ DATOS INGRESADOS POR EL DOCENTE ═══\n`;
+    p += `Estos son los datos que el docente quiere que aparezcan dentro del formato institucional. Encájalos en el lugar correcto del formato. Si un campo del formato no tiene dato disponible, escribe "(Sin información proporcionada)".\n\n`;
+    Object.entries(data).forEach(([k, v]) => {
+      if (k.startsWith("_") || !v || !v.trim()) return;
+      const allFields = [...FORM_FIELDS.common, ...FORM_FIELDS.common2, ...(FORM_FIELDS[type] || [])];
+      const field = allFields.find(f => f.k === k);
+      const label = field?.label || k;
+      p += `- ${label}: ${v.trim()}\n`;
+    });
+
+    p += `\n═══ FORMATO INSTITUCIONAL DEL DOCENTE (REPLICAR EXACTAMENTE) ═══\n`;
+    if (modo === "estricto") {
+      p += `Replica EXACTAMENTE este formato. Conserva títulos, subtítulos, numeración, orden de secciones, encabezados institucionales y cualquier estructura visible (tablas, listas, campos). NO añadas secciones nuevas. NO omitas secciones existentes. Cuando un campo del formato pida un dato, búscalo arriba en los DATOS INGRESADOS POR EL DOCENTE; si no está, escribe "(Sin información proporcionada)".\n\n`;
+    } else {
+      p += `Usa este formato como REFERENCIA principal: respeta su estilo y estructura general, pero puedes adaptarte si los datos del docente lo justifican.\n\n`;
+    }
+    p += `--- INICIO DEL FORMATO ---\n`;
+    p += formatoTexto;
+    p += `\n--- FIN DEL FORMATO ---\n\n`;
+    p += `Ahora genera el reporte llenando ese formato con los datos del docente. Devuelve SÓLO el reporte llenado, sin explicaciones previas. Al final, en una línea separada, agrega: "Documento generado con asistencia de DocuIA. El docente responsable debe revisar y validar todos los datos antes de su envío oficial."`;
+
+    return p;
+  }
+
+  // ── Caso B: no hay formato del docente → estructura por defecto de DocuIA ─
+  let p = `Genera un ${rt?.label || type} COMPLETO con formato institucional profesional.\n\n`;
   p += `DATOS INGRESADOS POR EL DOCENTE:\n`;
 
-  // Filter out group markers and empty fields
   Object.entries(data).forEach(([k, v]) => {
     if (k.startsWith("_") || !v || !v.trim()) return;
-    // Map internal keys to readable labels
     const allFields = [...FORM_FIELDS.common, ...FORM_FIELDS.common2, ...(FORM_FIELDS[type] || [])];
     const field = allFields.find(f => f.k === k);
     const label = field?.label || k;

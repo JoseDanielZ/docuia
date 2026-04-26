@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
 
-import { SYSTEM_PROMPT, REPORT_TYPES, buildPrompt, getRequiredFields } from "./config";
+import { REPORT_TYPES, buildPrompt, getRequiredFields, getSystemPrompt } from "./config";
 import { saveToSupabase } from "./utils/supabase.js";
 import { getUser, logout } from "./utils/auth.js";
+import { truncateForLLM } from "./utils/formatoText.js";
 
 import Navbar         from "./components/Navbar.jsx";
 import LandingPage    from "./components/LandingPage.jsx";
@@ -44,6 +45,7 @@ export default function App() {
   const [uploadingFormato, setUploadingFormato] = useState(false);
   const [formatoSubido,    setFormatoSubido]    = useState(null);
   const [formatoCompartir, setFormatoCompartir] = useState(false);
+  const [formatoModo,      setFormatoModo]      = useState("estricto"); // 'estricto' | 'guia'
   const [formatosDisponibles, setFormatosDisponibles] = useState({ mios: [], compartidos: [] });
 
   // Plantillas
@@ -297,16 +299,22 @@ export default function App() {
     const iv = setInterval(() => { mi = (mi + 1) % LOAD_MSGS.length; setLoadMsg(LOAD_MSGS[mi]); }, 2200);
 
     try {
-      let finalPrompt = buildPrompt(reportType, form);
+      // Si el docente subió un formato, lo limpiamos y se lo pasamos al builder
+      // para que el LLM REPLIQUE ese formato (estructura por defecto desactivada).
+      const formatoTexto = formatoSubido?.contenido_extraido
+        ? truncateForLLM(formatoSubido.contenido_extraido, 12000)
+        : "";
 
-      if (formatoSubido?.contenido_extraido) {
-        finalPrompt += `\n\nFORMATO INSTITUCIONAL PROPORCIONADO POR EL DOCENTE:\nEl docente ha subido el siguiente formato que usa su institución. Usa esta estructura como guía adicional para el reporte:\n\n${formatoSubido.contenido_extraido.substring(0, 2000)}\n`;
-      }
+      const finalPrompt  = buildPrompt(reportType, form, {
+        formatoTexto,
+        modo: formatoModo,
+      });
+      const systemPrompt = getSystemPrompt({ hasFormato: !!formatoTexto });
 
       const res  = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalPrompt, system: SYSTEM_PROMPT }),
+        body: JSON.stringify({ prompt: finalPrompt, system: systemPrompt }),
       });
       const data = await res.json();
       clearInterval(iv);
@@ -411,7 +419,14 @@ export default function App() {
       {(view === "landing" || view === "form") && (
         <LandingPage
           reportType={reportType}
-          setReportType={type => { setReportType(type); /* mantener form para que la plantilla siga viva */ }}
+          setReportType={type => {
+            setReportType(type);
+            // Si el formato seleccionado es de otro tipo, lo deseleccionamos
+            // para evitar mezclar (ej. formato de "planificacion" en "semanal").
+            if (formatoSubido && formatoSubido.tipo_reporte && formatoSubido.tipo_reporte !== type) {
+              setFormatoSubido(null);
+            }
+          }}
           form={form}
           set={set}
           generate={generate}
@@ -426,10 +441,13 @@ export default function App() {
           formatosDisponibles={formatosDisponibles}
           formatoSubido={formatoSubido}
           selectFormato={selectFormato}
+          clearFormato={() => setFormatoSubido(null)}
           uploadingFormato={uploadingFormato}
           handleFormatoUpload={handleFormatoUpload}
           formatoCompartir={formatoCompartir}
           setFormatoCompartir={setFormatoCompartir}
+          formatoModo={formatoModo}
+          setFormatoModo={setFormatoModo}
           saveAsTemplate={saveAsTemplate}
           plantillas={plantillas}
           loadTemplate={loadTemplate}

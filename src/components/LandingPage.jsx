@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
+import { getFormatoPreview } from "../utils/formatoText.js";
 import Field from "./Field.jsx";
 import {
   useEnter,
@@ -337,18 +338,145 @@ function FormatoInstitucional({
   uploadingFormato,
   handleFormatoUpload,
   selectFormato,
+  clearFormato,
   formatoCompartir,
   setFormatoCompartir,
+  formatoModo,
+  setFormatoModo,
   user,
 }) {
+  const [showPreview, setShowPreview] = useState(false);
   if (!user) return null;
 
   const mios = formatosDisponibles?.mios || [];
   const compartidos = formatosDisponibles?.compartidos || [];
+  const tipoCoincide = !formatoSubido || !reportType || formatoSubido.tipo_reporte === reportType;
+
+  const preview = formatoSubido?.contenido_extraido
+    ? getFormatoPreview(formatoSubido.contenido_extraido, { maxChars: 700, maxLines: 18 })
+    : "";
 
   return (
     <>
       <SectionLabel>Formato institucional (opcional)</SectionLabel>
+
+      {/* ── Banner de formato ACTIVO ────────────────────────────────────── */}
+      {formatoSubido && (
+        <div style={{
+          background: tipoCoincide ? "color-mix(in srgb, var(--accent) 14%, var(--paper))" : "color-mix(in srgb, #c0392b 12%, var(--paper))",
+          border: `1px solid ${tipoCoincide ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "color-mix(in srgb, #c0392b 35%, transparent)"}`,
+          borderRadius: 10,
+          padding: "12px 14px",
+          marginBottom: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "3px 8px", borderRadius: 999,
+              background: tipoCoincide ? "var(--accent)" : "#c0392b",
+              color: "var(--paper)",
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase",
+              fontWeight: 600,
+            }}>
+              {tipoCoincide ? "● Formato activo" : "⚠ Tipo no coincide"}
+            </span>
+            <span style={{
+              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontSize: 13, color: "var(--ink)", fontWeight: 500,
+            }}>
+              {formatoSubido.nombre_archivo}
+            </span>
+            <span style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 11, color: "var(--muted)",
+            }}>
+              {formatoSubido.num_campos_detectados || 0} campos · {formatoSubido.tipo_reporte}
+            </span>
+            <button
+              onClick={() => clearFormato?.()}
+              style={{
+                marginLeft: "auto",
+                background: "transparent", border: "1px solid var(--line)",
+                borderRadius: 6, padding: "3px 9px",
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10, color: "var(--muted)", cursor: "pointer",
+              }}
+            >
+              QUITAR
+            </button>
+          </div>
+
+          {!tipoCoincide && (
+            <p style={{
+              margin: 0, fontSize: 11, color: "#c0392b",
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}>
+              Este formato fue subido como "{formatoSubido.tipo_reporte}". El reporte actual es "{reportType}". Sube uno específico o quita el actual.
+            </p>
+          )}
+
+          {/* Toggle modo estricto / guía */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10, color: "var(--muted)",
+              letterSpacing: ".05em", textTransform: "uppercase",
+            }}>Modo:</span>
+            {[
+              { id: "estricto", label: "Estricto · replica el formato 1:1" },
+              { id: "guia",     label: "Guía · usa estructura como referencia" },
+            ].map(opt => (
+              <label key={opt.id} style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: 12, cursor: "pointer",
+                color: formatoModo === opt.id ? "var(--ink)" : "var(--muted)",
+                fontWeight: formatoModo === opt.id ? 600 : 400,
+              }}>
+                <input
+                  type="radio"
+                  name="formatoModo"
+                  checked={formatoModo === opt.id}
+                  onChange={() => setFormatoModo?.(opt.id)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+
+          {/* Preview del contenido extraído */}
+          {preview && (
+            <div>
+              <button
+                onClick={() => setShowPreview(s => !s)}
+                style={{
+                  background: "transparent", border: "none", padding: 0,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11, color: "var(--accent)", cursor: "pointer",
+                  letterSpacing: ".04em",
+                }}
+              >
+                {showPreview ? "▾ Ocultar previsualización" : "▸ Ver qué se le envía al modelo"}
+              </button>
+              {showPreview && (
+                <pre style={{
+                  marginTop: 8, padding: 10,
+                  background: "var(--paper-3)", border: "1px solid var(--line)",
+                  borderRadius: 6, maxHeight: 220, overflow: "auto",
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11, lineHeight: 1.55, color: "var(--ink)",
+                  whiteSpace: "pre-wrap", wordBreak: "break-word",
+                }}>{preview}</pre>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{
         background: "var(--paper)", border: "1px dashed var(--line)",
         borderRadius: 10, padding: 14, marginBottom: 16,
@@ -394,6 +522,7 @@ function FormatoInstitucional({
           <label className="btn btn-ghost" style={{
             padding: "8px 14px", fontSize: 12, cursor: "pointer",
             border: "1px solid var(--line)", borderRadius: 8,
+            opacity: (uploadingFormato || !reportType) ? 0.6 : 1,
           }}>
             {uploadingFormato ? "Subiendo..." : "Subir PDF/Excel"}
             <input
@@ -424,13 +553,12 @@ function FormatoInstitucional({
             fontFamily: "'IBM Plex Mono', monospace",
           }}>Selecciona primero el tipo de reporte para subir un formato.</p>
         )}
-        {formatoSubido && (
+        {!formatoSubido && reportType && (
           <p style={{
-            margin: "8px 0 0", fontSize: 12, color: "var(--ink)",
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            margin: "8px 0 0", fontSize: 11, color: "var(--muted)",
+            fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.5,
           }}>
-            Usando: <b>{formatoSubido.nombre_archivo}</b>
-            {formatoSubido.num_campos_detectados ? ` · ${formatoSubido.num_campos_detectados} campos` : ""}
+            Si subes un PDF o Excel del formato de tu institución, el reporte se generará replicando esa estructura exacta.
           </p>
         )}
       </div>
@@ -484,9 +612,10 @@ function TypeCard({ rt, onClick }) {
 function FormSection({
   formRef, reportType, setReportType, form, set, generate, canSubmit, error,
   user, cursos, selectedCurso, selectCurso,
-  formatosDisponibles, formatoSubido, selectFormato,
+  formatosDisponibles, formatoSubido, selectFormato, clearFormato,
   uploadingFormato, handleFormatoUpload,
   formatoCompartir, setFormatoCompartir,
+  formatoModo, setFormatoModo,
   saveAsTemplate, plantillas, loadTemplate,
 }) {
   const cardsRef = useRef(null);
@@ -627,8 +756,11 @@ function FormSection({
                 uploadingFormato={uploadingFormato}
                 handleFormatoUpload={handleFormatoUpload}
                 selectFormato={selectFormato}
+                clearFormato={clearFormato}
                 formatoCompartir={formatoCompartir}
                 setFormatoCompartir={setFormatoCompartir}
+                formatoModo={formatoModo}
+                setFormatoModo={setFormatoModo}
                 user={user}
               />
             </div>
@@ -759,9 +891,10 @@ export default function LandingPage(props) {
   const {
     reportType, setReportType, form, set, generate, canSubmit, error, scrollToForm,
     user, cursos, selectedCurso, selectCurso,
-    formatosDisponibles, formatoSubido, selectFormato,
+    formatosDisponibles, formatoSubido, selectFormato, clearFormato,
     uploadingFormato, handleFormatoUpload,
     formatoCompartir, setFormatoCompartir,
+    formatoModo, setFormatoModo,
     saveAsTemplate, plantillas, loadTemplate,
   } = props;
 
@@ -793,10 +926,13 @@ export default function LandingPage(props) {
         formatosDisponibles={formatosDisponibles}
         formatoSubido={formatoSubido}
         selectFormato={selectFormato}
+        clearFormato={clearFormato}
         uploadingFormato={uploadingFormato}
         handleFormatoUpload={handleFormatoUpload}
         formatoCompartir={formatoCompartir}
         setFormatoCompartir={setFormatoCompartir}
+        formatoModo={formatoModo}
+        setFormatoModo={setFormatoModo}
         saveAsTemplate={saveAsTemplate}
         plantillas={plantillas}
         loadTemplate={loadTemplate}
