@@ -2,10 +2,11 @@
 
 export async function recordVisita(referrer) {
   try {
-    await fetch('/api/visitas', {
+    await fetch('/api/telemetry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        kind: 'visita',
         referrer: typeof referrer === 'string' ? referrer : 'directo',
       }),
     });

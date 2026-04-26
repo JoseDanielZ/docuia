@@ -212,10 +212,10 @@
 
     setLoading('login-btn', true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw }),
+        body: JSON.stringify({ action: 'login', email, password: pw }),
       });
       const data = await res.json();
 
@@ -247,10 +247,10 @@
 
     setLoading('signup-btn', true);
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pw, name, role, institucion, cargo: cargo || role }),
+        body: JSON.stringify({ action: 'signup', email, password: pw, name, role, institucion, cargo: cargo || role }),
       });
       const data = await res.json();
 
@@ -278,10 +278,10 @@
 
     setLoading('recover-btn', true);
     try {
-      const res = await fetch('/api/auth/recover', {
+      const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ action: 'recover', email }),
       });
       const data = await res.json();
       showMsg('recover-msg', 'Enviado. Revisa tu correo. Si no lo ves, busca en spam.', 'success');

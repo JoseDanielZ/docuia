@@ -1,5 +1,5 @@
-import { verifyBearerUser } from './lib/verifyUser.js';
-import { allowRateLimit, clientIp } from './lib/rateLimit.js';
+import { verifyBearerUser } from '../lib/server/verifyUser.js';
+import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 import { getSystemPrompt } from '../src/config.js';
 
 const MAX_PROMPT_CHARS = 48_000;

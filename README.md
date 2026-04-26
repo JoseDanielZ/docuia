@@ -34,7 +34,9 @@ GROQ_API_KEY=gsk_...
 
 > La `SUPABASE_SERVICE_KEY` (service_role) es necesaria en el servidor para crear usuarios y acceder a la tabla `profiles` sin RLS.
 
-**Comportamiento de seguridad (resumen):** la generación con IA (`POST /api/generate`) exige JWT válido; el mensaje `system` lo define solo el servidor (no se acepta desde el cliente). Visitas y analíticas ligera pasan por rutas `/api/visitas`, `/api/reportes-copiados` y `/api/referrals` en lugar de escribir con la anon key desde el navegador. El historial se guarda con `POST /api/reportes` usando el `user_id` del token.
+**Comportamiento de seguridad (resumen):** la generación con IA (`POST /api/generate`) exige JWT válido; el mensaje `system` lo define solo el servidor (no se acepta desde el cliente). Visitas y analítica ligera van a **`POST /api/telemetry`** con `kind: 'visita' | 'reporte_copiado' | 'referral'` (en lugar de escribir con la anon key desde el navegador). El historial se guarda con `POST /api/reportes` usando el `user_id` del token.
+
+**Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **8** funciones en `/api` (`auth`, `generate`, `cursos`, `upload-formato`, `formatos`, `plantillas`, `reportes`, `telemetry`). Los helpers compartidos están en `lib/server/` (no cuentan como función). Auth unificado: **`POST /api/auth`** con `action: 'login'|'signup'|'recover'`.
 
 ### 3. Configurar Supabase
 
@@ -240,7 +242,7 @@ docuia/
     │                              · buildPrompt(type, data): construye el prompt final
     │                                con estructura obligatoria por tipo de reporte
     ├── utils/
-    │   ├── telemetry.js        ← recordVisita() vía /api/visitas
+    │   ├── telemetry.js        ← recordVisita() vía POST /api/telemetry
     │   ├── auth.js             ← getUser(): lee usuario del localStorage
     │   │                          logout(): limpia sesión → /login.html
     │   └── download.js         ← downloadWord, downloadPDF, downloadExcel, printReport
@@ -275,10 +277,10 @@ docuia/
        ├─ Token expirado → limpia localStorage, muestra formulario
        └─ Sin token → muestra formulario
 
-  └─ Login: POST /api/auth/login → Supabase Auth
+  └─ Login: POST /api/auth  body: { action: 'login', email, password } → Supabase Auth
        └─ Éxito: guarda token + user en localStorage → redirige a /
 
-  └─ Signup: POST /api/auth/signup → crea usuario Auth + fila en profiles
+  └─ Signup: POST /api/auth  body: { action: 'signup', ... } → crea usuario Auth + fila en profiles
        └─ Éxito con sesión: redirige a /
        └─ Éxito sin sesión (email no confirmado): muestra mensaje → pantalla login
 ```
@@ -292,7 +294,7 @@ Formulario → buildPrompt(type, form)
   └─ Si hay formato institucional subido: inyecta contenido extraído al prompt
   └─ POST /api/generate → Groq API (llama-3.3-70b-versatile)
   └─ Éxito: muestra ReportView → descarga Word / PDF / Excel / Imprimir
-  └─ Guarda en Supabase tabla reportes (analítica)
+  └─ POST /api/reportes guarda en historial (user_id del token)
 ```
 
 ---

@@ -360,20 +360,20 @@ export default function App() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     if (token) {
-      fetch("/api/reportes-copiados", {
+      fetch("/api/telemetry", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify({ tipo: reportType }),
+        body: JSON.stringify({ kind: "reporte_copiado", tipo: reportType }),
       }).catch(() => {});
     }
   };
 
   const recordReferralShare = () => {
     if (!token) return;
-    fetch("/api/referrals", {
+    fetch("/api/telemetry", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ kind: "referral" }),
     }).catch(() => {});
   };
 
