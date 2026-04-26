@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES } from "../config.js";
 import { downloadWord, downloadPDF, downloadExcel, printReport } from "../utils/download.js";
 import { saveToSupabase } from "../utils/supabase.js";
+import { pop, magneticHover } from "../utils/anim.js";
 
 // ── Formato toolbar (prototipo B) ─────────────────────────────────────────────
 function FormatToolbar({ onFormat }) {
@@ -31,7 +33,7 @@ function FormatToolbar({ onFormat }) {
         <button
           key={t.action}
           title={t.title}
-          onClick={() => onFormat(t.action)}
+          onClick={(e) => { onFormat(t.action); pop(e.currentTarget, { scale: 1.12, duration: 320 }); }}
           style={{
             all: "unset",
             cursor: "pointer",
@@ -44,10 +46,11 @@ function FormatToolbar({ onFormat }) {
             fontSize: 12,
             color: "var(--ink)",
             transition: "background .15s, border-color .15s",
+            willChange: "transform",
             ...t.style,
           }}
-          onMouseEnter={e => { e.target.style.background = "var(--paper-3)"; e.target.style.borderColor = "var(--ink)"; }}
-          onMouseLeave={e => { e.target.style.background = "var(--paper)";   e.target.style.borderColor = "var(--line)"; }}
+          onMouseEnter={e => { e.currentTarget.style.background = "var(--paper-3)"; e.currentTarget.style.borderColor = "var(--ink)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "var(--paper)";   e.currentTarget.style.borderColor = "var(--line)"; }}
         >
           {t.label}
         </button>
@@ -71,13 +74,56 @@ export default function ReportView({ report: initialReport, reportType, form, fi
   const [savedAt, setSavedAt] = useState(null);
   const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label;
 
+  const rootRef = useRef(null);
+  const headerRef = useRef(null);
+  const dlBarRef = useRef(null);
+  const warnRef = useRef(null);
+  const editorRef = useRef(null);
+  const actionsRef = useRef(null);
+  const shareRef = useRef(null);
+  const copyBtnRef = useRef(null);
+
+  // Entrada secuenciada al montar
+  useEffect(() => {
+    const tl = createTimeline({ defaults: { ease: "outExpo", duration: 600 } });
+    const blocks = [headerRef, dlBarRef, warnRef, editorRef, actionsRef, shareRef]
+      .map(r => r.current).filter(Boolean);
+    if (!blocks.length) return;
+
+    utils.set(blocks, { opacity: 0, translateY: 20 });
+    tl.add(blocks, {
+      opacity: [0, 1],
+      translateY: [20, 0],
+      delay: stagger(90),
+    });
+
+    // Pop de los download buttons
+    if (dlBarRef.current) {
+      const btns = dlBarRef.current.querySelectorAll(".dl-btn");
+      utils.set(btns, { opacity: 0, scale: 0.9 });
+      animate(btns, {
+        opacity: [0, 1],
+        scale: [0.9, 1],
+        duration: 500,
+        delay: stagger(70, { start: 250 }),
+        ease: "outBack(1.6)",
+      });
+    }
+  }, []);
+
+  // Pulse al copiar
+  useEffect(() => {
+    if (copied && copyBtnRef.current) {
+      pop(copyBtnRef.current, { scale: 1.04, duration: 460 });
+    }
+  }, [copied]);
+
   const handleShare = () => {
     navigator.clipboard.writeText(`DocuIA — Reportes institucionales con IA: ${window.location.href}`);
     saveToSupabase("referrals", { email_from: form.email });
     alert("Enlace copiado. Envíelo por WhatsApp o correo.");
   };
 
-  // Aplica formato al texto seleccionado dentro del textarea
   const applyFormat = (action) => {
     const textarea = document.getElementById("report-textarea");
     if (!textarea) return;
@@ -97,7 +143,6 @@ export default function ReportView({ report: initialReport, reportType, form, fi
     const newText = before + replacement + after;
     setReport(newText);
 
-    // Restaurar el foco y la posición del cursor
     setTimeout(() => {
       textarea.focus();
       textarea.selectionStart = start;
@@ -116,21 +161,27 @@ export default function ReportView({ report: initialReport, reportType, form, fi
     await onSaveEdits(report);
     setSaving(false);
     setSavedAt(new Date());
+    if (copyBtnRef.current?.parentElement) {
+      const saveBtn = copyBtnRef.current.parentElement.querySelector("[data-save-btn]");
+      if (saveBtn) pop(saveBtn);
+    }
   };
 
+  const dlHover = (e) => animate(e.currentTarget, { translateY: -2, duration: 260, ease: "outQuart" });
+  const dlLeave = (e) => animate(e.currentTarget, { translateY: 0,  duration: 320, ease: "outQuart" });
+
   return (
-    <div style={{
+    <div ref={rootRef} style={{
       maxWidth: 860, margin: "0 auto",
       padding: "48px 32px 80px",
-      animation: "fadeIn .4s ease",
     }}>
 
-      {/* Header */}
-      <div style={{
+      <div ref={headerRef} style={{
         display: "flex", justifyContent: "space-between", alignItems: "flex-start",
         marginBottom: 28, paddingBottom: 20,
         borderBottom: "1px solid var(--line)",
         flexWrap: "wrap", gap: 12,
+        willChange: "transform, opacity",
       }}>
         <div>
           <h2 style={{
@@ -153,10 +204,10 @@ export default function ReportView({ report: initialReport, reportType, form, fi
         </button>
       </div>
 
-      {/* Download bar */}
-      <div style={{
+      <div ref={dlBarRef} style={{
         background: "var(--ink)", borderRadius: 12,
         padding: "20px 24px", marginBottom: 20,
+        willChange: "transform, opacity",
       }}>
         <p style={{
           fontFamily: "'IBM Plex Mono', monospace",
@@ -171,22 +222,29 @@ export default function ReportView({ report: initialReport, reportType, form, fi
             { label: "Excel (.csv)",action: () => downloadExcel(report, fileName),bg: "rgba(255,255,255,.08)" },
             { label: "Imprimir",    action: () => printReport(report),            bg: "var(--paper)", color: "var(--ink)" },
           ].map(({ label, action, bg, color }) => (
-            <button key={label} className="dl-btn" onClick={action} style={{
-              padding: "11px 8px",
-              background: bg,
-              color: color || "var(--paper)",
-              fontSize: 12, fontWeight: 500,
-              border: "1px solid rgba(255,255,255,.1)",
-              borderRadius: 8,
-            }}>
+            <button
+              key={label}
+              className="dl-btn"
+              onClick={(e) => { action(); pop(e.currentTarget, { scale: 1.06, duration: 380 }); }}
+              onMouseEnter={dlHover}
+              onMouseLeave={dlLeave}
+              style={{
+                padding: "11px 8px",
+                background: bg,
+                color: color || "var(--paper)",
+                fontSize: 12, fontWeight: 500,
+                border: "1px solid rgba(255,255,255,.1)",
+                borderRadius: 8,
+                willChange: "transform",
+              }}
+            >
               {label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Warning */}
-      <div style={{
+      <div ref={warnRef} style={{
         padding: "14px 18px",
         background: "#fffbeb",
         border: "1px solid #fcd34d",
@@ -194,12 +252,12 @@ export default function ReportView({ report: initialReport, reportType, form, fi
         fontFamily: "'IBM Plex Sans', sans-serif",
         fontSize: 13, color: "#78350f",
         marginBottom: 20, lineHeight: 1.55,
+        willChange: "transform, opacity",
       }}>
         <strong>Nota importante:</strong> Revise el informe antes de enviarlo. Puede editar el texto directamente abajo. No confíe en la IA al 100%.
       </div>
 
-      {/* Editable report — Opción A + toolbar Opción B */}
-      <div style={{ border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden" }}>
+      <div ref={editorRef} style={{ border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden", willChange: "transform, opacity" }}>
         <FormatToolbar onFormat={applyFormat} />
         <textarea
           id="report-textarea"
@@ -222,20 +280,27 @@ export default function ReportView({ report: initialReport, reportType, form, fi
         />
       </div>
 
-      {/* Copy + (opcional) guardar cambios cuando viene del historial */}
-      <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-        <button className="btn" onClick={handleCopy} style={{
-          flex: 1, minWidth: 200, padding: "13px 0",
-          background: copied ? "var(--ok)" : "var(--ink)",
-          color: "var(--paper)",
-          fontSize: 14, fontWeight: 500, borderRadius: 10,
-          fontFamily: "'IBM Plex Sans', sans-serif",
-        }}>
+      <div ref={actionsRef} style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap", willChange: "transform, opacity" }}>
+        <button
+          ref={copyBtnRef}
+          className="btn"
+          onClick={handleCopy}
+          style={{
+            flex: 1, minWidth: 200, padding: "13px 0",
+            background: copied ? "var(--ok)" : "var(--ink)",
+            color: "var(--paper)",
+            fontSize: 14, fontWeight: 500, borderRadius: 10,
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            transition: "background .25s ease",
+            willChange: "transform",
+          }}
+        >
           {copied ? "Copiado al portapapeles" : "Copiar texto completo"}
         </button>
 
         {onSaveEdits && (
           <button
+            data-save-btn
             className="btn btn-ghost"
             onClick={handleSaveEdits}
             disabled={saving}
@@ -245,6 +310,7 @@ export default function ReportView({ report: initialReport, reportType, form, fi
               fontSize: 13, fontWeight: 500, borderRadius: 10,
               border: "1px solid var(--line)",
               fontFamily: "'IBM Plex Sans', sans-serif",
+              willChange: "transform",
             }}
           >
             {saving ? "Guardando..." : savedAt ? "Cambios guardados" : "Guardar cambios"}
@@ -252,12 +318,12 @@ export default function ReportView({ report: initialReport, reportType, form, fi
         )}
       </div>
 
-      {/* Share */}
-      <div style={{
+      <div ref={shareRef} style={{
         marginTop: 24, padding: "20px 24px",
         background: "var(--paper-2)",
         border: "1px solid var(--line)",
         borderRadius: 12, textAlign: "center",
+        willChange: "transform, opacity",
       }}>
         <p style={{
           fontFamily: "'IBM Plex Sans', sans-serif",

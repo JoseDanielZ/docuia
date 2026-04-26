@@ -1,3 +1,7 @@
+import { useEffect, useRef } from "react";
+import { animate, stagger, utils } from "animejs";
+import { magneticHover } from "../utils/anim.js";
+
 export default function Navbar({
   user,
   logout,
@@ -8,6 +12,43 @@ export default function Navbar({
   onPlantillasClick,
   onHistorialClick,
 }) {
+  const navRef = useRef(null);
+  const logoRef = useRef(null);
+  const itemsRef = useRef(null);
+
+  useEffect(() => {
+    if (!navRef.current) return;
+
+    utils.set(navRef.current, { translateY: -64, opacity: 0 });
+    if (logoRef.current) utils.set(logoRef.current, { opacity: 0, translateX: -10 });
+    if (itemsRef.current) {
+      utils.set(itemsRef.current.children, { opacity: 0, translateY: -8 });
+    }
+
+    animate(navRef.current, {
+      translateY: [-64, 0],
+      opacity: [0, 1],
+      duration: 720,
+      ease: "outExpo",
+    });
+    animate(logoRef.current, {
+      opacity: [0, 1],
+      translateX: [-10, 0],
+      duration: 700,
+      delay: 220,
+      ease: "outExpo",
+    });
+    if (itemsRef.current) {
+      animate(itemsRef.current.children, {
+        opacity: [0, 1],
+        translateY: [-8, 0],
+        duration: 600,
+        delay: stagger(60, { start: 280 }),
+        ease: "outExpo",
+      });
+    }
+  }, [user]);
+
   const navBtnStyle = {
     padding: "7px 14px",
     fontSize: 12,
@@ -17,14 +58,31 @@ export default function Navbar({
     borderRadius: 6,
     cursor: "pointer",
     fontFamily: "'IBM Plex Sans', sans-serif",
+    transition: "border-color .2s, color .2s, background .2s",
   };
 
+  const handleBtnEnter = (e) => {
+    e.currentTarget.style.borderColor = "rgba(255,255,255,.32)";
+    e.currentTarget.style.color = "var(--paper)";
+    e.currentTarget.style.background = "rgba(255,255,255,.04)";
+    animate(e.currentTarget, { translateY: -2, duration: 240, ease: "outQuart" });
+  };
+  const handleBtnLeave = (e) => {
+    e.currentTarget.style.borderColor = "rgba(255,255,255,.15)";
+    e.currentTarget.style.color = "rgba(245,241,232,.7)";
+    e.currentTarget.style.background = "transparent";
+    animate(e.currentTarget, { translateY: 0, duration: 320, ease: "outQuart" });
+  };
+
+  const primaryHover = magneticHover();
+
   return (
-    <nav style={{
+    <nav ref={navRef} style={{
       position: "sticky", top: 0, zIndex: 100,
       background: "var(--ink)",
       borderBottom: "1px solid rgba(255,255,255,.08)",
       padding: "0",
+      willChange: "transform, opacity",
     }}>
       <div style={{
         maxWidth: 1080, margin: "0 auto", padding: "16px 32px",
@@ -32,8 +90,9 @@ export default function Navbar({
         flexWrap: "wrap", gap: 12,
       }}>
         <div
+          ref={logoRef}
           onClick={onLogoClick}
-          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", willChange: "transform, opacity" }}
         >
           <div style={{
             width: 28, height: 28, borderRadius: 7,
@@ -54,16 +113,16 @@ export default function Navbar({
           }}>Fe y Alegría</span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div ref={itemsRef} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {user && (
             <>
-              <button onClick={onCursosClick} style={navBtnStyle}>
+              <button onClick={onCursosClick} style={navBtnStyle} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
                 Mis cursos {cursos.length > 0 ? `(${cursos.length})` : ""}
               </button>
-              <button onClick={onPlantillasClick} style={navBtnStyle}>
+              <button onClick={onPlantillasClick} style={navBtnStyle} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
                 Plantillas
               </button>
-              <button onClick={onHistorialClick} style={navBtnStyle}>
+              <button onClick={onHistorialClick} style={navBtnStyle} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
                 Historial
               </button>
               <span style={{
@@ -75,22 +134,28 @@ export default function Navbar({
           )}
 
           {user ? (
-            <button onClick={logout} style={{ ...navBtnStyle }}>
+            <button onClick={logout} style={navBtnStyle} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
               Salir
             </button>
           ) : (
-            <a href="/login.html" style={{ ...navBtnStyle, textDecoration: "none" }}>
+            <a href="/login.html" style={{ ...navBtnStyle, textDecoration: "none" }} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
               Iniciar sesión
             </a>
           )}
 
-          <button onClick={scrollToForm} className="btn btn-primary" style={{
-            padding: "9px 20px",
-            background: "var(--paper)",
-            color: "var(--ink)",
-            fontSize: 13, fontWeight: 600,
-            boxShadow: "none",
-          }}>
+          <button
+            onClick={scrollToForm}
+            className="btn btn-primary"
+            {...primaryHover}
+            style={{
+              padding: "9px 20px",
+              background: "var(--paper)",
+              color: "var(--ink)",
+              fontSize: 13, fontWeight: 600,
+              boxShadow: "none",
+              willChange: "transform",
+            }}
+          >
             Generar reporte
           </button>
         </div>

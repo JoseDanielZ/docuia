@@ -1,9 +1,59 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
 import Field from "./Field.jsx";
+import {
+  useEnter,
+  useStaggerChildren,
+  useCountUp,
+  useSplitWordsEnter,
+  useScrollReveal,
+  magneticHover,
+} from "../utils/anim.js";
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function HeroSection({ scrollToForm }) {
+  const eyebrowRef = useRef(null);
+  const titleRef = useRef(null);
+  const subRef = useRef(null);
+  const ctaRef = useRef(null);
+  const microRef = useRef(null);
+  const glowRef = useRef(null);
+
+  useEffect(() => {
+    const tl = createTimeline({ defaults: { ease: "outExpo", duration: 800 } });
+
+    if (eyebrowRef.current) {
+      utils.set(eyebrowRef.current, { opacity: 0, translateY: 14 });
+      tl.add(eyebrowRef.current, { opacity: [0, 1], translateY: [14, 0], duration: 600 }, 0);
+    }
+    if (subRef.current) utils.set(subRef.current, { opacity: 0, translateY: 16 });
+    if (ctaRef.current) utils.set(ctaRef.current, { opacity: 0, translateY: 16, scale: 0.96 });
+    if (microRef.current) utils.set(microRef.current, { opacity: 0, translateY: 8 });
+
+    tl.add(subRef.current, { opacity: [0, 1], translateY: [16, 0], duration: 700 }, 600);
+    tl.add(ctaRef.current, {
+      opacity: [0, 1],
+      translateY: [16, 0],
+      scale: [0.96, 1],
+      duration: 700,
+      ease: "outBack(1.6)",
+    }, 750);
+    tl.add(microRef.current, { opacity: [0, 1], translateY: [8, 0], duration: 500 }, 950);
+
+    if (glowRef.current) {
+      animate(glowRef.current, {
+        opacity: [{ to: 0.45, duration: 0 }, { to: 0.7, duration: 4200 }, { to: 0.45, duration: 4200 }],
+        loop: true,
+        ease: "inOutSine",
+      });
+    }
+  }, []);
+
+  useSplitWordsEnter(titleRef, { delay: 180, perWord: 55, y: 28, duration: 950 });
+
+  const ctaHover = magneticHover();
+
   return (
     <section style={{
       background: "var(--ink)",
@@ -11,13 +61,12 @@ function HeroSection({ scrollToForm }) {
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Subtle radial glow */}
-      <div style={{
+      <div ref={glowRef} style={{
         position: "absolute", inset: 0, pointerEvents: "none",
-        background: "radial-gradient(700px 500px at 15% 20%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 60%), radial-gradient(600px 400px at 85% 90%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%)",
-        opacity: .6,
+        background: "radial-gradient(700px 500px at 15% 20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%), radial-gradient(600px 400px at 85% 90%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%)",
+        opacity: .45,
+        willChange: "opacity",
       }} />
-      {/* Grid lines */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
         backgroundImage: "linear-gradient(to right, color-mix(in srgb, var(--paper) 4%, transparent) 1px, transparent 1px)",
@@ -26,7 +75,7 @@ function HeroSection({ scrollToForm }) {
       }} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
-        <p className="fade" style={{
+        <p ref={eyebrowRef} style={{
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: 11, fontWeight: 500,
           color: "color-mix(in srgb, var(--accent) 80%, var(--paper))",
@@ -36,7 +85,7 @@ function HeroSection({ scrollToForm }) {
           Plataforma de gestión documental — Fe y Alegría Ecuador
         </p>
 
-        <h1 className="fade d1 hero-t" style={{
+        <h1 ref={titleRef} className="hero-t" style={{
           fontFamily: "'Source Serif 4', Georgia, serif",
           fontWeight: 400, fontSize: 52,
           color: "var(--paper)",
@@ -46,7 +95,7 @@ function HeroSection({ scrollToForm }) {
           Seis horas de reportes reducidas a <em style={{ fontStyle: "italic", color: "color-mix(in srgb, var(--accent) 80%, var(--paper))" }}>diez minutos.</em>
         </h1>
 
-        <p className="fade d2" style={{
+        <p ref={subRef} style={{
           fontSize: 17, color: "rgba(245,241,232,.6)",
           lineHeight: 1.65, margin: "0 auto 40px", maxWidth: 520,
           fontFamily: "'IBM Plex Sans', sans-serif",
@@ -54,15 +103,22 @@ function HeroSection({ scrollToForm }) {
           Inteligencia artificial que genera informes institucionales completos en el formato exacto que requiere su coordinación.
         </p>
 
-        <button className="btn btn-primary fade d3" onClick={scrollToForm} style={{
-          padding: "14px 36px", fontSize: 15, fontWeight: 600,
-          background: "var(--paper)", color: "var(--ink)",
-          boxShadow: "none",
-        }}>
+        <button
+          ref={ctaRef}
+          className="btn btn-primary"
+          onClick={scrollToForm}
+          {...ctaHover}
+          style={{
+            padding: "14px 36px", fontSize: 15, fontWeight: 600,
+            background: "var(--paper)", color: "var(--ink)",
+            boxShadow: "none",
+            willChange: "transform, opacity",
+          }}
+        >
           Generar mi primer reporte
         </button>
 
-        <p className="fade d4" style={{
+        <p ref={microRef} style={{
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: 11, color: "rgba(245,241,232,.25)",
           marginTop: 18, letterSpacing: ".04em",
@@ -76,39 +132,92 @@ function HeroSection({ scrollToForm }) {
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 const STATS = [
-  { num: "79%", label: "dedica más de 6 horas\nsemanales a reportes" },
-  { num: "63%", label: "trabaja fuera\nde su jornada laboral" },
-  { num: "47%", label: "repite la misma información\nmás de tres veces" },
-  { num: "37%", label: "trabaja fines\nde semana" },
+  { num: 79, suffix: "%", label: "dedica más de 6 horas\nsemanales a reportes" },
+  { num: 63, suffix: "%", label: "trabaja fuera\nde su jornada laboral" },
+  { num: 47, suffix: "%", label: "repite la misma información\nmás de tres veces" },
+  { num: 37, suffix: "%", label: "trabaja fines\nde semana" },
 ];
 
-function StatsSection() {
+function StatItem({ stat, index, triggered }) {
+  const numRef = useRef(null);
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    if (!triggered) return;
+    if (cardRef.current) {
+      utils.set(cardRef.current, { opacity: 0, translateY: 24 });
+      animate(cardRef.current, {
+        opacity: [0, 1],
+        translateY: [24, 0],
+        duration: 700,
+        delay: index * 110,
+        ease: "outExpo",
+      });
+    }
+    if (numRef.current) {
+      const obj = { value: 0 };
+      animate(obj, {
+        value: stat.num,
+        duration: 1400,
+        delay: index * 110 + 120,
+        ease: "outExpo",
+        onUpdate: () => {
+          if (numRef.current) numRef.current.textContent = Math.round(obj.value) + stat.suffix;
+        },
+      });
+    }
+  }, [triggered]);
+
   return (
-    <section style={{ background: "var(--paper-2)", borderBottom: "1px solid var(--line)", padding: "0 32px" }}>
+    <div ref={cardRef} style={{
+      padding: "36px 20px",
+      textAlign: "center",
+      borderRight: index < 3 ? "1px solid var(--line)" : "none",
+      background: "var(--paper)",
+      willChange: "transform, opacity",
+    }}>
+      <div ref={numRef} className="sn" style={{
+        fontFamily: "'Source Serif 4', Georgia, serif",
+        fontSize: 40, fontWeight: 300,
+        color: "var(--ink)", lineHeight: 1,
+      }}>0{stat.suffix}</div>
+      <div style={{
+        fontFamily: "'IBM Plex Sans', sans-serif",
+        fontSize: 12, color: "var(--muted)",
+        marginTop: 10, lineHeight: 1.5,
+        whiteSpace: "pre-line",
+      }}>{stat.label}</div>
+    </div>
+  );
+}
+
+function StatsSection() {
+  const sectionRef = useRef(null);
+  const [triggered, setTriggered] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTriggered(true);
+          obs.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    obs.observe(sectionRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={sectionRef} style={{ background: "var(--paper-2)", borderBottom: "1px solid var(--line)", padding: "0 32px" }}>
       <div className="g2" style={{
         maxWidth: 1000, margin: "0 auto",
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
         transform: "translateY(-1px)",
       }}>
         {STATS.map((s, i) => (
-          <div key={i} style={{
-            padding: "36px 20px",
-            textAlign: "center",
-            borderRight: i < 3 ? "1px solid var(--line)" : "none",
-            background: "var(--paper)",
-          }}>
-            <div className="sn" style={{
-              fontFamily: "'Source Serif 4', Georgia, serif",
-              fontSize: 40, fontWeight: 300,
-              color: "var(--ink)", lineHeight: 1,
-            }}>{s.num}</div>
-            <div style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
-              fontSize: 12, color: "var(--muted)",
-              marginTop: 10, lineHeight: 1.5,
-              whiteSpace: "pre-line",
-            }}>{s.label}</div>
-          </div>
+          <StatItem key={i} stat={s} index={i} triggered={triggered} />
         ))}
       </div>
       <p style={{
@@ -132,6 +241,9 @@ const STEPS = [
 ];
 
 function HowItWorksSection() {
+  const stepsRef = useRef(null);
+  useScrollReveal(stepsRef, { selector: ".step-item", y: 26, duration: 800, delay: 140 });
+
   return (
     <section style={{ padding: "72px 32px", background: "var(--paper)", borderBottom: "1px solid var(--line)" }}>
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
@@ -151,9 +263,9 @@ function HowItWorksSection() {
           Tres pasos. Un resultado <em style={{ fontStyle: "italic" }}>profesional.</em>
         </h2>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 60, flexWrap: "wrap" }}>
+        <div ref={stepsRef} style={{ display: "flex", justifyContent: "center", gap: 60, flexWrap: "wrap" }}>
           {STEPS.map((st, i) => (
-            <div key={i} style={{ textAlign: "center", maxWidth: 220 }}>
+            <div key={i} className="step-item" style={{ textAlign: "center", maxWidth: 220, willChange: "transform, opacity" }}>
               <div style={{
                 fontFamily: "'Source Serif 4', Georgia, serif",
                 fontSize: 36, fontWeight: 300,
@@ -335,6 +447,49 @@ function FormatoInstitucional({
   );
 }
 
+// ── Card de tipo (con animación de entrada y hover) ───────────────────────────
+function TypeCard({ rt, onClick }) {
+  const ref = useRef(null);
+  const hover = magneticHover();
+  return (
+    <div
+      ref={ref}
+      className="card"
+      onClick={onClick}
+      {...hover}
+      style={{
+        background: "var(--paper)",
+        border: "1px solid var(--line)",
+        borderRadius: 12, padding: "20px 18px",
+        display: "flex", alignItems: "flex-start", gap: 14,
+        willChange: "transform, opacity",
+      }}
+    >
+      <div style={{
+        width: 36, height: 36, borderRadius: 8,
+        background: "var(--paper-3)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: 13, fontWeight: 600, color: "var(--muted)",
+      }}>
+        {rt.id.slice(0, 2).toUpperCase()}
+      </div>
+      <div>
+        <div style={{
+          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontSize: 14, fontWeight: 600, color: "var(--ink)",
+          marginBottom: 3,
+        }}>{rt.label}</div>
+        <div style={{
+          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontSize: 12, color: "var(--muted)",
+        }}>{rt.desc}</div>
+      </div>
+    </div>
+  );
+}
+
 function FormSection({
   formRef, reportType, setReportType, form, set, generate, canSubmit, error,
   user, cursos, selectedCurso, selectCurso,
@@ -343,6 +498,28 @@ function FormSection({
   formatoCompartir, setFormatoCompartir,
   saveAsTemplate, plantillas, loadTemplate,
 }) {
+  const cardsRef = useRef(null);
+  const formInnerRef = useRef(null);
+
+  useStaggerChildren(cardsRef, { y: 18, delay: 60, duration: 600, deps: [reportType] });
+
+  // Animar la entrada del formulario cuando se selecciona un tipo
+  useEffect(() => {
+    if (!reportType || !formInnerRef.current) return;
+    const sections = formInnerRef.current.querySelectorAll("[data-form-block]");
+    if (!sections.length) return;
+    utils.set(sections, { opacity: 0, translateY: 14 });
+    animate(sections, {
+      opacity: [0, 1],
+      translateY: [14, 0],
+      duration: 600,
+      delay: stagger(70, { start: 80 }),
+      ease: "outExpo",
+    });
+  }, [reportType]);
+
+  const generateHover = magneticHover();
+
   return (
     <section ref={formRef} style={{ padding: "72px 32px", background: "var(--paper-2)", borderBottom: "1px solid var(--line)" }}>
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
@@ -370,53 +547,20 @@ function FormSection({
         </p>
 
         {!reportType ? (
-          <div className="g2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div ref={cardsRef} className="g2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {REPORT_TYPES.map(rt => (
-              <div
-                key={rt.id}
-                className="card"
-                onClick={() => setReportType(rt.id)}
-                style={{
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
-                  borderRadius: 12, padding: "20px 18px",
-                  display: "flex", alignItems: "flex-start", gap: 14,
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  background: "var(--paper-3)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 13, fontWeight: 600, color: "var(--muted)",
-                }}>
-                  {rt.id.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <div style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    fontSize: 14, fontWeight: 600, color: "var(--ink)",
-                    marginBottom: 3,
-                  }}>{rt.label}</div>
-                  <div style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    fontSize: 12, color: "var(--muted)",
-                  }}>{rt.desc}</div>
-                </div>
-              </div>
+              <TypeCard key={rt.id} rt={rt} onClick={() => setReportType(rt.id)} />
             ))}
           </div>
         ) : (
-          <div style={{
+          <div ref={formInnerRef} style={{
             background: "var(--paper)",
             border: "1px solid var(--line)",
             borderRadius: 14,
             padding: "28px 28px",
             boxShadow: "var(--shadow)",
           }}>
-            {/* Header */}
-            <div style={{
+            <div data-form-block style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
               marginBottom: 20, paddingBottom: 16,
               borderBottom: "1px solid var(--line)",
@@ -442,7 +586,7 @@ function FormSection({
             </div>
 
             {error && (
-              <div style={{
+              <div data-form-block style={{
                 padding: "12px 16px", background: "#fef2f2",
                 border: "1px solid #f5c6c6", borderRadius: 8,
                 fontFamily: "'IBM Plex Sans', sans-serif",
@@ -453,7 +597,7 @@ function FormSection({
             )}
 
             {user && plantillas?.length > 0 && (
-              <>
+              <div data-form-block>
                 <SectionLabel>Cargar plantilla</SectionLabel>
                 <select
                   value=""
@@ -477,43 +621,54 @@ function FormSection({
                       </option>
                     ))}
                 </select>
-              </>
+              </div>
             )}
 
-            <CursoSelector cursos={cursos} selectedCurso={selectedCurso} selectCurso={selectCurso} />
-
-            <FormatoInstitucional
-              reportType={reportType}
-              formatosDisponibles={formatosDisponibles}
-              formatoSubido={formatoSubido}
-              uploadingFormato={uploadingFormato}
-              handleFormatoUpload={handleFormatoUpload}
-              selectFormato={selectFormato}
-              formatoCompartir={formatoCompartir}
-              setFormatoCompartir={setFormatoCompartir}
-              user={user}
-            />
-
-            <SectionLabel>Datos del docente</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-              {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
+            <div data-form-block>
+              <CursoSelector cursos={cursos} selectedCurso={selectedCurso} selectCurso={selectCurso} />
             </div>
 
-            <SectionLabel>Datos del curso</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-              {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
+            <div data-form-block>
+              <FormatoInstitucional
+                reportType={reportType}
+                formatosDisponibles={formatosDisponibles}
+                formatoSubido={formatoSubido}
+                uploadingFormato={uploadingFormato}
+                handleFormatoUpload={handleFormatoUpload}
+                selectFormato={selectFormato}
+                formatoCompartir={formatoCompartir}
+                setFormatoCompartir={setFormatoCompartir}
+                user={user}
+              />
             </div>
 
-            <SectionLabel>Información del reporte</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-              {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} />)}
+            <div data-form-block>
+              <SectionLabel>Datos del docente</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+                {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
+              </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+            <div data-form-block>
+              <SectionLabel>Datos del curso</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+                {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
+              </div>
+            </div>
+
+            <div data-form-block>
+              <SectionLabel>Información del reporte</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+                {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} />)}
+              </div>
+            </div>
+
+            <div data-form-block style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
               <button
                 className="btn"
                 onClick={generate}
                 disabled={!canSubmit}
+                {...(canSubmit ? generateHover : {})}
                 style={{
                   flex: 1, minWidth: 200, padding: "14px 0",
                   background: canSubmit ? "var(--ink)" : "var(--line)",
@@ -522,6 +677,7 @@ function FormSection({
                   cursor: canSubmit ? "pointer" : "not-allowed",
                   fontFamily: "'IBM Plex Sans', sans-serif",
                   letterSpacing: ".01em",
+                  willChange: "transform",
                 }}
               >
                 Generar reporte
@@ -551,9 +707,11 @@ function FormSection({
 
 // ── Quote ─────────────────────────────────────────────────────────────────────
 function QuoteSection() {
+  const ref = useRef(null);
+  useScrollReveal(ref, { y: 22, duration: 800 });
   return (
     <section style={{ padding: "64px 32px", background: "var(--paper)", borderBottom: "1px solid var(--line)" }}>
-      <div style={{ maxWidth: 580, margin: "0 auto", textAlign: "center" }}>
+      <div ref={ref} style={{ maxWidth: 580, margin: "0 auto", textAlign: "center", willChange: "transform, opacity" }}>
         <div style={{ width: 32, height: 1, background: "var(--line)", margin: "0 auto 24px" }} />
         <p style={{
           fontFamily: "'Source Serif 4', Georgia, serif",
@@ -576,10 +734,12 @@ function QuoteSection() {
 
 // ── CTA ───────────────────────────────────────────────────────────────────────
 function CtaSection() {
+  const ref = useRef(null);
+  useScrollReveal(ref, { y: 22, duration: 800 });
   return (
     <>
       <section style={{ padding: "64px 32px", background: "var(--ink)" }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
+        <div ref={ref} style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", willChange: "transform, opacity" }}>
           <p style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: 11, color: "color-mix(in srgb, var(--accent) 70%, var(--paper))",
