@@ -65,10 +65,11 @@ function FormatToolbar({ onFormat }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function ReportView({ report: initialReport, reportType, form, fileName, reset, copyReport, copied }) {
+export default function ReportView({ report: initialReport, reportType, form, fileName, reset, copyReport, copied, onSaveEdits }) {
   const [report, setReport] = useState(initialReport);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(null);
   const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label;
-  const textareaRef = useState(null);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`DocuIA — Reportes institucionales con IA: ${window.location.href}`);
@@ -107,6 +108,14 @@ export default function ReportView({ report: initialReport, reportType, form, fi
   const handleCopy = () => {
     navigator.clipboard.writeText(report);
     copyReport();
+  };
+
+  const handleSaveEdits = async () => {
+    if (!onSaveEdits) return;
+    setSaving(true);
+    await onSaveEdits(report);
+    setSaving(false);
+    setSavedAt(new Date());
   };
 
   return (
@@ -213,7 +222,7 @@ export default function ReportView({ report: initialReport, reportType, form, fi
         />
       </div>
 
-      {/* Copy */}
+      {/* Copy + (opcional) guardar cambios cuando viene del historial */}
       <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
         <button className="btn" onClick={handleCopy} style={{
           flex: 1, minWidth: 200, padding: "13px 0",
@@ -224,6 +233,23 @@ export default function ReportView({ report: initialReport, reportType, form, fi
         }}>
           {copied ? "Copiado al portapapeles" : "Copiar texto completo"}
         </button>
+
+        {onSaveEdits && (
+          <button
+            className="btn btn-ghost"
+            onClick={handleSaveEdits}
+            disabled={saving}
+            style={{
+              minWidth: 180, padding: "13px 18px",
+              background: "var(--paper)", color: "var(--ink)",
+              fontSize: 13, fontWeight: 500, borderRadius: 10,
+              border: "1px solid var(--line)",
+              fontFamily: "'IBM Plex Sans', sans-serif",
+            }}
+          >
+            {saving ? "Guardando..." : savedAt ? "Cambios guardados" : "Guardar cambios"}
+          </button>
+        )}
       </div>
 
       {/* Share */}

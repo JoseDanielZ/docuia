@@ -1,4 +1,24 @@
-export default function Navbar({ user, logout, scrollToForm, onLogoClick }) {
+export default function Navbar({
+  user,
+  logout,
+  scrollToForm,
+  onLogoClick,
+  cursos = [],
+  onCursosClick,
+  onPlantillasClick,
+  onHistorialClick,
+}) {
+  const navBtnStyle = {
+    padding: "7px 14px",
+    fontSize: 12,
+    border: "1px solid rgba(255,255,255,.15)",
+    color: "rgba(245,241,232,.7)",
+    background: "transparent",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontFamily: "'IBM Plex Sans', sans-serif",
+  };
+
   return (
     <nav style={{
       position: "sticky", top: 0, zIndex: 100,
@@ -9,8 +29,8 @@ export default function Navbar({ user, logout, scrollToForm, onLogoClick }) {
       <div style={{
         maxWidth: 1080, margin: "0 auto", padding: "16px 32px",
         display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: "wrap", gap: 12,
       }}>
-        {/* Logo */}
         <div
           onClick={onLogoClick}
           style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
@@ -34,32 +54,32 @@ export default function Navbar({ user, logout, scrollToForm, onLogoClick }) {
           }}>Fe y Alegría</span>
         </div>
 
-        {/* Right side */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {user && (
-            <span style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 11, color: "rgba(245,241,232,.45)",
-            }}>{user.email}</span>
+            <>
+              <button onClick={onCursosClick} style={navBtnStyle}>
+                Mis cursos {cursos.length > 0 ? `(${cursos.length})` : ""}
+              </button>
+              <button onClick={onPlantillasClick} style={navBtnStyle}>
+                Plantillas
+              </button>
+              <button onClick={onHistorialClick} style={navBtnStyle}>
+                Historial
+              </button>
+              <span style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11, color: "rgba(245,241,232,.45)",
+                marginLeft: 4,
+              }}>{user.email}</span>
+            </>
           )}
 
           {user ? (
-            <button onClick={logout} className="btn btn-ghost" style={{
-              padding: "7px 16px", fontSize: 13,
-              border: "1px solid rgba(255,255,255,.15)",
-              color: "rgba(245,241,232,.6)",
-              background: "transparent",
-            }}>
+            <button onClick={logout} style={{ ...navBtnStyle }}>
               Salir
             </button>
           ) : (
-            <a href="/login.html" className="btn btn-ghost" style={{
-              padding: "7px 16px", fontSize: 13,
-              border: "1px solid rgba(255,255,255,.15)",
-              color: "rgba(245,241,232,.6)",
-              background: "transparent",
-              textDecoration: "none",
-            }}>
+            <a href="/login.html" style={{ ...navBtnStyle, textDecoration: "none" }}>
               Iniciar sesión
             </a>
           )}

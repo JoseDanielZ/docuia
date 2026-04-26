@@ -36,7 +36,9 @@ GROQ_API_KEY=gsk_...
 
 ### 3. Configurar Supabase
 
-Ejecutar en el SQL Editor de Supabase:
+> Si ya tenías la base anterior, ejecuta el archivo `migrations.sql` (en la raíz del repo) en el SQL Editor de Supabase. Trae los cambios para **formatos compartidos por institución**, **plantillas** e **historial por usuario**.
+
+Si parten de cero, ejecuta también el siguiente bootstrap en el SQL Editor:
 
 ```sql
 -- Tabla de visitas anónimas
@@ -185,13 +187,22 @@ docuia/
 ├── api/                        ← handlers serverless (Vercel en prod, Express en dev)
 │   ├── generate.mjs            ← recibe prompt + system, llama a Groq API (llama-3.3-70b)
 │   │                              y devuelve el reporte generado
-│   ├── cursos.js               ← CRUD de cursos del docente
-│   │                              GET: lista cursos del usuario autenticado
-│   │                              POST: crea curso
-│   │                              DELETE: elimina curso por ?id=
+│   ├── cursos.js               ← CRUD de cursos del docente (lista/crea/borrado lógico)
 │   ├── upload-formato.js       ← recibe PDF o Excel en base64, extrae contenido,
-│   │                              guarda en formatos_institucionales y devuelve
-│   │                              campos detectados
+│   │                              guarda en formatos_institucionales con la
+│   │                              institución del docente y el flag `compartido`
+│   ├── formatos.js             ← lista de formatos disponibles
+│   │                              GET: { mios, compartidos } (compartidos = mismos
+│   │                                    de mi institución)
+│   │                              PATCH ?id=: alternar `compartido`
+│   │                              DELETE ?id=: borrado lógico
+│   ├── plantillas.js           ← plantillas privadas de reporte
+│   │                              GET / POST { nombre, tipo_reporte, datos } / DELETE
+│   ├── reportes.js             ← historial de reportes (por usuario autenticado)
+│   │                              GET: lista
+│   │                              GET ?id=: obtener reporte completo
+│   │                              PATCH ?id=: actualizar `reporte_generado`
+│   │                              DELETE ?id=: archivar
 │   └── auth/
 │       ├── login.js            ← verifica credenciales con Supabase Auth,
 │       │                          devuelve access_token + refresh_token + user
@@ -202,9 +213,10 @@ docuia/
 └── src/
     ├── main.jsx                ← monta App en el DOM
     ├── App.jsx                 ← orquestador central de vistas y estado:
-    │                              · Vistas: landing, form, cursos, loading, report
+    │                              · Vistas: landing, form, cursos, plantillas,
+    │                                historial, loading, report
     │                              · Estado: formulario, tipo de reporte, cursos,
-    │                                formato institucional subido
+    │                                plantillas, historial, formato institucional
     │                              · CRUD de cursos (loadCursos, createCurso,
     │                                deleteCurso, selectCurso)
     │                              · Upload de formato institucional (PDF/Excel)
@@ -237,7 +249,9 @@ docuia/
         │                          · Grid de tarjetas de cursos guardados
         │                          · Modal para crear nuevo curso
         │                          · Eliminar curso
-        ├── CursosView.css      ← estilos de CursosView (sin inline styles)
+        ├── PlantillasView.jsx  ← vista de plantillas guardadas (cargar/eliminar)
+        ├── HistorialView.jsx   ← vista del historial de reportes generados
+        ├── CursosView.css      ← estilos compartidos por Cursos/Plantillas/Historial
         ├── LandingPage.jsx     ← página principal:
         │                          · HeroSection, StatsSection, HowItWorksSection
         │                          · FormSection con selector de curso guardado,

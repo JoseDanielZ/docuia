@@ -196,7 +196,153 @@ function SectionLabel({ children }) {
   );
 }
 
-function FormSection({ formRef, reportType, setReportType, form, set, generate, canSubmit, error }) {
+// ── Selector de curso guardado ────────────────────────────────────────────────
+function CursoSelector({ cursos, selectedCurso, selectCurso }) {
+  if (!cursos?.length) return null;
+  return (
+    <>
+      <SectionLabel>Mis cursos guardados</SectionLabel>
+      <select
+        value={selectedCurso?.id || ""}
+        onChange={e => {
+          const c = cursos.find(x => x.id === e.target.value);
+          selectCurso(c || null);
+        }}
+        style={{
+          width: "100%", padding: "10px 12px", marginBottom: 16,
+          background: "var(--paper)", border: "1px solid var(--line)",
+          borderRadius: 8, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+          color: "var(--ink)",
+        }}
+      >
+        <option value="">— Sin auto-llenar —</option>
+        {cursos.map(c => (
+          <option key={c.id} value={c.id}>
+            {c.nombre} · {c.asignatura} · {c.grado} {c.paralelo}
+          </option>
+        ))}
+      </select>
+    </>
+  );
+}
+
+// ── Upload + selector de formato institucional ────────────────────────────────
+function FormatoInstitucional({
+  reportType,
+  formatosDisponibles,
+  formatoSubido,
+  uploadingFormato,
+  handleFormatoUpload,
+  selectFormato,
+  formatoCompartir,
+  setFormatoCompartir,
+  user,
+}) {
+  if (!user) return null;
+
+  const mios = formatosDisponibles?.mios || [];
+  const compartidos = formatosDisponibles?.compartidos || [];
+
+  return (
+    <>
+      <SectionLabel>Formato institucional (opcional)</SectionLabel>
+      <div style={{
+        background: "var(--paper)", border: "1px dashed var(--line)",
+        borderRadius: 10, padding: 14, marginBottom: 16,
+      }}>
+        {(mios.length > 0 || compartidos.length > 0) && (
+          <select
+            value={formatoSubido?.id || ""}
+            onChange={e => {
+              const todos = [...mios, ...compartidos];
+              const f = todos.find(x => x.id === e.target.value);
+              selectFormato(f || null);
+            }}
+            style={{
+              width: "100%", padding: "9px 12px", marginBottom: 10,
+              background: "var(--paper-2)", border: "1px solid var(--line)",
+              borderRadius: 8, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+              color: "var(--ink)",
+            }}
+          >
+            <option value="">— Sin formato —</option>
+            {mios.length > 0 && (
+              <optgroup label="Mis formatos">
+                {mios.map(f => (
+                  <option key={f.id} value={f.id}>
+                    {f.nombre_archivo} ({f.tipo_reporte}){f.compartido ? " · compartido" : ""}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {compartidos.length > 0 && (
+              <optgroup label="De mi institución">
+                {compartidos.map(f => (
+                  <option key={f.id} value={f.id}>
+                    {f.nombre_archivo} ({f.tipo_reporte})
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <label className="btn btn-ghost" style={{
+            padding: "8px 14px", fontSize: 12, cursor: "pointer",
+            border: "1px solid var(--line)", borderRadius: 8,
+          }}>
+            {uploadingFormato ? "Subiendo..." : "Subir PDF/Excel"}
+            <input
+              type="file"
+              accept=".pdf,.xlsx,.xls"
+              onChange={handleFormatoUpload}
+              disabled={uploadingFormato || !reportType}
+              style={{ display: "none" }}
+            />
+          </label>
+          <label style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12,
+            color: "var(--muted)",
+          }}>
+            <input
+              type="checkbox"
+              checked={!!formatoCompartir}
+              onChange={e => setFormatoCompartir(e.target.checked)}
+            />
+            Compartir con mi institución
+          </label>
+        </div>
+
+        {!reportType && (
+          <p style={{
+            margin: "8px 0 0", fontSize: 11, color: "var(--muted)",
+            fontFamily: "'IBM Plex Mono', monospace",
+          }}>Selecciona primero el tipo de reporte para subir un formato.</p>
+        )}
+        {formatoSubido && (
+          <p style={{
+            margin: "8px 0 0", fontSize: 12, color: "var(--ink)",
+            fontFamily: "'IBM Plex Sans', sans-serif",
+          }}>
+            Usando: <b>{formatoSubido.nombre_archivo}</b>
+            {formatoSubido.num_campos_detectados ? ` · ${formatoSubido.num_campos_detectados} campos` : ""}
+          </p>
+        )}
+      </div>
+    </>
+  );
+}
+
+function FormSection({
+  formRef, reportType, setReportType, form, set, generate, canSubmit, error,
+  user, cursos, selectedCurso, selectCurso,
+  formatosDisponibles, formatoSubido, selectFormato,
+  uploadingFormato, handleFormatoUpload,
+  formatoCompartir, setFormatoCompartir,
+  saveAsTemplate, plantillas, loadTemplate,
+}) {
   return (
     <section ref={formRef} style={{ padding: "72px 32px", background: "var(--paper-2)", borderBottom: "1px solid var(--line)" }}>
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
@@ -306,6 +452,48 @@ function FormSection({ formRef, reportType, setReportType, form, set, generate, 
               </div>
             )}
 
+            {user && plantillas?.length > 0 && (
+              <>
+                <SectionLabel>Cargar plantilla</SectionLabel>
+                <select
+                  value=""
+                  onChange={e => {
+                    const p = plantillas.find(x => x.id === e.target.value);
+                    if (p) loadTemplate(p);
+                  }}
+                  style={{
+                    width: "100%", padding: "10px 12px", marginBottom: 16,
+                    background: "var(--paper)", border: "1px solid var(--line)",
+                    borderRadius: 8, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+                    color: "var(--ink)",
+                  }}
+                >
+                  <option value="">— Seleccionar plantilla —</option>
+                  {plantillas
+                    .filter(p => !reportType || p.tipo_reporte === reportType)
+                    .map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre} · {p.tipo_reporte}
+                      </option>
+                    ))}
+                </select>
+              </>
+            )}
+
+            <CursoSelector cursos={cursos} selectedCurso={selectedCurso} selectCurso={selectCurso} />
+
+            <FormatoInstitucional
+              reportType={reportType}
+              formatosDisponibles={formatosDisponibles}
+              formatoSubido={formatoSubido}
+              uploadingFormato={uploadingFormato}
+              handleFormatoUpload={handleFormatoUpload}
+              selectFormato={selectFormato}
+              formatoCompartir={formatoCompartir}
+              setFormatoCompartir={setFormatoCompartir}
+              user={user}
+            />
+
             <SectionLabel>Datos del docente</SectionLabel>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
               {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
@@ -321,22 +509,39 @@ function FormSection({ formRef, reportType, setReportType, form, set, generate, 
               {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} />)}
             </div>
 
-            <button
-              className="btn"
-              onClick={generate}
-              disabled={!canSubmit}
-              style={{
-                width: "100%", padding: "14px 0", marginTop: 16,
-                background: canSubmit ? "var(--ink)" : "var(--line)",
-                color: canSubmit ? "var(--paper)" : "var(--muted)",
-                fontSize: 14, fontWeight: 600, borderRadius: 10,
-                cursor: canSubmit ? "pointer" : "not-allowed",
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                letterSpacing: ".01em",
-              }}
-            >
-              Generar reporte
-            </button>
+            <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+              <button
+                className="btn"
+                onClick={generate}
+                disabled={!canSubmit}
+                style={{
+                  flex: 1, minWidth: 200, padding: "14px 0",
+                  background: canSubmit ? "var(--ink)" : "var(--line)",
+                  color: canSubmit ? "var(--paper)" : "var(--muted)",
+                  fontSize: 14, fontWeight: 600, borderRadius: 10,
+                  cursor: canSubmit ? "pointer" : "not-allowed",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  letterSpacing: ".01em",
+                }}
+              >
+                Generar reporte
+              </button>
+              {user && (
+                <button
+                  className="btn btn-ghost"
+                  onClick={saveAsTemplate}
+                  disabled={!reportType}
+                  style={{
+                    padding: "13px 18px", fontSize: 13, borderRadius: 10,
+                    border: "1px solid var(--line)", background: "var(--paper)",
+                    color: reportType ? "var(--ink)" : "var(--muted)",
+                    cursor: reportType ? "pointer" : "not-allowed",
+                  }}
+                >
+                  Guardar como plantilla
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -426,7 +631,16 @@ function CtaSection() {
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
-export default function LandingPage({ reportType, setReportType, form, set, generate, canSubmit, error, scrollToForm }) {
+export default function LandingPage(props) {
+  const {
+    reportType, setReportType, form, set, generate, canSubmit, error, scrollToForm,
+    user, cursos, selectedCurso, selectCurso,
+    formatosDisponibles, formatoSubido, selectFormato,
+    uploadingFormato, handleFormatoUpload,
+    formatoCompartir, setFormatoCompartir,
+    saveAsTemplate, plantillas, loadTemplate,
+  } = props;
+
   const formRef = useRef(null);
 
   const handleScrollToForm = () => {
@@ -448,6 +662,20 @@ export default function LandingPage({ reportType, setReportType, form, set, gene
         generate={generate}
         canSubmit={canSubmit}
         error={error}
+        user={user}
+        cursos={cursos}
+        selectedCurso={selectedCurso}
+        selectCurso={selectCurso}
+        formatosDisponibles={formatosDisponibles}
+        formatoSubido={formatoSubido}
+        selectFormato={selectFormato}
+        uploadingFormato={uploadingFormato}
+        handleFormatoUpload={handleFormatoUpload}
+        formatoCompartir={formatoCompartir}
+        setFormatoCompartir={setFormatoCompartir}
+        saveAsTemplate={saveAsTemplate}
+        plantillas={plantillas}
+        loadTemplate={loadTemplate}
       />
       <QuoteSection />
       <CtaSection />

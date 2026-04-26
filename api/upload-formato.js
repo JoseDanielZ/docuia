@@ -33,11 +33,22 @@ export default async function handler(req, res) {
 
   // Parse multipart form data (file upload)
   // For Vercel, we'll use base64 encoding from frontend
-  const { filename, content, tipo_reporte, es_ejemplo } = req.body;
+  const { filename, content, tipo_reporte, es_ejemplo, compartido } = req.body;
 
   if (!filename || !content || !tipo_reporte) {
     return res.status(400).json({ error: 'Faltan datos: filename, content, tipo_reporte' });
   }
+
+  // Buscar institución del docente (para asociarla al formato si se comparte)
+  let institucionDelDocente = '';
+  try {
+    const profileRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=institucion`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const profileData = await profileRes.json();
+    institucionDelDocente = profileData?.[0]?.institucion || '';
+  } catch (e) { /* ignorar, no es crítico */ }
 
   try {
     // Decode base64 file content
@@ -107,6 +118,8 @@ export default async function handler(req, res) {
         contenido_extraido: textoExtraido,
         es_ejemplo: !!es_ejemplo,
         num_campos_detectados: numCampos,
+        institucion: institucionDelDocente,
+        compartido: !!compartido,
         activo: true
       })
     });
