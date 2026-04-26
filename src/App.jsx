@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
 
-import { REPORT_TYPES, buildPrompt, getRequiredFields, getSystemPrompt } from "./config";
-import { saveToSupabase } from "./utils/supabase.js";
+import { REPORT_TYPES, buildPrompt, getRequiredFields } from "./config";
+import { recordVisita } from "./utils/telemetry.js";
 import { getUser, logout } from "./utils/auth.js";
 import { truncateForLLM } from "./utils/formatoText.js";
 
@@ -66,7 +66,7 @@ export default function App() {
       loadFormatos();
       loadPlantillas();
     }
-    saveToSupabase("visitas", { referrer: document.referrer || "directo" });
+    recordVisita(document.referrer || "directo");
   }, []);
 
   const set = (k, v) => setFormState(p => ({ ...p, [k]: v }));
@@ -287,6 +287,10 @@ export default function App() {
 
   // ===== GENERAR REPORTE =====
   const generate = async () => {
+    if (!token) {
+      setError("Inicia sesión para generar reportes.");
+      return;
+    }
     const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
     const missing = requiredFields.filter(k => !form[k]?.trim());
     if (missing.length > 0) { setError(`Complete los campos obligatorios: ${missing.join(', ')}`); return; }
@@ -309,12 +313,11 @@ export default function App() {
         formatoTexto,
         modo: formatoModo,
       });
-      const systemPrompt = getSystemPrompt({ hasFormato: !!formatoTexto });
 
       const res  = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalPrompt, system: systemPrompt }),
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ prompt: finalPrompt }),
       });
       const data = await res.json();
       clearInterval(iv);
@@ -322,20 +325,25 @@ export default function App() {
       if (data.text) {
         setReport(data.text);
         setView("report");
-        // Guardar en historial (con user_id si hay sesión, así aparece en HistorialView)
-        saveToSupabase("reportes", {
-          user_id:          user?.id || null,
-          email_docente:    form.email,
-          nombre_docente:   form.docente,
-          institucion:      form.institucion,
-          curso:            form.curso,
-          periodo:          form.periodo,
-          tipo_reporte:     reportType,
-          datos_ingresados: form,
-          reporte_generado: data.text,
-        });
-        // Recargar historial en background
-        if (token) loadReportes();
+        try {
+          const saveRes = await fetch("/api/reportes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify({
+              email_docente:    form.email,
+              nombre_docente:   form.docente,
+              institucion:      form.institucion,
+              curso:            form.curso,
+              periodo:          form.periodo,
+              tipo_reporte:     reportType,
+              datos_ingresados: form,
+              reporte_generado: data.text,
+            }),
+          });
+          const saveData = await saveRes.json();
+          if (saveData.reporte?.id) setCurrentReporteId(saveData.reporte.id);
+        } catch { /* historial opcional */ }
+        loadReportes();
       } else {
         setError(data.error || "No se pudo generar. Intenta de nuevo.");
         setView("form");
@@ -351,7 +359,22 @@ export default function App() {
     navigator.clipboard.writeText(report);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    saveToSupabase("reportes_copiados", { email_docente: form.email, tipo: reportType });
+    if (token) {
+      fetch("/api/reportes-copiados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ tipo: reportType }),
+      }).catch(() => {});
+    }
+  };
+
+  const recordReferralShare = () => {
+    if (!token) return;
+    fetch("/api/referrals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({}),
+    }).catch(() => {});
   };
 
   const reset = () => {
@@ -466,6 +489,7 @@ export default function App() {
           copyReport={copyReport}
           copied={copied}
           onSaveEdits={currentReporteId ? saveReportEdits : null}
+          onReferralShare={recordReferralShare}
         />
       )}
     </div>

@@ -45,15 +45,25 @@ export default async function handler(req, res) {
     if (!nombre || !tipo_reporte) {
       return res.status(400).json({ error: 'nombre y tipo_reporte son obligatorios' });
     }
+    const datosObj = datos && typeof datos === 'object' ? datos : {};
+    let datosJson;
+    try {
+      datosJson = JSON.stringify(datosObj);
+    } catch {
+      return res.status(400).json({ error: 'datos no válidos' });
+    }
+    if (datosJson.length > 200_000) {
+      return res.status(413).json({ error: 'Los datos de la plantilla son demasiado grandes' });
+    }
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/plantillas`, {
         method: 'POST',
         headers: { ...baseHeaders, Prefer: 'return=representation' },
         body: JSON.stringify({
           user_id: user.id,
-          nombre,
-          tipo_reporte,
-          datos: datos || {},
+          nombre: String(nombre).slice(0, 200),
+          tipo_reporte: String(tipo_reporte).slice(0, 64),
+          datos: datosObj,
           activo: true,
         }),
       });

@@ -51,8 +51,11 @@ export default async function handler(req, res) {
   } catch (e) { /* ignorar, no es crítico */ }
 
   try {
-    // Decode base64 file content
+    // Decode base64 file content (tope ~10 MiB para evitar DoS de memoria)
     const buffer = Buffer.from(content, 'base64');
+    if (buffer.length > 10 * 1024 * 1024) {
+      return res.status(413).json({ error: 'El archivo supera el tamaño máximo permitido (10 MB)' });
+    }
     const fileExt = filename.toLowerCase().split('.').pop();
     
     let textoExtraido = '';

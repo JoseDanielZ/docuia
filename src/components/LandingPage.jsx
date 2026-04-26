@@ -639,6 +639,7 @@ function FormSection({
   }, [reportType]);
 
   const generateHover = magneticHover();
+  const canGenerate = canSubmit && !!user;
 
   return (
     <section ref={formRef} style={{ padding: "72px 32px", background: "var(--paper-2)", borderBottom: "1px solid var(--line)" }}>
@@ -790,14 +791,14 @@ function FormSection({
               <button
                 className="btn"
                 onClick={generate}
-                disabled={!canSubmit}
-                {...(canSubmit ? generateHover : {})}
+                disabled={!canGenerate}
+                {...(canGenerate ? generateHover : {})}
                 style={{
                   flex: 1, minWidth: 200, padding: "14px 0",
-                  background: canSubmit ? "var(--ink)" : "var(--line)",
-                  color: canSubmit ? "var(--paper)" : "var(--muted)",
+                  background: canGenerate ? "var(--ink)" : "var(--line)",
+                  color: canGenerate ? "var(--paper)" : "var(--muted)",
                   fontSize: 14, fontWeight: 600, borderRadius: 10,
-                  cursor: canSubmit ? "pointer" : "not-allowed",
+                  cursor: canGenerate ? "pointer" : "not-allowed",
                   fontFamily: "'IBM Plex Sans', sans-serif",
                   letterSpacing: ".01em",
                   willChange: "transform",
@@ -821,6 +822,16 @@ function FormSection({
                 </button>
               )}
             </div>
+            {reportType && !user && (
+              <p style={{
+                margin: "12px 0 0", textAlign: "center",
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: 13, color: "var(--muted)",
+              }}>
+                <a href="/login.html" style={{ color: "var(--accent)" }}>Inicia sesión</a>
+                {" "}para generar y guardar reportes en tu historial.
+              </p>
+            )}
           </div>
         )}
       </div>

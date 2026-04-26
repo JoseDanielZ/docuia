@@ -34,6 +34,8 @@ GROQ_API_KEY=gsk_...
 
 > La `SUPABASE_SERVICE_KEY` (service_role) es necesaria en el servidor para crear usuarios y acceder a la tabla `profiles` sin RLS.
 
+**Comportamiento de seguridad (resumen):** la generación con IA (`POST /api/generate`) exige JWT válido; el mensaje `system` lo define solo el servidor (no se acepta desde el cliente). Visitas y analíticas ligera pasan por rutas `/api/visitas`, `/api/reportes-copiados` y `/api/referrals` en lugar de escribir con la anon key desde el navegador. El historial se guarda con `POST /api/reportes` usando el `user_id` del token.
+
 ### 3. Configurar Supabase
 
 > Si ya tenías la base anterior, ejecuta el archivo `migrations.sql` (en la raíz del repo) en el SQL Editor de Supabase. Trae los cambios para **formatos compartidos por institución**, **plantillas** e **historial por usuario**.
@@ -238,7 +240,7 @@ docuia/
     │                              · buildPrompt(type, data): construye el prompt final
     │                                con estructura obligatoria por tipo de reporte
     ├── utils/
-    │   ├── supabase.js         ← saveToSupabase(table, data)
+    │   ├── telemetry.js        ← recordVisita() vía /api/visitas
     │   ├── auth.js             ← getUser(): lee usuario del localStorage
     │   │                          logout(): limpia sesión → /login.html
     │   └── download.js         ← downloadWord, downloadPDF, downloadExcel, printReport

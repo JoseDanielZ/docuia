@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES } from "../config.js";
 import { downloadWord, downloadPDF, downloadExcel, printReport } from "../utils/download.js";
-import { saveToSupabase } from "../utils/supabase.js";
 import { pop, magneticHover } from "../utils/anim.js";
 
 // ── Formato toolbar (prototipo B) ─────────────────────────────────────────────
@@ -68,7 +67,7 @@ function FormatToolbar({ onFormat }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function ReportView({ report: initialReport, reportType, form, fileName, reset, copyReport, copied, onSaveEdits }) {
+export default function ReportView({ report: initialReport, reportType, form, fileName, reset, copyReport, copied, onSaveEdits, onReferralShare }) {
   const [report, setReport] = useState(initialReport);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
@@ -120,7 +119,7 @@ export default function ReportView({ report: initialReport, reportType, form, fi
 
   const handleShare = () => {
     navigator.clipboard.writeText(`DocuIA — Reportes institucionales con IA: ${window.location.href}`);
-    saveToSupabase("referrals", { email_from: form.email });
+    onReferralShare?.();
     alert("Enlace copiado. Envíelo por WhatsApp o correo.");
   };
 
