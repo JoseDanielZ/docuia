@@ -1,4 +1,29 @@
-export default function Field({ label, k, ph, area, req, half, form, set }) {
+export default function Field({ label, k, ph, area, req, half, form, set, group }) {
+  // Marcadores de agrupación en FORM_FIELDS (ej. { k: "_g1", group: "..." }):
+  // no son campos editables; antes se pintaban como inputs vacíos sin etiqueta.
+  if (typeof k === "string" && k.startsWith("_")) {
+    if (!group) return null;
+    return (
+      <div
+        style={{
+          gridColumn: "1 / -1",
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 10,
+          fontWeight: 500,
+          color: "var(--muted)",
+          letterSpacing: ".1em",
+          textTransform: "uppercase",
+          marginTop: 18,
+          marginBottom: 8,
+          paddingBottom: 8,
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
+        {group}
+      </div>
+    );
+  }
+
   const base = {
     all: "unset",
     background: "transparent",
