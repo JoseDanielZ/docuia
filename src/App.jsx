@@ -13,6 +13,9 @@ import ReportView     from "./components/ReportView.jsx";
 import CursosView     from "./components/CursosView.jsx";
 import PlantillasView from "./components/PlantillasView.jsx";
 import HistorialView  from "./components/HistorialView.jsx";
+import DashboardView  from "./components/DashboardView.jsx";
+
+const DRAFT_KEY = 'docuia_draft';
 
 const LOAD_MSGS = [
   "Analizando datos del curso...",
@@ -51,6 +54,9 @@ export default function App() {
   // Plantillas
   const [plantillas, setPlantillas] = useState([]);
 
+  // Borrador automático
+  const [draftRestored, setDraftRestored] = useState(false);
+
   // Historial
   const [reportes, setReportes] = useState([]);
   const [historialLoading, setHistorialLoading] = useState(false);
@@ -67,7 +73,31 @@ export default function App() {
       loadPlantillas();
     }
     recordVisita(document.referrer || "directo");
+
+    // Restaurar borrador (excluyendo docente/email que vienen del perfil)
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const { form: savedForm, reportType: savedType } = JSON.parse(saved);
+        const skip = new Set(['docente', 'email']);
+        const formData = Object.fromEntries(Object.entries(savedForm || {}).filter(([k]) => !skip.has(k)));
+        const hasContent = Object.values(formData).some(v => v?.toString().trim());
+        if (hasContent || savedType) {
+          setFormState(p => ({ ...p, ...formData }));
+          if (savedType) setReportType(savedType);
+          setDraftRestored(true);
+        }
+      }
+    } catch { /* ignorar borrador corrupto */ }
   }, []);
+
+  // Auto-guardar borrador con debounce de 800ms
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, reportType })); } catch { /* ignorar */ }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [form, reportType]);
 
   const set = (k, v) => setFormState(p => ({ ...p, [k]: v }));
 
@@ -325,6 +355,8 @@ export default function App() {
       if (data.text) {
         setReport(data.text);
         setView("report");
+        try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
+        setDraftRestored(false);
         try {
           const saveRes = await fetch("/api/reportes", {
             method: "POST",
@@ -386,6 +418,8 @@ export default function App() {
     setSelectedCurso(null);
     setFormatoSubido(null);
     setCurrentReporteId(null);
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
+    setDraftRestored(false);
   };
 
   const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
@@ -406,6 +440,7 @@ export default function App() {
         onCursosClick={() => setView("cursos")}
         onPlantillasClick={() => setView("plantillas")}
         onHistorialClick={() => { setView("historial"); loadReportes(); }}
+        onDashboardClick={() => { setView("dashboard"); loadReportes(); }}
       />
 
       {view === "cursos" && (
@@ -434,6 +469,15 @@ export default function App() {
           reportes={reportes}
           openReport={openReportFromHistory}
           deleteReport={deleteReporte}
+          goBack={() => setView("form")}
+          loading={historialLoading}
+        />
+      )}
+
+      {view === "dashboard" && (
+        <DashboardView
+          reportes={reportes}
+          cursos={cursos}
           goBack={() => setView("form")}
           loading={historialLoading}
         />
@@ -474,6 +518,11 @@ export default function App() {
           saveAsTemplate={saveAsTemplate}
           plantillas={plantillas}
           loadTemplate={loadTemplate}
+          draftRestored={draftRestored}
+          onDismissDraft={() => {
+            try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
+            setDraftRestored(false);
+          }}
         />
       )}
 

@@ -11,6 +11,7 @@ export default function Navbar({
   onCursosClick,
   onPlantillasClick,
   onHistorialClick,
+  onDashboardClick,
 }) {
   const navRef = useRef(null);
   const logoRef = useRef(null);
@@ -123,6 +124,9 @@ export default function Navbar({
               </button>
               <button onClick={onHistorialClick} style={navBtnStyle} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
                 Historial
+              </button>
+              <button onClick={onDashboardClick} style={navBtnStyle} onMouseEnter={handleBtnEnter} onMouseLeave={handleBtnLeave}>
+                Métricas
               </button>
               <span style={{
                 fontFamily: "'IBM Plex Mono', monospace",

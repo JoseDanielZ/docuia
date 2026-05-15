@@ -617,6 +617,7 @@ function FormSection({
   formatoCompartir, setFormatoCompartir,
   formatoModo, setFormatoModo,
   saveAsTemplate, plantillas, loadTemplate,
+  draftRestored, onDismissDraft,
 }) {
   const cardsRef = useRef(null);
   const formInnerRef = useRef(null);
@@ -674,6 +675,26 @@ function FormSection({
           Privacidad: el contenido del formulario se envía de forma cifrada (HTTPS) a nuestros servidores y a un proveedor de IA para redactar el informe.
           No incluyas contraseñas, datos bancarios ni información que tu institución prohíba compartir con terceros. Revisa siempre el texto antes de enviarlo oficialmente.
         </p>
+
+        {draftRestored && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "color-mix(in srgb, var(--accent) 8%, var(--paper-2))",
+            border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
+            borderRadius: 8, padding: "10px 14px", marginBottom: 20,
+            fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+            color: "var(--ink)",
+          }}>
+            <span>Borrador restaurado — continuando desde donde lo dejaste.</span>
+            <button onClick={onDismissDraft} style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--muted)", fontSize: 12, padding: "2px 8px",
+              fontFamily: "inherit",
+            }}>
+              Descartar
+            </button>
+          </div>
+        )}
 
         {!reportType ? (
           <div ref={cardsRef} className="g2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -915,6 +936,7 @@ export default function LandingPage(props) {
     formatoCompartir, setFormatoCompartir,
     formatoModo, setFormatoModo,
     saveAsTemplate, plantillas, loadTemplate,
+    draftRestored, onDismissDraft,
   } = props;
 
   const formRef = useRef(null);
@@ -955,6 +977,8 @@ export default function LandingPage(props) {
         saveAsTemplate={saveAsTemplate}
         plantillas={plantillas}
         loadTemplate={loadTemplate}
+        draftRestored={draftRestored}
+        onDismissDraft={onDismissDraft}
       />
       <CtaSection />
     </>

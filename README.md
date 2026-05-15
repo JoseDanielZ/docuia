@@ -5,9 +5,10 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 ## Stack
 
 | Capa | Tecnología |
-|---|---|
+| --- | --- |
 | **Frontend** | React 18 + Vite 5 |
 | **Estilos** | CSS puro con variables nativas (sin frameworks) |
+| **Animaciones** | Anime.js v4 |
 | **Backend local** | Express 4 (servidor de desarrollo) |
 | **Backend producción** | Vercel Serverless Functions |
 | **Base de datos** | Supabase (PostgreSQL + Auth) |
@@ -19,12 +20,15 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 ## Setup local
 
 ### 1. Instalar dependencias
+
 ```bash
 npm install
 ```
 
 ### 2. Variables de entorno
+
 Crear archivo `.env` en la raíz del proyecto:
+
 ```env
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_KEY=eyJhbGci...          # anon key (frontend)
@@ -34,13 +38,13 @@ GROQ_API_KEY=gsk_...
 
 > La `SUPABASE_SERVICE_KEY` (service_role) es necesaria en el servidor para crear usuarios y acceder a la tabla `profiles` sin RLS.
 
-**Comportamiento de seguridad (resumen):** la generación con IA (`POST /api/generate`) exige JWT válido; el mensaje `system` lo define solo el servidor (no se acepta desde el cliente). Visitas y analítica ligera van a **`POST /api/telemetry`** con `kind: 'visita' | 'reporte_copiado' | 'referral'` (en lugar de escribir con la anon key desde el navegador). El historial se guarda con `POST /api/reportes` usando el `user_id` del token.
+**Comportamiento de seguridad (resumen):** la generación con IA (`POST /api/generate`) exige JWT válido; el mensaje `system` lo define solo el servidor (no se acepta desde el cliente). Visitas y analítica ligera van a **`POST /api/telemetry`** con `kind: 'visita' | 'reporte_copiado' | 'referral'`. El historial se guarda con `POST /api/reportes` usando el `user_id` del token.
 
 **Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **8** funciones en `/api` (`auth`, `generate`, `cursos`, `upload-formato`, `formatos`, `plantillas`, `reportes`, `telemetry`). Los helpers compartidos están en `lib/server/` (no cuentan como función). Auth unificado: **`POST /api/auth`** con `action: 'login'|'signup'|'recover'`.
 
-**CSP y cabeceras:** `vercel.json` aplica Content-Security-Policy, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` y `Permissions-Policy`. En local, `server.js` usa la misma política vía `lib/server/securityHeaders.js`. La página de login carga `login-main.js` (sin scripts inline) para poder usar `script-src 'self'`.
+**CSP y cabeceras:** `vercel.json` aplica Content-Security-Policy, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` y `Permissions-Policy`. En local, `server.js` usa la misma política vía `lib/server/securityHeaders.js`.
 
-**RLS en Supabase:** ejecuta `supabase-rls-hardening.sql` en el SQL Editor para cerrar inserciones anónimas en tablas que solo debe escribir el backend y, si existe la columna `user_id` en `reportes`, permitir lectura/escritura al dueño autenticado.
+**RLS en Supabase:** ejecuta `supabase-rls-hardening.sql` en el SQL Editor para cerrar inserciones anónimas en tablas que solo debe escribir el backend.
 
 ### 3. Configurar Supabase
 
@@ -60,6 +64,7 @@ CREATE TABLE visitas (
 CREATE TABLE reportes (
   id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at       TIMESTAMPTZ DEFAULT now(),
+  user_id          UUID REFERENCES auth.users(id),
   email_docente    TEXT,
   nombre_docente   TEXT NOT NULL,
   institucion      TEXT,
@@ -68,7 +73,8 @@ CREATE TABLE reportes (
   tipo_reporte     TEXT NOT NULL,
   datos_ingresados JSONB,
   reporte_generado TEXT,
-  fue_copiado      BOOLEAN DEFAULT false
+  fue_copiado      BOOLEAN DEFAULT false,
+  archivado        BOOLEAN DEFAULT false
 );
 
 -- Tabla de reportes copiados (analítica)
@@ -166,7 +172,7 @@ O conectar el repo en [vercel.com](https://vercel.com) y agregar las variables d
 ## Scripts npm
 
 | Comando | Descripción |
-|---|---|
+| --- | --- |
 | `npm run dev` | Inicia Vite (frontend + proxy /api) |
 | `npm run api` | Inicia Express local para las rutas de API |
 | `npm run build` | Compila el frontend para producción |
@@ -176,7 +182,7 @@ O conectar el repo en [vercel.com](https://vercel.com) y agregar las variables d
 
 ## Estructura del proyecto
 
-```
+```text
 docuia/
 ├── index.html                  ← entrada HTML, carga fuentes Google y monta React
 ├── vite.config.js              ← Vite config con proxy /api → localhost:3000
@@ -189,7 +195,6 @@ docuia/
 │   ├── login.html              ← autenticación SPA (login / signup / recuperar)
 │   │                              · Registro incluye institución y cargo
 │   │                              · Validación de token JWT antes de redirigir
-│   │                                (evita redirecciones por tokens expirados)
 │   └── login.css               ← estilos del login (separados del HTML)
 │
 ├── api/                        ← handlers serverless (Vercel en prod, Express en dev)
@@ -207,29 +212,28 @@ docuia/
 │   ├── plantillas.js           ← plantillas privadas de reporte
 │   │                              GET / POST { nombre, tipo_reporte, datos } / DELETE
 │   ├── reportes.js             ← historial de reportes (por usuario autenticado)
-│   │                              GET: lista
+│   │                              GET: lista (incluye fue_copiado para métricas)
 │   │                              GET ?id=: obtener reporte completo
 │   │                              PATCH ?id=: actualizar `reporte_generado`
 │   │                              DELETE ?id=: archivar
-│   └── auth/
-│       ├── login.js            ← verifica credenciales con Supabase Auth,
-│       │                          devuelve access_token + refresh_token + user
-│       ├── signup.js           ← registra usuario en Supabase Auth y crea fila
-│       │                          en profiles (name, role, institucion, cargo)
-│       └── recover.js          ← envía email de recuperación vía Supabase
+│   ├── telemetry.js            ← registra visitas, reportes copiados y referrals
+│   │                              POST { kind: 'visita'|'reporte_copiado'|'referral' }
+│   └── auth.js                 ← auth unificado: login / signup / recover
+│                                  POST { action: 'login'|'signup'|'recover', ... }
 │
 └── src/
     ├── main.jsx                ← monta App en el DOM
     ├── App.jsx                 ← orquestador central de vistas y estado:
     │                              · Vistas: landing, form, cursos, plantillas,
-    │                                historial, loading, report
+    │                                historial, dashboard, loading, report
     │                              · Estado: formulario, tipo de reporte, cursos,
-    │                                plantillas, historial, formato institucional
+    │                                plantillas, historial, formato institucional,
+    │                                borrador automático (localStorage)
     │                              · CRUD de cursos (loadCursos, createCurso,
     │                                deleteCurso, selectCurso)
     │                              · Upload de formato institucional (PDF/Excel)
-    │                              · Inyección del formato al prompt de generación
-    │                              · Validación de campos requeridos por tipo
+    │                              · Auto-guardado de borrador (debounce 800 ms)
+    │                                y restauración al recargar la página
     ├── App.css                 ← sistema de diseño:
     │                              · Variables CSS (--ink, --paper, --accent, etc.)
     │                              · Animaciones (fadeUp, spin, pulse)
@@ -249,32 +253,44 @@ docuia/
     │   ├── telemetry.js        ← recordVisita() vía POST /api/telemetry
     │   ├── auth.js             ← getUser(): lee usuario del localStorage
     │   │                          logout(): limpia sesión → /login.html
-    │   └── download.js         ← downloadWord, downloadPDF, downloadExcel, printReport
+    │   ├── download.js         ← downloadWord, downloadPDF, downloadExcel, printReport
+    │   ├── formatoText.js      ← truncateForLLM, getFormatoPreview
+    │   └── anim.js             ← hooks de Anime.js: useEnter, useStaggerChildren,
+    │                              useCountUp, useSplitWordsEnter, useScrollReveal,
+    │                              magneticHover, pop
     └── components/
-        ├── Navbar.jsx          ← barra superior; muestra "Mis cursos (N)" si hay cursos
-        ├── Field.jsx           ← campo reutilizable (input / textarea) con label y hint
-        ├── CursosView.jsx      ← vista completa de gestión de cursos:
+        ├── Navbar.jsx          ← barra superior con botones: Mis cursos (N),
+        │                          Plantillas, Historial, Métricas, Salir
+        ├── Field.jsx           ← campo reutilizable (input / textarea) con label,
+        │                          hint y soporte de grupos de etiquetas
+        ├── CursosView.jsx      ← vista de gestión de cursos:
         │                          · Grid de tarjetas de cursos guardados
         │                          · Modal para crear nuevo curso
-        │                          · Eliminar curso
         ├── PlantillasView.jsx  ← vista de plantillas guardadas (cargar/eliminar)
         ├── HistorialView.jsx   ← vista del historial de reportes generados
-        ├── CursosView.css      ← estilos compartidos por Cursos/Plantillas/Historial
+        ├── DashboardView.jsx   ← vista de métricas del docente:
+        │                          · Tarjetas: reportes generados, cursos registrados,
+        │                            copiados, tipo más usado
+        │                          · Barras de desglose por tipo de reporte
+        │                          · Datos calculados del lado del cliente
+        ├── CursosView.css      ← estilos compartidos por Cursos/Plantillas/
+        │                          Historial/Dashboard
         ├── LandingPage.jsx     ← página principal:
         │                          · HeroSection, StatsSection, HowItWorksSection
-        │                          · FormSection con selector de curso guardado,
-        │                            upload de formato institucional y formulario
-        │                          · QuoteSection, CtaSection, Footer
+        │                          · FormSection con: selector de curso guardado,
+        │                            upload de formato institucional, formulario,
+        │                            banner de borrador restaurado
+        │                          · CtaSection, Footer
         ├── LoadingView.jsx     ← spinner + mensajes animados durante generación
         └── ReportView.jsx      ← reporte generado con descarga Word/PDF/Excel/Imprimir,
-                                   copia al portapapeles y botón de compartir
+                                   copia al portapapeles, edición inline y compartir
 ```
 
 ---
 
 ## Flujo de autenticación
 
-```
+```text
 /login.html
   └─ Al cargar: verifica JWT en localStorage
        ├─ Token válido (no expirado) → redirige a /
@@ -293,13 +309,34 @@ docuia/
 
 ## Flujo de generación de reportes
 
-```
+```text
 Formulario → buildPrompt(type, form)
   └─ Si hay formato institucional subido: inyecta contenido extraído al prompt
   └─ POST /api/generate → Groq API (llama-3.3-70b-versatile)
   └─ Éxito: muestra ReportView → descarga Word / PDF / Excel / Imprimir
   └─ POST /api/reportes guarda en historial (user_id del token)
+  └─ localStorage.removeItem('docuia_draft') — limpia el borrador automático
 ```
+
+---
+
+## Borrador automático
+
+El formulario se guarda automáticamente en `localStorage` (clave `docuia_draft`) cada 800 ms mientras el docente escribe. Al recargar la página, el borrador se restaura (excluyendo nombre y email que siempre vienen del perfil de sesión) y se muestra un banner con opción de descartarlo. El borrador se elimina al generar un reporte exitosamente o al hacer reset.
+
+---
+
+## Dashboard de métricas del docente
+
+Accesible desde **Navbar → Métricas**. Muestra estadísticas calculadas del lado del cliente a partir de los reportes e historial del docente autenticado:
+
+| Métrica | Fuente |
+| --- | --- |
+| Reportes generados (total y último mes) | `GET /api/reportes` |
+| Cursos registrados | `GET /api/cursos` |
+| Reportes copiados | campo `fue_copiado` en `reportes` |
+| Tipo de reporte más usado | agrupación por `tipo_reporte` |
+| Barras de desglose por tipo | porcentaje relativo al máximo |
 
 ---
 
@@ -329,5 +366,6 @@ SELECT COUNT(DISTINCT user_id) AS docentes_con_cursos FROM cursos;
 ---
 
 ## Equipo
+
 Piñero · Heredia · Zumárraga · Iza
 PUCE — Emprendimiento Tecnológico 2026

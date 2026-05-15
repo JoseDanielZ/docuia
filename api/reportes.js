@@ -100,7 +100,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/reportes?user_id=eq.${user.id}&archivado=eq.false&order=created_at.desc&select=id,created_at,nombre_docente,curso,periodo,tipo_reporte,institucion`,
+        `${SUPABASE_URL}/rest/v1/reportes?user_id=eq.${user.id}&archivado=eq.false&order=created_at.desc&select=id,created_at,nombre_docente,curso,periodo,tipo_reporte,institucion,fue_copiado`,
         { headers: baseHeaders }
       );
       const reportes = await r.json();
