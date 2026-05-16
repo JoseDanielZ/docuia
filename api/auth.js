@@ -101,6 +101,35 @@ async function handleSignup(req, res) {
   }
 }
 
+async function handleRefresh(req, res) {
+  const { refresh_token } = req.body;
+  if (!refresh_token || typeof refresh_token !== 'string') {
+    return res.status(400).json({ error: 'refresh_token es obligatorio' });
+  }
+
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_KEY;
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+      body: JSON.stringify({ refresh_token }),
+    });
+    const data = await r.json();
+    if (data.error) {
+      return res.status(401).json({ error: 'Sesión expirada. Inicia sesión nuevamente.' });
+    }
+    return res.status(200).json({
+      access_token:  data.access_token,
+      refresh_token: data.refresh_token,
+      user:          data.user,
+    });
+  } catch {
+    return res.status(500).json({ error: 'Error del servidor' });
+  }
+}
+
 async function handleRecover(req, res) {
   const ip = clientIp(req);
   if (!allowRateLimit(`recover:${ip}`, 8, 3_600_000)) {
@@ -136,9 +165,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const action = req.body?.action;
-  if (action === 'login') return handleLogin(req, res);
-  if (action === 'signup') return handleSignup(req, res);
+  if (action === 'login')   return handleLogin(req, res);
+  if (action === 'signup')  return handleSignup(req, res);
   if (action === 'recover') return handleRecover(req, res);
+  if (action === 'refresh') return handleRefresh(req, res);
 
-  return res.status(400).json({ error: 'action debe ser login, signup o recover' });
+  return res.status(400).json({ error: 'action debe ser login, signup, recover o refresh' });
 }

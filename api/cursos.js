@@ -1,100 +1,88 @@
-export default async function handler(req, res) {
-  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_KEY;
+import { verifyBearerUser, serviceRestHeaders } from '../lib/server/verifyUser.js';
+import { logger } from '../lib/server/logger.js';
 
-  // Get user from Authorization header
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'No autorizado' });
+function supabaseUrl() {
+  return process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+}
 
-  // Verify token and get user
-  let user;
+async function handleGet(res, user) {
   try {
-    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-      headers: { 'Authorization': `Bearer ${token}`, 'apikey': SUPABASE_KEY }
+    const r = await fetch(
+      `${supabaseUrl()}/rest/v1/cursos?user_id=eq.${user.id}&activo=eq.true&order=created_at.desc`,
+      { headers: serviceRestHeaders() }
+    );
+    const cursos = await r.json();
+    return res.status(200).json({ cursos: Array.isArray(cursos) ? cursos : [] });
+  } catch (error_) {
+    logger.error('cursos GET', { userId: user.id, err: error_.message });
+    return res.status(500).json({ error: 'Error al obtener cursos' });
+  }
+}
+
+async function handlePost(req, res, user) {
+  const { nombre, grado, paralelo, asignatura, num_estudiantes, jornada, año_lectivo, periodo_actual, nombres_estudiantes, observaciones } = req.body || {};
+
+  if (!nombre || !grado || !asignatura) {
+    return res.status(400).json({ error: 'Nombre, grado y asignatura son obligatorios' });
+  }
+  if (typeof nombre !== 'string' || nombre.length > 200) {
+    return res.status(400).json({ error: 'Nombre inválido' });
+  }
+
+  try {
+    const r = await fetch(`${supabaseUrl()}/rest/v1/cursos`, {
+      method: 'POST',
+      headers: { ...serviceRestHeaders(), Prefer: 'return=representation' },
+      body: JSON.stringify({
+        user_id:             user.id,
+        nombre:              String(nombre).slice(0, 200),
+        grado:               String(grado).slice(0, 100),
+        paralelo:            paralelo    ? String(paralelo).slice(0, 20)    : '',
+        asignatura:          String(asignatura).slice(0, 200),
+        num_estudiantes:     Number.parseInt(num_estudiantes, 10) || 0,
+        jornada:             jornada     ? String(jornada).slice(0, 50)     : '',
+        año_lectivo:         año_lectivo ? String(año_lectivo).slice(0, 20) : '',
+        periodo_actual:      periodo_actual ? String(periodo_actual).slice(0, 100) : '',
+        nombres_estudiantes: Array.isArray(nombres_estudiantes) ? nombres_estudiantes : [],
+        observaciones:       observaciones ? String(observaciones).slice(0, 2000) : '',
+        activo: true,
+      }),
     });
-    const userData = await userRes.json();
-    if (!userData.id) return res.status(401).json({ error: 'Token inválido' });
-    user = userData;
-  } catch (e) {
-    return res.status(401).json({ error: 'Token inválido' });
+    const curso = await r.json();
+    if (Array.isArray(curso) && curso[0]) return res.status(201).json({ success: true, curso: curso[0] });
+    return res.status(400).json({ error: 'Error al crear curso' });
+  } catch (error_) {
+    logger.error('cursos POST', { userId: user.id, err: error_.message });
+    return res.status(500).json({ error: 'Error del servidor' });
+  }
+}
+
+async function handleDelete(req, res, user) {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: 'ID del curso es requerido' });
+
+  try {
+    await fetch(`${supabaseUrl()}/rest/v1/cursos?id=eq.${encodeURIComponent(id)}&user_id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: serviceRestHeaders(),
+      body: JSON.stringify({ activo: false }),
+    });
+    return res.status(200).json({ success: true });
+  } catch (error_) {
+    logger.error('cursos DELETE', { userId: user.id, err: error_.message });
+    return res.status(500).json({ error: 'Error al eliminar curso' });
+  }
+}
+
+export default async function handler(req, res) {
+  const { user, error: authErr, status: authStatus } = await verifyBearerUser(req);
+  if (authErr || !user) {
+    return res.status(authStatus || 401).json({ error: authErr || 'No autorizado' });
   }
 
-  // GET - List user's courses
-  if (req.method === 'GET') {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/cursos?user_id=eq.${user.id}&activo=eq.true&order=created_at.desc`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-      });
-      const cursos = await response.json();
-      return res.status(200).json({ cursos });
-    } catch (e) {
-      return res.status(500).json({ error: 'Error al obtener cursos' });
-    }
-  }
-
-  // POST - Create new course
-  if (req.method === 'POST') {
-    const { nombre, grado, paralelo, asignatura, num_estudiantes, jornada, año_lectivo, periodo_actual, nombres_estudiantes, observaciones } = req.body;
-    
-    if (!nombre || !grado || !asignatura) {
-      return res.status(400).json({ error: 'Nombre, grado y asignatura son obligatorios' });
-    }
-
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/cursos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          nombre,
-          grado,
-          paralelo: paralelo || '',
-          asignatura,
-          num_estudiantes: parseInt(num_estudiantes) || 0,
-          jornada: jornada || '',
-          año_lectivo: año_lectivo || '',
-          periodo_actual: periodo_actual || '',
-          nombres_estudiantes: nombres_estudiantes || [],
-          observaciones: observaciones || '',
-          activo: true
-        })
-      });
-
-      const curso = await response.json();
-      if (Array.isArray(curso) && curso[0]) {
-        return res.status(201).json({ success: true, curso: curso[0] });
-      }
-      return res.status(400).json({ error: 'Error al crear curso' });
-    } catch (e) {
-      return res.status(500).json({ error: 'Error del servidor', details: e.message });
-    }
-  }
-
-  // DELETE - Soft delete course (mark as inactive)
-  if (req.method === 'DELETE') {
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: 'ID del curso es requerido' });
-
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/cursos?id=eq.${id}&user_id=eq.${user.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`
-        },
-        body: JSON.stringify({ activo: false })
-      });
-      return res.status(200).json({ success: true });
-    } catch (e) {
-      return res.status(500).json({ error: 'Error al eliminar curso' });
-    }
-  }
+  if (req.method === 'GET')    return handleGet(res, user);
+  if (req.method === 'POST')   return handlePost(req, res, user);
+  if (req.method === 'DELETE') return handleDelete(req, res, user);
 
   return res.status(405).json({ error: 'Método no permitido' });
 }

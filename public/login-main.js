@@ -83,6 +83,7 @@
 
       if (data.success) {
         localStorage.setItem('docuia_token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('docuia_refresh', data.refresh_token);
         localStorage.setItem('docuia_user', JSON.stringify(data.user));
         window.location.href = '/';
       } else {
@@ -136,6 +137,7 @@
       if (data.success) {
         if (data.session?.access_token) {
           localStorage.setItem('docuia_token', data.session.access_token);
+          if (data.session.refresh_token) localStorage.setItem('docuia_refresh', data.session.refresh_token);
           localStorage.setItem('docuia_user', JSON.stringify(data.user));
           window.location.href = '/';
         } else {

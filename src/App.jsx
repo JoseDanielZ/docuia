@@ -3,8 +3,9 @@ import "./App.css";
 
 import { REPORT_TYPES, buildPrompt, getRequiredFields } from "./config";
 import { recordVisita } from "./utils/telemetry.js";
-import { getUser, logout } from "./utils/auth.js";
+import { getUser, getToken, setSession, logout, authFetch, refreshAccessToken } from "./utils/auth.js";
 import { truncateForLLM } from "./utils/formatoText.js";
+import { useToast } from "./components/Toast.jsx";
 
 import Navbar         from "./components/Navbar.jsx";
 import LandingPage    from "./components/LandingPage.jsx";
@@ -15,7 +16,9 @@ import PlantillasView from "./components/PlantillasView.jsx";
 import HistorialView  from "./components/HistorialView.jsx";
 import DashboardView  from "./components/DashboardView.jsx";
 
-const DRAFT_KEY = 'docuia_draft';
+const DRAFT_KEY  = 'docuia_draft';
+const DRAFT_MAX  = 512 * 1024; // 512 KB
+const PAGE_LIMIT = 20;
 
 const LOAD_MSGS = [
   "Analizando datos del curso...",
@@ -26,13 +29,29 @@ const LOAD_MSGS = [
   "Formateando documento final...",
 ];
 
-function getToken() { return localStorage.getItem('docuia_token'); }
+function parseSSEChunk(raw) {
+  let content = '';
+  const lines = raw.split('\n');
+  for (const line of lines) {
+    if (!line.startsWith('data: ')) continue;
+    const data = line.slice(6).trim();
+    if (data === '[DONE]') continue;
+    try {
+      const parsed = JSON.parse(data);
+      content += parsed.choices?.[0]?.delta?.content ?? '';
+    } catch { /* skip malformed chunks */ }
+  }
+  return content;
+}
 
 export default function App() {
+  const toast = useToast();
+
   const [view,       setView]      = useState("landing");
   const [reportType, setReportType] = useState(null);
   const [form,       setFormState] = useState({});
   const [report,     setReport]    = useState("");
+  const [streaming,  setStreaming]  = useState(false);
   const [error,      setError]     = useState("");
   const [copied,     setCopied]    = useState(false);
   const [loadMsg,    setLoadMsg]   = useState("");
@@ -44,11 +63,11 @@ export default function App() {
   const [showCursoModal, setShowCursoModal] = useState(false);
   const [cursoForm,      setCursoForm]      = useState({});
 
-  // Formato institucional (subido en esta sesión o seleccionado de la lista)
-  const [uploadingFormato, setUploadingFormato] = useState(false);
-  const [formatoSubido,    setFormatoSubido]    = useState(null);
-  const [formatoCompartir, setFormatoCompartir] = useState(false);
-  const [formatoModo,      setFormatoModo]      = useState("estricto"); // 'estricto' | 'guia'
+  // Formato institucional
+  const [uploadingFormato,    setUploadingFormato]    = useState(false);
+  const [formatoSubido,       setFormatoSubido]       = useState(null);
+  const [formatoCompartir,    setFormatoCompartir]    = useState(false);
+  const [formatoModo,         setFormatoModo]         = useState("estricto");
   const [formatosDisponibles, setFormatosDisponibles] = useState({ mios: [], compartidos: [] });
 
   // Plantillas
@@ -57,13 +76,14 @@ export default function App() {
   // Borrador automático
   const [draftRestored, setDraftRestored] = useState(false);
 
-  // Historial
-  const [reportes, setReportes] = useState([]);
+  // Historial (paginado)
+  const [reportes,        setReportes]        = useState([]);
   const [historialLoading, setHistorialLoading] = useState(false);
+  const [historialHasMore, setHistorialHasMore] = useState(false);
+  const [historialOffset,  setHistorialOffset]  = useState(0);
   const [currentReporteId, setCurrentReporteId] = useState(null);
 
-  const user  = getUser();
-  const token = getToken();
+  const user = getUser();
 
   useEffect(() => {
     if (user) {
@@ -71,10 +91,11 @@ export default function App() {
       loadCursos();
       loadFormatos();
       loadPlantillas();
+      // Proactively refresh token in background
+      refreshAccessToken().catch(() => {});
     }
     recordVisita(document.referrer || "directo");
 
-    // Restaurar borrador (excluyendo docente/email que vienen del perfil)
     try {
       const saved = localStorage.getItem(DRAFT_KEY);
       if (saved) {
@@ -88,13 +109,16 @@ export default function App() {
           setDraftRestored(true);
         }
       }
-    } catch { /* ignorar borrador corrupto */ }
-  }, []);
+    } catch { /* borrador corrupto */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-guardar borrador con debounce de 800ms
+  // Auto-guardar borrador (debounce 800ms, con límite de tamaño)
   useEffect(() => {
     const t = setTimeout(() => {
-      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, reportType })); } catch { /* ignorar */ }
+      try {
+        const serialized = JSON.stringify({ form, reportType });
+        if (serialized.length < DRAFT_MAX) localStorage.setItem(DRAFT_KEY, serialized);
+      } catch { /* ignorar */ }
     }, 800);
     return () => clearTimeout(t);
   }, [form, reportType]);
@@ -106,26 +130,24 @@ export default function App() {
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
 
-  const authHeaders = () => ({ Authorization: `Bearer ${token}` });
-
   // ===== CURSOS =====
   async function loadCursos() {
-    if (!token) return;
+    if (!getToken()) return;
     try {
-      const res  = await fetch('/api/cursos', { headers: authHeaders() });
+      const res  = await authFetch('/api/cursos');
       const data = await res.json();
       if (data.cursos) setCursos(data.cursos);
-    } catch (e) { console.error('Error loading cursos:', e); }
+    } catch { /* silencioso */ }
   }
 
   async function createCurso() {
     if (!cursoForm.nombre || !cursoForm.grado || !cursoForm.asignatura) {
-      alert('Nombre, grado y asignatura son obligatorios'); return;
+      toast.warning('Nombre, grado y asignatura son obligatorios'); return;
     }
     try {
-      const res  = await fetch('/api/cursos', {
+      const res  = await authFetch('/api/cursos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cursoForm),
       });
       const data = await res.json();
@@ -133,16 +155,23 @@ export default function App() {
         setCursos(p => [data.curso, ...p]);
         setCursoForm({});
         setShowCursoModal(false);
+        toast.success('Curso creado correctamente');
+      } else {
+        toast.error(data.error || 'Error al crear curso');
       }
-    } catch { alert('Error al crear curso'); }
+    } catch { toast.error('Error al crear curso'); }
   }
 
   async function deleteCurso(id) {
-    if (!confirm('¿Eliminar este curso?')) return;
+    const ok = await toast.confirm('¿Eliminar este curso?', {
+      confirmLabel: 'Eliminar', danger: true,
+    });
+    if (!ok) return;
     try {
-      await fetch(`/api/cursos?id=${id}`, { method: 'DELETE', headers: authHeaders() });
+      await authFetch(`/api/cursos?id=${id}`, { method: 'DELETE' });
       setCursos(p => p.filter(c => c.id !== id));
-    } catch { alert('Error al eliminar'); }
+      toast.success('Curso eliminado');
+    } catch { toast.error('Error al eliminar el curso'); }
   }
 
   function selectCurso(curso) {
@@ -160,99 +189,95 @@ export default function App() {
 
   // ===== FORMATOS =====
   async function loadFormatos() {
-    if (!token) return;
+    if (!getToken()) return;
     try {
-      const res = await fetch('/api/formatos', { headers: authHeaders() });
+      const res  = await authFetch('/api/formatos');
       const data = await res.json();
-      setFormatosDisponibles({
-        mios: data.mios || [],
-        compartidos: data.compartidos || [],
-      });
-    } catch (e) { console.error('Error loading formatos:', e); }
-  }
-
-  function selectFormato(f) {
-    setFormatoSubido(f);
+      setFormatosDisponibles({ mios: data.mios || [], compartidos: data.compartidos || [] });
+    } catch { /* silencioso */ }
   }
 
   async function handleFormatoUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'xlsx', 'xls'].includes(ext)) { alert('Solo PDF o Excel'); return; }
-    if (!reportType) { alert('Selecciona primero el tipo de reporte'); return; }
+    if (!['pdf', 'xlsx', 'xls'].includes(ext)) { toast.warning('Solo se admiten archivos PDF o Excel'); return; }
+    if (!reportType) { toast.warning('Selecciona primero el tipo de reporte'); return; }
 
     setUploadingFormato(true);
     try {
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const base64 = ev.target.result.split(',')[1];
-        const res    = await fetch('/api/upload-formato', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({
-            filename: file.name,
-            content: base64,
-            tipo_reporte: reportType,
-            es_ejemplo: false,
-            compartido: formatoCompartir,
-          }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          setFormatoSubido(data.formato);
-          // refrescar la lista (mis + compartidos)
-          loadFormatos();
-          alert(`Formato subido: ${data.formato.num_campos_detectados || 0} campos detectados${formatoCompartir ? ' · compartido con tu institución' : ''}`);
-        } else {
-          alert(data.error || 'Error al subir formato');
-        }
+        try {
+          const res  = await authFetch('/api/upload-formato', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name, content: base64,
+              tipo_reporte: reportType, es_ejemplo: false, compartido: formatoCompartir,
+            }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            setFormatoSubido(data.formato);
+            loadFormatos();
+            const campos = data.formato.num_campos_detectados || 0;
+            toast.success(`Formato subido: ${campos} campo${campos !== 1 ? 's' : ''} detectado${campos !== 1 ? 's' : ''}${formatoCompartir ? ' · compartido con tu institución' : ''}`);
+          } else {
+            toast.error(data.error || 'Error al subir formato');
+          }
+        } catch { toast.error('Error al subir el formato'); }
         setUploadingFormato(false);
       };
       reader.readAsDataURL(file);
     } catch {
-      alert('Error al procesar archivo');
+      toast.error('Error al procesar el archivo');
       setUploadingFormato(false);
     }
   }
 
   // ===== PLANTILLAS =====
   async function loadPlantillas() {
-    if (!token) return;
+    if (!getToken()) return;
     try {
-      const res = await fetch('/api/plantillas', { headers: authHeaders() });
+      const res  = await authFetch('/api/plantillas');
       const data = await res.json();
       if (data.plantillas) setPlantillas(data.plantillas);
-    } catch (e) { console.error('Error loading plantillas:', e); }
+    } catch { /* silencioso */ }
   }
 
   async function saveAsTemplate() {
-    if (!token) { alert('Inicia sesión para guardar plantillas'); return; }
-    if (!reportType) { alert('Selecciona un tipo de reporte primero'); return; }
-    const nombre = prompt('Nombre de la plantilla:');
-    if (!nombre?.trim()) return;
+    if (!getToken()) { toast.warning('Inicia sesión para guardar plantillas'); return; }
+    if (!reportType) { toast.warning('Selecciona un tipo de reporte primero'); return; }
+    const nombre = await toast.prompt('Nombre de la plantilla:', { placeholder: 'Ej: Semana 1 - 8vo B' });
+    if (!nombre) return;
     try {
-      const res = await fetch('/api/plantillas', {
+      const res  = await authFetch('/api/plantillas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ nombre: nombre.trim(), tipo_reporte: reportType, datos: form }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, tipo_reporte: reportType, datos: form }),
       });
       const data = await res.json();
       if (data.success) {
         setPlantillas(p => [data.plantilla, ...p]);
-        alert('Plantilla guardada');
+        toast.success('Plantilla guardada correctamente');
       } else {
-        alert(data.error || 'Error al guardar plantilla');
+        toast.error(data.error || 'Error al guardar plantilla');
       }
-    } catch { alert('Error al guardar plantilla'); }
+    } catch { toast.error('Error al guardar la plantilla'); }
   }
 
   async function deletePlantilla(id) {
-    if (!confirm('¿Eliminar esta plantilla?')) return;
+    const ok = await toast.confirm('¿Eliminar esta plantilla?', {
+      confirmLabel: 'Eliminar', danger: true,
+    });
+    if (!ok) return;
     try {
-      await fetch(`/api/plantillas?id=${id}`, { method: 'DELETE', headers: authHeaders() });
+      await authFetch(`/api/plantillas?id=${id}`, { method: 'DELETE' });
       setPlantillas(p => p.filter(x => x.id !== id));
-    } catch { alert('Error al eliminar plantilla'); }
+      toast.success('Plantilla eliminada');
+    } catch { toast.error('Error al eliminar la plantilla'); }
   }
 
   function loadTemplate(p) {
@@ -262,149 +287,207 @@ export default function App() {
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   }
 
-  // ===== HISTORIAL =====
-  async function loadReportes() {
-    if (!token) return;
+  // ===== HISTORIAL (paginado) =====
+  async function loadReportes(reset = true) {
+    if (!getToken()) return;
     setHistorialLoading(true);
+    const offset = reset ? 0 : historialOffset;
     try {
-      const res = await fetch('/api/reportes', { headers: authHeaders() });
+      const res  = await authFetch(`/api/reportes?limit=${PAGE_LIMIT}&offset=${offset}`);
       const data = await res.json();
-      setReportes(data.reportes || []);
-    } catch (e) { console.error('Error loading reportes:', e); }
+      const rows = data.reportes || [];
+      setReportes(p => reset ? rows : [...p, ...rows]);
+      setHistorialHasMore(data.hasMore ?? false);
+      setHistorialOffset(offset + rows.length);
+    } catch { toast.error('Error al cargar el historial'); }
     setHistorialLoading(false);
+  }
+
+  async function loadMoreReportes() {
+    await loadReportes(false);
   }
 
   async function openReportFromHistory(id) {
     try {
-      const res = await fetch(`/api/reportes?id=${id}`, { headers: authHeaders() });
+      const res  = await authFetch(`/api/reportes?id=${id}`);
       const data = await res.json();
       if (data.reporte) {
         const r = data.reporte;
         setReportType(r.tipo_reporte);
         try {
           const datos = typeof r.datos_ingresados === 'string'
-            ? JSON.parse(r.datos_ingresados)
-            : (r.datos_ingresados || {});
+            ? JSON.parse(r.datos_ingresados) : (r.datos_ingresados || {});
           setFormState(datos);
         } catch { /* ignorar */ }
         setReport(r.reporte_generado || '');
         setCurrentReporteId(r.id);
         setView('report');
       } else {
-        alert('No se encontró el reporte');
+        toast.error('No se encontró el reporte');
       }
-    } catch { alert('Error al abrir reporte'); }
+    } catch { toast.error('Error al abrir el reporte'); }
   }
 
   async function deleteReporte(id) {
-    if (!confirm('¿Archivar este reporte? No se mostrará más en tu historial.')) return;
+    const ok = await toast.confirm(
+      '¿Archivar este reporte? No se mostrará más en tu historial.',
+      { confirmLabel: 'Archivar', danger: true }
+    );
+    if (!ok) return;
     try {
-      await fetch(`/api/reportes?id=${id}`, { method: 'DELETE', headers: authHeaders() });
+      await authFetch(`/api/reportes?id=${id}`, { method: 'DELETE' });
       setReportes(p => p.filter(x => x.id !== id));
-    } catch { alert('Error al archivar'); }
+      toast.success('Reporte archivado');
+    } catch { toast.error('Error al archivar el reporte'); }
   }
 
   async function saveReportEdits(newText) {
-    if (!currentReporteId || !token) return;
+    if (!currentReporteId || !getToken()) return;
     try {
-      await fetch(`/api/reportes?id=${currentReporteId}`, {
+      await authFetch(`/api/reportes?id=${currentReporteId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reporte_generado: newText }),
       });
     } catch { /* silencioso */ }
   }
 
-  // ===== GENERAR REPORTE =====
+  // ===== GENERAR REPORTE (con streaming SSE) =====
   const generate = async () => {
-    if (!token) {
-      setError("Inicia sesión para generar reportes.");
-      return;
-    }
+    if (!getToken()) { setError("Inicia sesión para generar reportes."); return; }
     const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
     const missing = requiredFields.filter(k => !form[k]?.trim());
-    if (missing.length > 0) { setError(`Complete los campos obligatorios: ${missing.join(', ')}`); return; }
+    if (missing.length > 0) { setError(`Complete: ${missing.join(', ')}`); return; }
 
     setView("loading");
     setError("");
     setCurrentReporteId(null);
-    let mi = 0;
+    setReport("");
+
+    let msgIdx = 0;
     setLoadMsg(LOAD_MSGS[0]);
-    const iv = setInterval(() => { mi = (mi + 1) % LOAD_MSGS.length; setLoadMsg(LOAD_MSGS[mi]); }, 2200);
+    const iv = setInterval(() => {
+      msgIdx = (msgIdx + 1) % LOAD_MSGS.length;
+      setLoadMsg(LOAD_MSGS[msgIdx]);
+    }, 2200);
 
     try {
-      // Si el docente subió un formato, lo limpiamos y se lo pasamos al builder
-      // para que el LLM REPLIQUE ese formato (estructura por defecto desactivada).
       const formatoTexto = formatoSubido?.contenido_extraido
-        ? truncateForLLM(formatoSubido.contenido_extraido, 12000)
-        : "";
+        ? truncateForLLM(formatoSubido.contenido_extraido, 12000) : "";
 
-      const finalPrompt  = buildPrompt(reportType, form, {
-        formatoTexto,
-        modo: formatoModo,
-      });
+      const finalPrompt = buildPrompt(reportType, form, { formatoTexto, modo: formatoModo });
 
-      const res  = await fetch("/api/generate", {
+      const res = await authFetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify({ prompt: finalPrompt }),
       });
-      const data = await res.json();
+
       clearInterval(iv);
 
-      if (data.text) {
-        setReport(data.text);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || "No se pudo generar. Intenta de nuevo.");
+        setView("form");
+        return;
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+
+      // ── Streaming SSE ──────────────────────────────────────────────────
+      if (contentType.includes('text/event-stream')) {
+        setStreaming(true);
         setView("report");
+
+        const reader  = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer  = '';
+        let fullText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer  += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+          for (const line of lines) {
+            const chunk = parseSSEChunk(line + '\n');
+            if (chunk) { fullText += chunk; setReport(fullText); }
+          }
+        }
+        // Flush remainder
+        if (buffer) {
+          const chunk = parseSSEChunk(buffer);
+          if (chunk) { fullText += chunk; setReport(fullText); }
+        }
+
+        setStreaming(false);
         try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
         setDraftRestored(false);
-        try {
-          const saveRes = await fetch("/api/reportes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...authHeaders() },
-            body: JSON.stringify({
-              email_docente:    form.email,
-              nombre_docente:   form.docente,
-              institucion:      form.institucion,
-              curso:            form.curso,
-              periodo:          form.periodo,
-              tipo_reporte:     reportType,
-              datos_ingresados: form,
-              reporte_generado: data.text,
-            }),
-          });
-          const saveData = await saveRes.json();
-          if (saveData.reporte?.id) setCurrentReporteId(saveData.reporte.id);
-        } catch { /* historial opcional */ }
-        loadReportes();
+        saveGeneratedReport(fullText);
+
+      // ── JSON fallback ──────────────────────────────────────────────────
       } else {
-        setError(data.error || "No se pudo generar. Intenta de nuevo.");
-        setView("form");
+        const data = await res.json();
+        if (data.text) {
+          setReport(data.text);
+          setView("report");
+          try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
+          setDraftRestored(false);
+          saveGeneratedReport(data.text);
+        } else {
+          setError(data.error || "No se pudo generar. Intenta de nuevo.");
+          setView("form");
+        }
       }
+
     } catch {
       clearInterval(iv);
+      setStreaming(false);
       setError("Error de conexión. Intenta de nuevo.");
       setView("form");
     }
   };
 
+  async function saveGeneratedReport(text) {
+    try {
+      const saveRes = await authFetch("/api/reportes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email_docente:    form.email,
+          nombre_docente:   form.docente,
+          institucion:      form.institucion,
+          curso:            form.curso,
+          periodo:          form.periodo,
+          tipo_reporte:     reportType,
+          datos_ingresados: form,
+          reporte_generado: text,
+        }),
+      });
+      const saveData = await saveRes.json();
+      if (saveData.reporte?.id) setCurrentReporteId(saveData.reporte.id);
+    } catch { /* historial opcional */ }
+  }
+
   const copyReport = () => {
     navigator.clipboard.writeText(report);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    if (token) {
-      fetch("/api/telemetry", {
+    if (getToken()) {
+      authFetch("/api/telemetry", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind: "reporte_copiado", tipo: reportType }),
       }).catch(() => {});
     }
   };
 
   const recordReferralShare = () => {
-    if (!token) return;
-    fetch("/api/telemetry", {
+    if (!getToken()) return;
+    authFetch("/api/telemetry", {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kind: "referral" }),
     }).catch(() => {});
   };
@@ -418,6 +501,7 @@ export default function App() {
     setSelectedCurso(null);
     setFormatoSubido(null);
     setCurrentReporteId(null);
+    setStreaming(false);
     try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
     setDraftRestored(false);
   };
@@ -439,8 +523,8 @@ export default function App() {
         cursos={cursos}
         onCursosClick={() => setView("cursos")}
         onPlantillasClick={() => setView("plantillas")}
-        onHistorialClick={() => { setView("historial"); loadReportes(); }}
-        onDashboardClick={() => { setView("dashboard"); loadReportes(); }}
+        onHistorialClick={() => { setView("historial"); loadReportes(true); }}
+        onDashboardClick={() => { setView("dashboard"); loadReportes(true); }}
       />
 
       {view === "cursos" && (
@@ -471,6 +555,8 @@ export default function App() {
           deleteReport={deleteReporte}
           goBack={() => setView("form")}
           loading={historialLoading}
+          hasMore={historialHasMore}
+          onLoadMore={loadMoreReportes}
         />
       )}
 
@@ -488,8 +574,6 @@ export default function App() {
           reportType={reportType}
           setReportType={type => {
             setReportType(type);
-            // Si el formato seleccionado es de otro tipo, lo deseleccionamos
-            // para evitar mezclar (ej. formato de "planificacion" en "semanal").
             if (formatoSubido && formatoSubido.tipo_reporte && formatoSubido.tipo_reporte !== type) {
               setFormatoSubido(null);
             }
@@ -507,7 +591,7 @@ export default function App() {
           selectCurso={selectCurso}
           formatosDisponibles={formatosDisponibles}
           formatoSubido={formatoSubido}
-          selectFormato={selectFormato}
+          selectFormato={setFormatoSubido}
           clearFormato={() => setFormatoSubido(null)}
           uploadingFormato={uploadingFormato}
           handleFormatoUpload={handleFormatoUpload}
@@ -531,6 +615,7 @@ export default function App() {
       {view === "report" && (
         <ReportView
           report={report}
+          streaming={streaming}
           reportType={reportType}
           form={form}
           fileName={fileName}

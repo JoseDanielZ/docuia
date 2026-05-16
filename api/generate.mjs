@@ -1,12 +1,11 @@
 import { verifyBearerUser } from '../lib/server/verifyUser.js';
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 import { getSystemPrompt } from '../src/config.js';
+import { logger } from '../lib/server/logger.js';
 
-const MAX_PROMPT_CHARS = 48_000;
-/** Generaciones por usuario por hora (autenticado) */
+const MAX_PROMPT_CHARS  = 48_000;
 const GEN_PER_USER_HOUR = 45;
-/** Por IP para la misma ruta (capa extra) */
-const GEN_PER_IP_HOUR = 120;
+const GEN_PER_IP_HOUR   = 120;
 
 function detectHasFormato(prompt) {
   return typeof prompt === 'string' && prompt.includes('FORMATO INSTITUCIONAL DEL DOCENTE');
@@ -30,7 +29,7 @@ export default async function handler(req, res) {
 
   if (trimmed.length > MAX_PROMPT_CHARS) {
     return res.status(413).json({
-      error: `El contenido enviado supera el máximo permitido (${MAX_PROMPT_CHARS} caracteres).`,
+      error: `El contenido supera el máximo permitido (${MAX_PROMPT_CHARS} caracteres).`,
     });
   }
 
@@ -46,7 +45,7 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Demasiadas solicitudes desde esta red. Intenta más tarde.' });
   }
   if (!allowRateLimit(`gen:user:${user.id}`, GEN_PER_USER_HOUR, 3_600_000)) {
-    return res.status(429).json({ error: 'Has alcanzado el límite de generaciones por hora. Intenta más tarde.' });
+    return res.status(429).json({ error: 'Has alcanzado el límite de generaciones por hora.' });
   }
 
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -55,37 +54,73 @@ export default async function handler(req, res) {
   }
 
   const hasFormato = detectHasFormato(trimmed);
-  const system = getSystemPrompt({ hasFormato });
+  const system     = getSystemPrompt({ hasFormato });
+  const useStream  = req.headers['accept'] === 'text/event-stream';
+
+  const t0 = Date.now();
 
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model:      'llama-3.3-70b-versatile',
         max_tokens: 6000,
         temperature: 0.3,
+        stream:     useStream,
         messages: [
           { role: 'system', content: system },
-          { role: 'user', content: trimmed },
+          { role: 'user',   content: trimmed },
         ],
       }),
     });
 
-    const data = await response.json();
+    if (!groqRes.ok) {
+      const errData = await groqRes.json().catch(() => ({}));
+      logger.error('Groq HTTP error', { status: groqRes.status, err: errData?.error?.message });
+      return res.status(502).json({ error: 'No se pudo generar el reporte. Intenta de nuevo.' });
+    }
 
-    if (data.choices && data.choices[0]?.message?.content) {
+    // ── Streaming (SSE) mode ──────────────────────────────────────────────
+    if (useStream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      const reader  = groqRes.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: streamDone } = await reader.read();
+        done = streamDone;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: !done });
+          res.write(chunk);
+        }
+      }
+
+      logger.info('generate stream done', { userId: user.id, ms: Date.now() - t0 });
+      return res.end();
+    }
+
+    // ── Non-streaming (JSON) fallback ─────────────────────────────────────
+    const data = await groqRes.json();
+
+    if (data.choices?.[0]?.message?.content) {
+      logger.info('generate done', { userId: user.id, ms: Date.now() - t0 });
       return res.status(200).json({ text: data.choices[0].message.content });
     }
 
-    const providerMsg = data.error?.message || 'No response from AI';
-    console.error('[generate] Groq error:', providerMsg);
+    logger.error('Groq empty response', { userId: user.id, data });
     return res.status(502).json({ error: 'No se pudo generar el reporte. Intenta de nuevo.' });
+
   } catch (err) {
-    console.error('[generate]', err);
+    logger.error('generate exception', { userId: user.id, err: err.message });
     return res.status(500).json({ error: 'Error al contactar el servicio de IA' });
   }
 }

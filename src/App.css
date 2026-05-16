@@ -19,8 +19,34 @@
   --accent-ink:  oklch(30% 0.09 250);
   --danger:      #9A2A2A;
   --ok:          #2F6A4A;
+  --warn-bg:     #fffbeb;
+  --warn-border: #fcd34d;
+  --warn-text:   #78350f;
   --shadow:      0 1px 0 rgba(11,31,58,.05), 0 8px 24px -8px rgba(11,31,58,.12);
   --shadow-deep: 0 1px 0 rgba(11,31,58,.05), 0 30px 70px -28px rgba(11,31,58,.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:         #ddd5c2;
+    --ink-2:       #c8bfad;
+    --paper:       #141210;
+    --paper-2:     #1c1916;
+    --paper-3:     #23201c;
+    --line:        #332e27;
+    --muted:       #7a7265;
+    --text:        #ddd5c2;
+    --accent:      oklch(65% 0.16 250);
+    --accent-soft: oklch(18% 0.06 250);
+    --accent-ink:  oklch(78% 0.12 250);
+    --danger:      #c44f4f;
+    --ok:          #4a9a6a;
+    --warn-bg:     #2a1f0a;
+    --warn-border: #6b4f15;
+    --warn-text:   #f0c060;
+    --shadow:      0 1px 0 rgba(0,0,0,.3), 0 8px 24px -8px rgba(0,0,0,.6);
+    --shadow-deep: 0 1px 0 rgba(0,0,0,.3), 0 30px 70px -28px rgba(0,0,0,.8);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -28,10 +54,27 @@
 .serif { font-family: 'Source Serif 4', Georgia, serif; font-optical-sizing: auto; letter-spacing: -.01em; }
 .mono  { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
-/* ── Animations (anime.js maneja casi todo; este keyframe queda como fallback) ── */
+/* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes stream-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.streaming-cursor::after {
+  content: "▋";
+  animation: stream-cursor .7s ease infinite;
+  color: var(--accent);
+  font-size: 0.85em;
 }
 
 /* Respeta la preferencia del usuario por menos movimiento */

@@ -1,6 +1,6 @@
 .cursos-section {
   padding: 60px 28px;
-  background: #F8F7F4;
+  background: var(--paper-2);
   min-height: 80vh;
 }
 
@@ -14,37 +14,46 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .cursos-title {
+  font-family: 'Source Serif 4', Georgia, serif;
   font-size: 26px;
   font-weight: 400;
-  color: #0A2240;
+  color: var(--ink);
   margin: 0 0 4px;
+  letter-spacing: -.02em;
 }
 
 .cursos-subtitle {
-  color: #888;
+  color: var(--muted);
   font-size: 13px;
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 .cursos-add-btn {
   padding: 10px 20px;
-  background: #0A2240;
-  color: #C5A55A;
+  background: var(--ink);
+  color: var(--paper);
   font-size: 13px;
-  font-weight: 700;
-  border-radius: 3px;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  transition: opacity .18s;
 }
+.cursos-add-btn:hover { opacity: .88; }
 
 .cursos-empty {
   text-align: center;
   padding: 60px 20px;
-  color: #aaa;
+  color: var(--muted);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 14px;
 }
 
 .cursos-grid {
@@ -54,10 +63,15 @@
 }
 
 .curso-card {
-  background: #fff;
-  border: 1px solid #E8E4DE;
-  border-radius: 6px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
   padding: 18px 20px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.curso-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
 }
 
 .curso-card-header {
@@ -70,55 +84,70 @@
 .curso-card-name {
   font-size: 15px;
   font-weight: 600;
-  color: #0A2240;
-  font-family: 'Segoe UI', sans-serif;
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 .curso-card-delete {
   all: unset;
   cursor: pointer;
-  color: #999;
-  font-size: 18px;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+.curso-card-delete:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
 .curso-card-meta {
   font-size: 12px;
-  color: #888;
+  color: var(--muted);
   margin-bottom: 6px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 .curso-card-details {
   font-size: 11px;
-  color: #aaa;
-  font-family: 'Segoe UI', sans-serif;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  opacity: .8;
 }
 
 /* Modal */
 .curso-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .5);
+  background: rgba(11,31,58,.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 }
 
 .curso-modal {
-  background: #fff;
-  border-radius: 8px;
+  background: var(--paper);
+  border-radius: 12px;
   padding: 28px;
-  width: min(500px, 90%);
+  width: min(500px, 100%);
   max-height: 80vh;
   overflow-y: auto;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-deep);
 }
 
 .curso-modal-title {
+  font-family: 'Source Serif 4', Georgia, serif;
   font-size: 20px;
   font-weight: 400;
-  color: #0A2240;
+  color: var(--ink);
   margin: 0 0 20px;
+  letter-spacing: -.02em;
 }
 
 .curso-modal-form {
@@ -136,27 +165,31 @@
 .curso-modal-label {
   font-size: 12px;
   font-weight: 500;
-  color: #3D4F5F;
+  color: var(--ink);
   display: block;
   margin-bottom: 4px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  opacity: .8;
 }
 
 .curso-modal-label-req {
-  color: #B8860B;
+  color: var(--danger);
 }
 
 .curso-modal-input {
   width: 100%;
-  padding: 11px 14px;
-  border: 1px solid #D0D5DD;
-  border-radius: 4px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
   font-size: 13px;
-  font-family: 'Segoe UI', sans-serif;
-  background: #fff;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--text);
   outline: none;
   box-sizing: border-box;
+  transition: border-color .18s;
 }
+.curso-modal-input:focus { border-color: var(--accent); }
 
 .curso-modal-actions {
   display: flex;
@@ -167,22 +200,33 @@
 .curso-modal-btn-create {
   flex: 1;
   padding: 12px;
-  background: #0A2240;
-  color: #C5A55A;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 3px;
-  border: none;
-  cursor: pointer;
-}
-
-.curso-modal-btn-cancel {
-  padding: 12px;
-  background: #F8F7F4;
-  color: #0A2240;
+  background: var(--ink);
+  color: var(--paper);
   font-size: 14px;
   font-weight: 600;
-  border-radius: 3px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  transition: opacity .18s;
+}
+.curso-modal-btn-create:hover { opacity: .88; }
+
+.curso-modal-btn-cancel {
+  padding: 12px 20px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  transition: border-color .18s;
+}
+.curso-modal-btn-cancel:hover { border-color: var(--ink); }
+
+@media (max-width: 500px) {
+  .curso-modal-row { grid-template-columns: 1fr; }
+  .cursos-header { flex-direction: column; align-items: flex-start; }
 }
