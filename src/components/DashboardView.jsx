@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import "./CursosView.css";
 import { REPORT_TYPES } from "../config.js";
 import { useEnter, useStaggerChildren } from "../utils/anim.js";
@@ -35,7 +36,7 @@ function StatCard({ label, value, sub }) {
   );
 }
 
-export default function DashboardView({ reportes, cursos, goBack, loading }) {
+function DashboardView({ reportes, cursos, goBack, loading }) {
   const headerRef = useRef(null);
   const cardsRef  = useRef(null);
   const goBackHover = magneticHover();
@@ -175,3 +176,12 @@ export default function DashboardView({ reportes, cursos, goBack, loading }) {
     </section>
   );
 }
+
+DashboardView.propTypes = {
+  reportes: PropTypes.arrayOf(PropTypes.object).isRequired,
+  cursos:   PropTypes.arrayOf(PropTypes.object).isRequired,
+  goBack:   PropTypes.func.isRequired,
+  loading:  PropTypes.bool.isRequired,
+};
+
+export default DashboardView;

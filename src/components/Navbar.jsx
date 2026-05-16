@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { animate, stagger, utils } from "animejs";
 import { magneticHover } from "../utils/anim.js";
 
-export default function Navbar({
+function Navbar({
   user,
   logout,
   scrollToForm,
@@ -166,3 +167,22 @@ export default function Navbar({
     </nav>
   );
 }
+
+Navbar.propTypes = {
+  user:              PropTypes.object,
+  logout:            PropTypes.func.isRequired,
+  scrollToForm:      PropTypes.func.isRequired,
+  onLogoClick:       PropTypes.func.isRequired,
+  cursos:            PropTypes.arrayOf(PropTypes.object),
+  onCursosClick:     PropTypes.func.isRequired,
+  onPlantillasClick: PropTypes.func.isRequired,
+  onHistorialClick:  PropTypes.func.isRequired,
+  onDashboardClick:  PropTypes.func.isRequired,
+};
+
+Navbar.defaultProps = {
+  user:   null,
+  cursos: [],
+};
+
+export default Navbar;

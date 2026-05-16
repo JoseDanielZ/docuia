@@ -1,10 +1,11 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import { animate } from "animejs";
 import "./CursosView.css";
 import { REPORT_TYPES } from "../config.js";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
-export default function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
+function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
   const headerRef = useRef(null);
   const gridRef = useRef(null);
   const goBackHover = magneticHover();
@@ -78,3 +79,12 @@ export default function PlantillasView({ plantillas, deletePlantilla, loadTempla
     </section>
   );
 }
+
+PlantillasView.propTypes = {
+  plantillas:      PropTypes.arrayOf(PropTypes.object).isRequired,
+  deletePlantilla: PropTypes.func.isRequired,
+  loadTemplate:    PropTypes.func.isRequired,
+  goBack:          PropTypes.func.isRequired,
+};
+
+export default PlantillasView;

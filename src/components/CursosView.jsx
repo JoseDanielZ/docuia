@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { animate, utils } from "animejs";
 import "./CursosView.css";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
-export default function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, createCurso, deleteCurso }) {
+function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, createCurso, deleteCurso }) {
   const headerRef = useRef(null);
   const gridRef = useRef(null);
   const overlayRef = useRef(null);
@@ -160,3 +161,15 @@ export default function CursosView({ cursos, showModal, setShowModal, cursoForm,
     </section>
   );
 }
+
+CursosView.propTypes = {
+  cursos:       PropTypes.arrayOf(PropTypes.object).isRequired,
+  showModal:    PropTypes.bool.isRequired,
+  setShowModal: PropTypes.func.isRequired,
+  cursoForm:    PropTypes.object.isRequired,
+  setCursoForm: PropTypes.func.isRequired,
+  createCurso:  PropTypes.func.isRequired,
+  deleteCurso:  PropTypes.func.isRequired,
+};
+
+export default CursosView;

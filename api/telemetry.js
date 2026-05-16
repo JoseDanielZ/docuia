@@ -4,6 +4,7 @@
  */
 import { verifyBearerUser, getSupabaseEnv } from '../lib/server/verifyUser.js';
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
+import { logger } from '../lib/server/logger.js';
 
 const MAX_REFERRER = 500;
 const VISITAS_PER_IP_HOUR = 200;
@@ -36,8 +37,8 @@ async function handleVisita(req, res) {
       },
       body: JSON.stringify({ referrer: ref }),
     });
-  } catch (e) {
-    console.error('[telemetry visita]', e);
+  } catch (error_) {
+    logger.error('telemetry visita', { err: error_.message });
   }
 
   return res.status(204).end();
@@ -73,8 +74,8 @@ async function handleReporteCopiado(req, res) {
         tipo: tipoStr || 'desconocido',
       }),
     });
-  } catch (e) {
-    console.error('[telemetry copiado]', e);
+  } catch (error_) {
+    logger.error('telemetry copiado', { err: error_.message });
   }
 
   return res.status(204).end();
@@ -106,8 +107,8 @@ async function handleReferral(req, res) {
         email_from: user.email || '',
       }),
     });
-  } catch (e) {
-    console.error('[telemetry referral]', e);
+  } catch (error_) {
+    logger.error('telemetry referral', { err: error_.message });
   }
 
   return res.status(204).end();
