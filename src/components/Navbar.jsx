@@ -58,24 +58,25 @@ function Navbar({
   const navBtnStyle = {
     padding: "7px 14px",
     fontSize: 12,
-    border: "1px solid rgba(255,255,255,.15)",
-    color: "rgba(245,241,232,.7)",
+    border: "1px solid rgba(11,31,58,.18)",
+    color: "var(--ink)",
     background: "transparent",
     borderRadius: 6,
     cursor: "pointer",
     fontFamily: "'IBM Plex Sans', sans-serif",
+    fontWeight: 500,
     transition: "border-color .2s, color .2s, background .2s",
   };
 
   const handleBtnEnter = (e) => {
-    e.currentTarget.style.borderColor = "rgba(255,255,255,.32)";
-    e.currentTarget.style.color = "var(--paper)";
-    e.currentTarget.style.background = "rgba(255,255,255,.04)";
+    e.currentTarget.style.borderColor = "rgba(11,31,58,.4)";
+    e.currentTarget.style.color = "var(--ink)";
+    e.currentTarget.style.background = "rgba(11,31,58,.06)";
     animate(e.currentTarget, { translateY: -2, duration: 240, ease: "outQuart" });
   };
   const handleBtnLeave = (e) => {
-    e.currentTarget.style.borderColor = "rgba(255,255,255,.15)";
-    e.currentTarget.style.color = "rgba(245,241,232,.7)";
+    e.currentTarget.style.borderColor = "rgba(11,31,58,.18)";
+    e.currentTarget.style.color = "var(--ink)";
     e.currentTarget.style.background = "transparent";
     animate(e.currentTarget, { translateY: 0, duration: 320, ease: "outQuart" });
   };
@@ -85,8 +86,8 @@ function Navbar({
   return (
     <nav ref={navRef} style={{
       position: "sticky", top: 0, zIndex: 100,
-      background: "var(--ink)",
-      borderBottom: "1px solid rgba(255,255,255,.08)",
+      background: "var(--paper)",
+      borderBottom: "1px solid rgba(11,31,58,.12)",
       padding: "0",
       willChange: "transform, opacity",
     }}>
@@ -102,7 +103,7 @@ function Navbar({
         >
           <div style={{
             width: 28, height: 28, borderRadius: 7,
-            background: "var(--paper)", color: "var(--ink)",
+            background: "var(--ink)", color: "var(--paper)",
             display: "grid", placeItems: "center",
             fontFamily: "'Source Serif 4', Georgia, serif",
             fontWeight: 700, fontSize: 15,
@@ -110,7 +111,7 @@ function Navbar({
           <span style={{
             fontFamily: "'IBM Plex Sans', sans-serif",
             fontWeight: 600, fontSize: 16,
-            color: "var(--paper)", letterSpacing: ".01em",
+            color: "var(--ink)", letterSpacing: ".01em",
           }}>DocuIA</span>
         </div>
 
@@ -131,7 +132,7 @@ function Navbar({
               </button>
               <span style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 11, color: "rgba(245,241,232,.45)",
+                fontSize: 11, color: "rgba(11,31,58,.45)",
                 marginLeft: 4,
               }}>{user.email}</span>
             </>
@@ -153,8 +154,8 @@ function Navbar({
             {...primaryHover}
             style={{
               padding: "9px 20px",
-              background: "var(--paper)",
-              color: "var(--ink)",
+              background: "var(--ink)",
+              color: "var(--paper)",
               fontSize: 13, fontWeight: 600,
               boxShadow: "none",
               willChange: "transform",
