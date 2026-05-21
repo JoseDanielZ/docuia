@@ -30,6 +30,31 @@ async function handleLogin(req, res) {
       return res.status(401).json({ error: data.error_description || data.msg || 'Credenciales incorrectas' });
     }
 
+    // Enrich user_metadata with profile data from the profiles table
+    // This covers existing users who signed up before institucion was added to auth metadata
+    if (data.user?.id) {
+      try {
+        const profileRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/profiles?id=eq.${data.user.id}&select=name,role,institucion,cargo`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const profiles = await profileRes.json();
+        if (Array.isArray(profiles) && profiles.length > 0) {
+          const p = profiles[0];
+          data.user = {
+            ...data.user,
+            user_metadata: {
+              ...data.user.user_metadata,
+              name:        p.name        || data.user.user_metadata?.name        || '',
+              role:        p.role        || data.user.user_metadata?.role        || '',
+              institucion: p.institucion || data.user.user_metadata?.institucion || '',
+              cargo:       p.cargo       || data.user.user_metadata?.cargo       || '',
+            },
+          };
+        }
+      } catch { /* no bloqueamos el login si falla el enriquecimiento */ }
+    }
+
     return res.status(200).json({
       success: true,
       access_token: data.access_token,
@@ -65,7 +90,16 @@ async function handleSignup(req, res) {
     const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-      body: JSON.stringify({ email: emailNorm, password, data: { name, role } }),
+      body: JSON.stringify({
+        email: emailNorm,
+        password,
+        data: {
+          name,
+          role,
+          institucion: req.body.institucion || '',
+          cargo: req.body.cargo || role || 'Docente',
+        },
+      }),
     });
     const authData = await authRes.json();
 
