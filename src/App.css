@@ -147,6 +147,19 @@
 }
 .dl-btn:hover { opacity: .9; }
 
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin .65s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .g2      { grid-template-columns: 1fr !important; }

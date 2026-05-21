@@ -1,6 +1,6 @@
-export default function Field({ label, k, ph, area, req, half, form, set, group }) {
-  // Marcadores de agrupación en FORM_FIELDS (ej. { k: "_g1", group: "..." }):
-  // no son campos editables; antes se pintaban como inputs vacíos sin etiqueta.
+import PropTypes from "prop-types";
+
+export default function Field({ label, k, ph, area, req, half, form, set, group, type, min, max, pattern, hint }) {
   if (typeof k === "string" && k.startsWith("_")) {
     if (!group) return null;
     return (
@@ -39,6 +39,17 @@ export default function Field({ label, k, ph, area, req, half, form, set, group 
     display: "block",
   };
 
+  const focusHandlers = {
+    onFocus: e => {
+      e.target.style.borderColor = "var(--accent)";
+      e.target.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent)";
+    },
+    onBlur: e => {
+      e.target.style.borderColor = "var(--line)";
+      e.target.style.boxShadow = "none";
+    },
+  };
+
   return (
     <div style={{ marginBottom: 14, gridColumn: half ? undefined : "1 / -1" }}>
       <label style={{
@@ -51,7 +62,7 @@ export default function Field({ label, k, ph, area, req, half, form, set, group 
         textTransform: "uppercase",
         fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
       }}>
-        {label} {req && <span style={{ color: "var(--danger)" }}>*</span>}
+        {label} {req && <span style={{ color: "var(--danger)" }} title="Campo obligatorio">*</span>}
       </label>
 
       {area ? (
@@ -59,33 +70,58 @@ export default function Field({ label, k, ph, area, req, half, form, set, group 
           value={form[k] || ""}
           onChange={e => set(k, e.target.value)}
           placeholder={ph}
+          required={req}
           rows={3}
           style={{ ...base, resize: "vertical" }}
-          onFocus={e => {
-            e.target.style.borderColor = "var(--accent)";
-            e.target.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent)";
-          }}
-          onBlur={e => {
-            e.target.style.borderColor = "var(--line)";
-            e.target.style.boxShadow = "none";
-          }}
+          {...focusHandlers}
         />
       ) : (
         <input
+          type={type}
           value={form[k] || ""}
           onChange={e => set(k, e.target.value)}
           placeholder={ph}
+          required={req}
+          min={min}
+          max={max}
+          pattern={pattern}
           style={base}
-          onFocus={e => {
-            e.target.style.borderColor = "var(--accent)";
-            e.target.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent)";
-          }}
-          onBlur={e => {
-            e.target.style.borderColor = "var(--line)";
-            e.target.style.boxShadow = "none";
-          }}
+          {...focusHandlers}
         />
+      )}
+
+      {hint && (
+        <p style={{
+          margin: "5px 0 0",
+          fontSize: 11,
+          color: "var(--muted)",
+          fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+          lineHeight: 1.5,
+        }}>
+          {hint}
+        </p>
       )}
     </div>
   );
 }
+
+Field.propTypes = {
+  label:   PropTypes.string,
+  k:       PropTypes.string,
+  ph:      PropTypes.string,
+  area:    PropTypes.bool,
+  req:     PropTypes.bool,
+  half:    PropTypes.bool,
+  form:    PropTypes.object,
+  set:     PropTypes.func,
+  group:   PropTypes.string,
+  type:    PropTypes.string,
+  min:     PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  max:     PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  pattern: PropTypes.string,
+  hint:    PropTypes.string,
+};
+
+Field.defaultProps = {
+  type: "text",
+};

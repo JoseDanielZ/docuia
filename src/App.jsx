@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
 
-import { REPORT_TYPES, buildPrompt, getRequiredFields } from "./config";
+import { REPORT_TYPES, FORM_FIELDS, buildPrompt, getRequiredFields } from "./config";
 import { recordVisita } from "./utils/telemetry.js";
 import { getUser, getToken, setSession, logout, authFetch, refreshAccessToken } from "./utils/auth.js";
 import { truncateForLLM } from "./utils/formatoText.js";
@@ -87,11 +87,17 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
-      setFormState(p => ({ ...p, docente: user.user_metadata?.name || "", email: user.email || "" }));
+      // H6: Pre-rellenar todos los campos del perfil disponibles
+      setFormState(p => ({
+        ...p,
+        docente:     user.user_metadata?.name        || "",
+        email:       user.email                       || "",
+        institucion: user.user_metadata?.institucion  || p.institucion || "",
+        cargo:       user.user_metadata?.cargo        || p.cargo       || "",
+      }));
       loadCursos();
       loadFormatos();
       loadPlantillas();
-      // Proactively refresh token in background
       refreshAccessToken().catch(() => {});
     }
     recordVisita(document.referrer || "directo");
@@ -137,7 +143,7 @@ export default function App() {
       const res  = await authFetch('/api/cursos');
       const data = await res.json();
       if (data.cursos) setCursos(data.cursos);
-    } catch { /* silencioso */ }
+    } catch { toast.error('No se pudieron cargar tus cursos. Recarga la página.'); }
   }
 
   async function createCurso() {
@@ -201,8 +207,9 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'xlsx', 'xls'].includes(ext)) { toast.warning('Solo se admiten archivos PDF o Excel'); return; }
-    if (!reportType) { toast.warning('Selecciona primero el tipo de reporte'); return; }
+    if (!['pdf', 'xlsx', 'xls'].includes(ext)) { toast.warning('Solo se admiten archivos PDF o Excel (.pdf, .xlsx, .xls)'); return; }
+    if (file.size > 25 * 1024 * 1024) { toast.warning('El archivo supera 25 MB. Usa un archivo más liviano.'); return; }
+    if (!reportType) { toast.warning('Selecciona primero el tipo de reporte antes de subir el formato'); return; }
 
     setUploadingFormato(true);
     try {
@@ -357,7 +364,11 @@ export default function App() {
     if (!getToken()) { setError("Inicia sesión para generar reportes."); return; }
     const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
     const missing = requiredFields.filter(k => !form[k]?.trim());
-    if (missing.length > 0) { setError(`Complete: ${missing.join(', ')}`); return; }
+    if (missing.length > 0) {
+      const names = missing.map(k => FIELD_LABELS[k] || k).join(', ');
+      setError(`Por favor completa los campos obligatorios: ${names}`);
+      return;
+    }
 
     setView("loading");
     setError("");
@@ -387,7 +398,12 @@ export default function App() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        setError(errData.error || "No se pudo generar. Intenta de nuevo.");
+        const status  = res.status;
+        let msg = errData.error || "No se pudo generar el reporte. Intenta de nuevo.";
+        if (status === 401) msg = "Tu sesión expiró. Recarga la página e inicia sesión nuevamente.";
+        else if (status === 429) msg = "Alcanzaste el límite de reportes por hora. Espera unos minutos e intenta de nuevo.";
+        else if (status === 500) msg = "Error en el servidor. Nuestro equipo fue notificado. Intenta en unos momentos.";
+        setError(msg);
         setView("form");
         return;
       }
@@ -509,6 +525,28 @@ export default function App() {
   const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
   const canSubmit      = requiredFields.every(k => form[k]?.trim());
 
+  // H2: Mapa de claves técnicas → labels legibles para mensajes de error
+  const FIELD_LABELS = Object.fromEntries(
+    [...(FORM_FIELDS.common || []), ...(FORM_FIELDS.common2 || []),
+     ...Object.values(FORM_FIELDS).flat()]
+      .filter(f => f.k && !f.k.startsWith('_') && f.label)
+      .map(f => [f.k, f.label])
+  );
+
+  // H7: Ctrl+Enter / Cmd+Enter para generar reporte desde el formulario
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && view === 'form' && canSubmit && user) {
+        e.preventDefault();
+        generate();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [view, canSubmit, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const generating = view === 'loading' || streaming;
+
   const fileName = `DocuIA_${REPORT_TYPES.find(r => r.id === reportType)?.label || "Reporte"}_${form.curso || ""}_${form.periodo || ""}`
     .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_\- ]/g, "")
     .replace(/\s+/g, "_");
@@ -581,6 +619,7 @@ export default function App() {
           form={form}
           set={set}
           generate={generate}
+          generating={generating}
           canSubmit={canSubmit}
           error={error}
           scrollToForm={scrollToForm}

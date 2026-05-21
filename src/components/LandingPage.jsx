@@ -610,7 +610,7 @@ function TypeCard({ rt, onClick }) {
 }
 
 function FormSection({
-  formRef, reportType, setReportType, form, set, generate, canSubmit, error,
+  formRef, reportType, setReportType, form, set, generate, generating, canSubmit, error,
   user, cursos, selectedCurso, selectCurso,
   formatosDisponibles, formatoSubido, selectFormato, clearFormato,
   uploadingFormato, handleFormatoUpload,
@@ -640,7 +640,7 @@ function FormSection({
   }, [reportType]);
 
   const generateHover = magneticHover();
-  const canGenerate = canSubmit && !!user;
+  const canGenerate = canSubmit && !!user && !generating;
 
   return (
     <section ref={formRef} style={{ padding: "72px 32px", background: "var(--paper-2)", borderBottom: "1px solid var(--line)" }}>
@@ -833,7 +833,11 @@ function FormSection({
                   willChange: "transform",
                 }}
               >
-                Generar reporte
+                {generating ? (
+                  <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Generando…</>
+                ) : (
+                  <>Generar reporte <span style={{ fontSize: 10, opacity: .55, fontWeight: 400, marginLeft: 4 }}>Ctrl+Enter</span></>
+                )}
               </button>
               {user && (
                 <button
@@ -968,7 +972,7 @@ function CtaSection() {
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function LandingPage(props) {
   const {
-    reportType, setReportType, form, set, generate, canSubmit, error, scrollToForm,
+    reportType, setReportType, form, set, generate, generating, canSubmit, error, scrollToForm,
     user, cursos, selectedCurso, selectCurso,
     formatosDisponibles, formatoSubido, selectFormato, clearFormato,
     uploadingFormato, handleFormatoUpload,
@@ -997,6 +1001,7 @@ export default function LandingPage(props) {
         form={form}
         set={set}
         generate={generate}
+        generating={generating}
         canSubmit={canSubmit}
         error={error}
         user={user}

@@ -32,6 +32,14 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
     }
   }, [showModal]);
 
+  // H3: Cerrar con ESC
+  useEffect(() => {
+    if (!showModal) return;
+    const handler = (e) => { if (e.key === 'Escape') closeModal(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }); // eslint-disable-line react-hooks/exhaustive-deps
+
   const closeModal = () => {
     if (modalRef.current && overlayRef.current) {
       animate(modalRef.current, {
