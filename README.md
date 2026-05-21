@@ -369,3 +369,7 @@ SELECT COUNT(DISTINCT user_id) AS docentes_con_cursos FROM cursos;
 
 Piñero · Heredia · Zumárraga · Iza
 PUCE — Emprendimiento Tecnológico 2026
+
+## Redes sociales
+
+[![Instagram](https://img.shields.io/badge/Instagram-%40docu__ia-E4405F?logo=instagram&logoColor=white)](https://www.instagram.com/docu_ia?igsh=OXZ2dWw2aDJxYzFj&utm_source=qr)
