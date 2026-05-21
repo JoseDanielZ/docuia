@@ -135,7 +135,7 @@ function Navbar({
               </button>
               <span style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 11, color: "rgba(30,58,95,.45)",
+                fontSize: 11, color: "var(--muted)",
                 marginLeft: 4,
               }}>{user.email}</span>
             </>
