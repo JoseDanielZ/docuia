@@ -6,44 +6,46 @@
 }
 
 :root {
-  --ink:         #0B1F3A;
-  --ink-2:       #122a4e;
-  --paper:       #F5F1E8;
-  --paper-2:     #EFE9DB;
-  --paper-3:     #E4DCC8;
-  --line:        #D8CFB7;
-  --muted:       #6b6552;
-  --text:        #0B1F3A;
-  --accent:      oklch(55% 0.14 250);
-  --accent-soft: oklch(92% 0.04 250);
-  --accent-ink:  oklch(30% 0.09 250);
+  --ink:         #1e3a5f;   /* Navy — primario */
+  --ink-2:       #162e4d;   /* Navy oscuro */
+  --paper:       #f4f0e6;   /* Ivory */
+  --paper-2:     #e6e1d4;   /* Linen */
+  --paper-3:     #d9d2c1;
+  --line:        #ccc4ae;
+  --muted:       #5c6b7a;
+  --text:        #1e3a5f;
+  --accent:      #2d5f9e;   /* Royal blue — accentos */
+  --accent-soft: #dde8f7;
+  --accent-ink:  #1b3d6e;
+  --brass:       #c9a84c;   /* Dorado académico */
   --danger:      #9A2A2A;
   --ok:          #2F6A4A;
   --warn-bg:     #fffbeb;
-  --warn-border: #fcd34d;
-  --warn-text:   #78350f;
-  --shadow:      0 1px 0 rgba(11,31,58,.05), 0 8px 24px -8px rgba(11,31,58,.12);
-  --shadow-deep: 0 1px 0 rgba(11,31,58,.05), 0 30px 70px -28px rgba(11,31,58,.28);
+  --warn-border: #c9a84c;
+  --warn-text:   #5c3d0a;
+  --shadow:      0 1px 0 rgba(30,58,95,.05), 0 8px 24px -8px rgba(30,58,95,.12);
+  --shadow-deep: 0 1px 0 rgba(30,58,95,.05), 0 30px 70px -28px rgba(30,58,95,.28);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink:         #ddd5c2;
-    --ink-2:       #c8bfad;
-    --paper:       #141210;
-    --paper-2:     #1c1916;
-    --paper-3:     #23201c;
-    --line:        #332e27;
-    --muted:       #7a7265;
-    --text:        #ddd5c2;
-    --accent:      oklch(65% 0.16 250);
-    --accent-soft: oklch(18% 0.06 250);
-    --accent-ink:  oklch(78% 0.12 250);
+    --ink:         #c8d8f0;
+    --ink-2:       #a8c0e0;
+    --paper:       #0d1520;
+    --paper-2:     #121c2e;
+    --paper-3:     #182437;
+    --line:        #253450;
+    --muted:       #6080a0;
+    --text:        #c8d8f0;
+    --accent:      #4a85c8;
+    --accent-soft: #142040;
+    --accent-ink:  #80b0e0;
+    --brass:       #c9a84c;
     --danger:      #c44f4f;
     --ok:          #4a9a6a;
-    --warn-bg:     #2a1f0a;
-    --warn-border: #6b4f15;
-    --warn-text:   #f0c060;
+    --warn-bg:     #1a1500;
+    --warn-border: #8a6c20;
+    --warn-text:   #e8c060;
     --shadow:      0 1px 0 rgba(0,0,0,.3), 0 8px 24px -8px rgba(0,0,0,.6);
     --shadow-deep: 0 1px 0 rgba(0,0,0,.3), 0 30px 70px -28px rgba(0,0,0,.8);
   }
@@ -107,7 +109,7 @@
   padding: 12px 24px;
   background: var(--ink);
   color: var(--paper);
-  box-shadow: 0 6px 18px -8px rgba(11,31,58,.5);
+  box-shadow: 0 6px 18px -8px rgba(30,58,95,.5);
 }
 .btn-primary:hover { opacity: 1; }
 
@@ -126,7 +128,7 @@
 }
 .card:hover {
   border-color: var(--accent) !important;
-  box-shadow: 0 8px 24px -10px rgba(11,31,58,.18);
+  box-shadow: 0 8px 24px -10px rgba(30,58,95,.18);
 }
 
 /* ── Download buttons (transform lo gestiona anime.js) ───────────────────── */

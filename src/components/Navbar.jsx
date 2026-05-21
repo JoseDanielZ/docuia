@@ -58,7 +58,7 @@ function Navbar({
   const navBtnStyle = {
     padding: "7px 14px",
     fontSize: 12,
-    border: "1px solid rgba(11,31,58,.18)",
+    border: "1px solid rgba(30,58,95,.18)",
     color: "var(--ink)",
     background: "transparent",
     borderRadius: 6,
@@ -69,13 +69,13 @@ function Navbar({
   };
 
   const handleBtnEnter = (e) => {
-    e.currentTarget.style.borderColor = "rgba(11,31,58,.4)";
+    e.currentTarget.style.borderColor = "rgba(30,58,95,.4)";
     e.currentTarget.style.color = "var(--ink)";
-    e.currentTarget.style.background = "rgba(11,31,58,.06)";
+    e.currentTarget.style.background = "rgba(30,58,95,.06)";
     animate(e.currentTarget, { translateY: -2, duration: 240, ease: "outQuart" });
   };
   const handleBtnLeave = (e) => {
-    e.currentTarget.style.borderColor = "rgba(11,31,58,.18)";
+    e.currentTarget.style.borderColor = "rgba(30,58,95,.18)";
     e.currentTarget.style.color = "var(--ink)";
     e.currentTarget.style.background = "transparent";
     animate(e.currentTarget, { translateY: 0, duration: 320, ease: "outQuart" });
@@ -87,7 +87,7 @@ function Navbar({
     <nav ref={navRef} style={{
       position: "sticky", top: 0, zIndex: 100,
       background: "var(--paper)",
-      borderBottom: "1px solid rgba(11,31,58,.12)",
+      borderBottom: "1px solid rgba(30,58,95,.12)",
       padding: "0",
       willChange: "transform, opacity",
     }}>
@@ -96,10 +96,13 @@ function Navbar({
         display: "flex", justifyContent: "space-between", alignItems: "center",
         flexWrap: "wrap", gap: 12,
       }}>
-        <div
+        <button
           ref={logoRef}
           onClick={onLogoClick}
-          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", willChange: "transform, opacity" }}
+          style={{
+            all: "unset", display: "flex", alignItems: "center", gap: 10,
+            cursor: "pointer", willChange: "transform, opacity",
+          }}
         >
           <div style={{
             width: 28, height: 28, borderRadius: 7,
@@ -113,7 +116,7 @@ function Navbar({
             fontWeight: 600, fontSize: 16,
             color: "var(--ink)", letterSpacing: ".01em",
           }}>DocuIA</span>
-        </div>
+        </button>
 
         <div ref={itemsRef} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {user && (
@@ -132,7 +135,7 @@ function Navbar({
               </button>
               <span style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 11, color: "rgba(11,31,58,.45)",
+                fontSize: 11, color: "rgba(30,58,95,.45)",
                 marginLeft: 4,
               }}>{user.email}</span>
             </>
