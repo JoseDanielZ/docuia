@@ -23,6 +23,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Faltan datos: filename, content, tipo_reporte' });
   }
 
+  const safeName = String(filename).split(/[/\\]/).pop().replace(/[^a-zA-Z0-9._\- ]/g, '_').substring(0, 255);
+  if (!safeName) return res.status(400).json({ error: 'Nombre de archivo inválido' });
+
   const { url } = getSupabaseEnv();
   const headers = serviceRestHeaders();
 
@@ -43,7 +46,7 @@ export default async function handler(req, res) {
     if (buffer.length > 10 * 1024 * 1024) {
       return res.status(413).json({ error: 'El archivo supera el tamaño máximo permitido (10 MB)' });
     }
-    const fileExt = filename.toLowerCase().split('.').pop();
+    const fileExt = safeName.toLowerCase().split('.').pop();
 
     let textoExtraido = '';
     let numCampos = 0;
@@ -54,10 +57,10 @@ export default async function handler(req, res) {
         const data = await pdfParse(buffer);
         textoExtraido = data.text;
         const lineas = textoExtraido.split('\n').filter(l => l.trim());
-        numCampos = lineas.filter(l => l.includes(':') || l.includes('____') || l.match(/\[\s*\]/)).length;
+        numCampos = lineas.filter(l => l.includes(':') || l.includes('____') || /\[\s*\]/.exec(l)).length;
       } catch (error_) {
         logger.error('upload-formato: error parsear PDF', { err: error_.message });
-        return res.status(400).json({ error: 'Error al parsear PDF', details: error_.message });
+        return res.status(400).json({ error: 'Error al parsear PDF' });
       }
     } else if (fileExt === 'xlsx' || fileExt === 'xls') {
       try {
@@ -71,7 +74,7 @@ export default async function handler(req, res) {
         numCampos = rows.reduce((acc, row) => acc + row.split(',').filter(c => c.trim()).length, 0);
       } catch (error_) {
         logger.error('upload-formato: error parsear Excel', { err: error_.message });
-        return res.status(400).json({ error: 'Error al parsear Excel', details: error_.message });
+        return res.status(400).json({ error: 'Error al parsear Excel' });
       }
     } else {
       return res.status(400).json({ error: 'Formato no soportado. Use PDF o Excel (.xlsx, .xls)' });
@@ -87,7 +90,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         user_id: user.id,
         tipo_reporte,
-        nombre_archivo: filename,
+        nombre_archivo: safeName,
         tipo_archivo: fileExt,
         contenido_extraido: textoExtraido,
         es_ejemplo: !!es_ejemplo,
@@ -113,6 +116,6 @@ export default async function handler(req, res) {
 
   } catch (error_) {
     logger.error('upload-formato: error inesperado', { err: error_.message });
-    return res.status(500).json({ error: 'Error del servidor', details: error_.message });
+    return res.status(500).json({ error: 'Error del servidor' });
   }
 }

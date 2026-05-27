@@ -5,6 +5,7 @@
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UUID_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function handleLogin(req, res) {
   const ip = clientIp(req);
@@ -32,7 +33,7 @@ async function handleLogin(req, res) {
 
     // Enrich user_metadata with profile data from the profiles table
     // This covers existing users who signed up before institucion was added to auth metadata
-    if (data.user?.id) {
+    if (data.user?.id && UUID_RE.test(data.user.id)) {
       try {
         const profileRes = await fetch(
           `${SUPABASE_URL}/rest/v1/profiles?id=eq.${data.user.id}&select=name,role,institucion,cargo`,
