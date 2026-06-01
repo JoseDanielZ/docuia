@@ -5,19 +5,35 @@ import "./CursosView.css";
 import { REPORT_TYPES } from "../config.js";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
+const TIPO_ICONS = {
+  semanal:        "📋",
+  calificaciones: "📊",
+  asistencia:     "📅",
+  dece:           "🧠",
+  planificacion:  "📐",
+};
+
+const TIPO_CSS_CLASS = {
+  semanal:        "tipo-semanal",
+  calificaciones: "tipo-calificaciones",
+  asistencia:     "tipo-asistencia",
+  dece:           "tipo-dece",
+  planificacion:  "tipo-planificacion",
+};
+
 export default function HistorialView({
   reportes, openReport, deleteReport, goBack,
   loading, hasMore, onLoadMore,
 }) {
   const headerRef  = useRef(null);
-  const gridRef    = useRef(null);
+  const listRef    = useRef(null);
   const goBackHover = magneticHover();
 
   const [filtros, setFiltros] = useState({ tipo: '', desde: '', hasta: '' });
 
   const reportesFiltrados = reportes.filter(r => {
-    const matchTipo = !filtros.tipo || r.tipo_reporte === filtros.tipo;
-    const fecha = new Date(r.created_at);
+    const matchTipo  = !filtros.tipo || r.tipo_reporte === filtros.tipo;
+    const fecha      = new Date(r.created_at);
     const matchDesde = !filtros.desde || fecha >= new Date(filtros.desde);
     const matchHasta = !filtros.hasta || fecha <= new Date(filtros.hasta + 'T23:59:59');
     return matchTipo && matchDesde && matchHasta;
@@ -25,26 +41,18 @@ export default function HistorialView({
   const hayFiltros = filtros.tipo || filtros.desde || filtros.hasta;
 
   useEnter(headerRef, { y: 14, duration: 600 });
-  useStaggerChildren(gridRef, {
-    y: 22, delay: 70, duration: 600,
+  useStaggerChildren(listRef, {
+    y: 16, delay: 50, duration: 550,
     deps: [reportesFiltrados.length, loading, filtros],
   });
 
   const handleArchive = (id, el) => {
     if (!el) return deleteReport(id);
     animate(el, {
-      opacity: [1, 0], scale: [1, 0.92], translateX: [0, 30],
-      duration: 280, ease: "outQuad",
+      opacity: [1, 0], scale: [1, 0.94], translateX: [0, 24],
+      duration: 260, ease: "outQuad",
       onComplete: () => deleteReport(id),
     });
-  };
-
-  const inputStyle = {
-    fontFamily: "'IBM Plex Sans', sans-serif",
-    fontSize: 13, padding: "8px 10px",
-    border: "1px solid var(--line)", borderRadius: 8,
-    background: "var(--paper)", color: "var(--ink)",
-    outline: "none",
   };
 
   return (
@@ -55,128 +63,147 @@ export default function HistorialView({
         <div ref={headerRef} className="cursos-header" style={{ willChange: "transform, opacity" }}>
           <div>
             <h2 className="cursos-title">Historial de reportes</h2>
-            <p className="cursos-subtitle">
-              Reportes generados. Puedes verlos, editarlos y descargarlos otra vez.
-            </p>
+            <p className="cursos-subtitle">Reportes generados. Puedes verlos, editarlos y descargarlos otra vez.</p>
           </div>
           <button className="cursos-add-btn" {...goBackHover} onClick={goBack}>
             ← Volver al formulario
           </button>
         </div>
 
-        {/* Barra de filtros */}
+        {/* Filtros */}
         {reportes.length > 0 && (
-          <div style={{
-            display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center",
-            marginBottom: 20, padding: "14px 16px",
-            background: "var(--paper-2)", border: "1px solid var(--line)",
-            borderRadius: 10,
-          }}>
+          <div className="historial-filters">
             <select
               value={filtros.tipo}
               onChange={e => setFiltros(f => ({ ...f, tipo: e.target.value }))}
-              style={{ ...inputStyle, minWidth: 160 }}
+              className="filter-select"
               aria-label="Filtrar por tipo de reporte"
+              style={{ minWidth: 160 }}
             >
               <option value="">Todos los tipos</option>
-              {REPORT_TYPES.map(rt => (
-                <option key={rt.id} value={rt.id}>{rt.label}</option>
-              ))}
+              {REPORT_TYPES.map(rt => <option key={rt.id} value={rt.id}>{rt.label}</option>)}
             </select>
 
             <input
-              type="date"
-              value={filtros.desde}
+              type="date" value={filtros.desde}
               onChange={e => setFiltros(f => ({ ...f, desde: e.target.value }))}
-              style={inputStyle}
-              aria-label="Desde fecha"
-              title="Desde"
+              className="filter-input" aria-label="Desde"
             />
             <input
-              type="date"
-              value={filtros.hasta}
+              type="date" value={filtros.hasta}
               onChange={e => setFiltros(f => ({ ...f, hasta: e.target.value }))}
-              style={inputStyle}
-              aria-label="Hasta fecha"
-              title="Hasta"
+              className="filter-input" aria-label="Hasta"
             />
 
             {hayFiltros && (
               <button
-                className="btn btn-ghost"
+                className="cursos-add-btn"
                 onClick={() => setFiltros({ tipo: '', desde: '', hasta: '' })}
-                style={{ fontSize: 12, padding: "8px 14px" }}
+                style={{ background: "transparent", color: "var(--text-secondary)", border: "1px solid var(--border-default)", boxShadow: "none" }}
               >
-                Limpiar filtros
+                Limpiar
               </button>
             )}
 
             {hayFiltros && (
-              <span style={{
-                fontSize: 12, color: "var(--muted)",
-                fontFamily: "'IBM Plex Mono', monospace",
-                marginLeft: "auto",
-              }}>
-                {reportesFiltrados.length} de {reportes.length} cargados
+              <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginLeft: "auto" }}>
+                {reportesFiltrados.length} de {reportes.length}
               </span>
             )}
           </div>
         )}
 
-        {/* Estados */}
+        {/* Estado: cargando */}
         {loading && reportes.length === 0 && (
-          <div className="cursos-empty" aria-live="polite">Cargando historial…</div>
+          <div className="cursos-empty" aria-live="polite">
+            <span style={{ fontSize: "1.8rem", animation: "emptyFloat 2s ease-in-out infinite" }}>⏳</span>
+            <p>Cargando historial…</p>
+          </div>
         )}
 
+        {/* Estado: vacío */}
         {!loading && reportes.length === 0 && (
-          <div className="cursos-empty" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: "2rem" }}>📄</span>
-            <p style={{ margin: 0 }}>Todavía no has generado reportes.</p>
+          <div className="cursos-empty">
+            <span style={{ fontSize: "2.2rem" }}>📄</span>
+            <p>Todavía no has generado reportes.</p>
             <button className="cursos-add-btn" onClick={goBack}>Generar mi primer reporte</button>
           </div>
         )}
 
+        {/* Sin resultados con filtros */}
         {!loading && reportes.length > 0 && reportesFiltrados.length === 0 && (
           <div className="cursos-empty">
-            No hay reportes que coincidan con los filtros seleccionados.
+            <span style={{ fontSize: "1.8rem" }}>🔍</span>
+            <p>No hay reportes con los filtros seleccionados.</p>
           </div>
         )}
 
-        {/* Grid */}
-        <div ref={gridRef} className="cursos-grid" role="list">
+        {/* Lista */}
+        <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 10 }} role="list">
           {reportesFiltrados.map(r => {
-            const tipo = REPORT_TYPES.find(rt => rt.id === r.tipo_reporte)?.label || r.tipo_reporte;
+            const tipoLabel = REPORT_TYPES.find(rt => rt.id === r.tipo_reporte)?.label || r.tipo_reporte;
+            const icono     = TIPO_ICONS[r.tipo_reporte] || "📄";
+            const tipoCls   = TIPO_CSS_CLASS[r.tipo_reporte] || "";
             return (
               <article
                 key={r.id}
-                className="curso-card"
                 role="listitem"
-                style={{ willChange: "transform, opacity" }}
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "16px 20px",
+                  display: "grid",
+                  gridTemplateColumns: "44px 1fr auto",
+                  gap: 14,
+                  alignItems: "center",
+                  cursor: "pointer",
+                  transition: "border-color 200ms, background 200ms, transform 200ms",
+                  willChange: "transform",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                  e.currentTarget.style.background = "var(--bg-elevated)";
+                  e.currentTarget.style.transform = "translateX(4px)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = "var(--border-subtle)";
+                  e.currentTarget.style.background = "var(--bg-surface)";
+                  e.currentTarget.style.transform = "translateX(0)";
+                }}
               >
-                <div className="curso-card-header">
-                  <div className="curso-card-name">{tipo}</div>
+                {/* Indicador de tipo */}
+                <div className={`historial-tipo-indicator ${tipoCls}`}>{icono}</div>
+
+                {/* Información */}
+                <div>
+                  <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 14, marginBottom: 3, fontFamily: "var(--font-body)" }}>
+                    {tipoLabel} — {r.curso || "Sin curso"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)", display: "flex", gap: 10, flexWrap: "wrap", fontFamily: "var(--font-mono)" }}>
+                    <span>{r.periodo || "Sin período"}</span>
+                    <span>·</span>
+                    <span>{new Date(r.created_at).toLocaleString('es-EC', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                    {r.fue_copiado && <span style={{ color: "var(--jade-500)" }}>· Copiado</span>}
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                  <button
+                    className="cursos-add-btn"
+                    style={{ padding: "7px 14px", fontSize: 12, willChange: "transform" }}
+                    onClick={(e) => { pop(e.currentTarget, { scale: 1.04 }); openReport(r.id); }}
+                  >
+                    Ver
+                  </button>
                   <button
                     className="curso-card-delete"
                     onClick={(e) => handleArchive(r.id, e.currentTarget.closest("article"))}
-                    aria-label={`Archivar reporte de ${tipo}`}
-                    title="Archivar reporte"
+                    aria-label={`Archivar reporte de ${tipoLabel}`}
+                    title="Archivar"
                   >×</button>
                 </div>
-                <div className="curso-card-meta">
-                  {r.curso || "Sin curso"} · {r.periodo || "Sin período"}
-                </div>
-                <div className="curso-card-details">
-                  {new Date(r.created_at).toLocaleString('es-EC', {
-                    dateStyle: 'short', timeStyle: 'short',
-                  })}
-                </div>
-                <button
-                  className="cursos-add-btn"
-                  style={{ marginTop: 12, width: "100%", willChange: "transform" }}
-                  onClick={(e) => { pop(e.currentTarget, { scale: 1.04 }); openReport(r.id); }}
-                >
-                  Ver / editar
-                </button>
               </article>
             );
           })}
@@ -189,7 +216,7 @@ export default function HistorialView({
               className="btn btn-ghost"
               onClick={onLoadMore}
               disabled={loading}
-              style={{ minWidth: 180, padding: "11px 24px" }}
+              style={{ minWidth: 200, padding: "11px 24px" }}
             >
               {loading ? "Cargando…" : "Cargar más reportes"}
             </button>

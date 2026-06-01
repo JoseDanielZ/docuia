@@ -1,0 +1,183 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   global.css — DocuIA / Design tokens, reset, body y aurora de fondo.
+   Importado desde main.jsx para que Vite lo procese con el resto del CSS.
+═══════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+
+:root {
+  /* Fondos */
+  --bg-base:        #060D1A;
+  --bg-surface:     #0D1829;
+  --bg-elevated:    #14223A;
+  --bg-hover:       #1A2D4A;
+
+  /* Acento primario — Jade eléctrico */
+  --jade-50:        #E6FFF9;
+  --jade-100:       #CCFFF3;
+  --jade-400:       #2EEABC;
+  --jade-500:       #00D4A8;
+  --jade-600:       #00B891;
+  --jade-700:       #009678;
+
+  /* Acento secundario — Ámbar dorado */
+  --amber-400:      #FFC24A;
+  --amber-500:      #F5A623;
+  --amber-600:      #D4881A;
+
+  /* Texto */
+  --text-primary:   #F0F4FF;
+  --text-secondary: #8BA3C7;
+  --text-muted:     #4A6080;
+  --text-inverse:   #060D1A;
+
+  /* Bordes */
+  --border-subtle:  rgba(45, 120, 200, 0.12);
+  --border-default: rgba(45, 120, 200, 0.22);
+  --border-strong:  rgba(0, 212, 168, 0.35);
+
+  /* Estados */
+  --success:  #00D4A8;
+  --error:    #FF5B6B;
+  --warning:  #F5A623;
+  --info:     #4A90E2;
+
+  /* Gradientes */
+  --grad-jade:      linear-gradient(135deg, #00D4A8 0%, #00B891 100%);
+  --grad-amber:     linear-gradient(135deg, #FFC24A 0%, #F5A623 100%);
+  --grad-surface:   linear-gradient(135deg, #0D1829 0%, #14223A 100%);
+  --grad-glow-jade: 0 0 40px rgba(0, 212, 168, 0.25), 0 0 80px rgba(0, 212, 168, 0.10);
+  --grad-glow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+
+  /* Espaciado */
+  --space-1:  4px;  --space-2:  8px;  --space-3:  12px; --space-4:  16px;
+  --space-5:  20px; --space-6:  24px; --space-8:  32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
+
+  /* Tipografía */
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'Figtree', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Radios */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* Easings */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+
+  /* Duraciones */
+  --duration-fast:  150ms;
+  --duration-base:  250ms;
+  --duration-slow:  400ms;
+  --duration-xslow: 600ms;
+
+  /* Aliases de compatibilidad con código existente */
+  --ink:         #F0F4FF;
+  --ink-2:       #8BA3C7;
+  --paper:       #060D1A;
+  --paper-2:     #0D1829;
+  --paper-3:     #14223A;
+  --line:        rgba(45, 120, 200, 0.22);
+  --muted:       #4A6080;
+  --text:        #F0F4FF;
+  --accent:      #00D4A8;
+  --accent-soft: rgba(0, 212, 168, 0.1);
+  --accent-ink:  #060D1A;
+  --brass:       #F5A623;
+  --danger:      #FF5B6B;
+  --ok:          #00D4A8;
+  --warn-bg:     rgba(245, 166, 35, 0.08);
+  --warn-border: rgba(245, 166, 35, 0.30);
+  --warn-text:   #F5A623;
+  --shadow:      0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+/* ── Light mode ───────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-base:        #F4F7FB;
+    --bg-surface:     #FFFFFF;
+    --bg-elevated:    #FFFFFF;
+    --bg-hover:       #EEF3FA;
+    --text-primary:   #0D1829;
+    --text-secondary: #4A6080;
+    --text-muted:     #8BA3C7;
+    --border-subtle:  rgba(13, 24, 41, 0.08);
+    --border-default: rgba(13, 24, 41, 0.14);
+    --grad-glow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+    /* Aliases compat */
+    --ink:         #0D1829;
+    --ink-2:       #4A6080;
+    --paper:       #F4F7FB;
+    --paper-2:     #FFFFFF;
+    --paper-3:     #EEF3FA;
+    --line:        rgba(13, 24, 41, 0.14);
+    --muted:       #8BA3C7;
+    --text:        #0D1829;
+    --accent-soft: rgba(0, 212, 168, 0.1);
+    --accent-ink:  #F4F7FB;
+    --shadow:      0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+    --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.12);
+    --warn-bg:     rgba(245, 166, 35, 0.08);
+    --warn-border: rgba(245, 166, 35, 0.30);
+    --warn-text:   #92400e;
+  }
+}
+
+/* ── Accesibilidad — reducir movimiento ───────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Base del documento ───────────────────────────────────────────────────── */
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Aurora de fondo — capa decorativa fija */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(0, 212, 168, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(245, 166, 35, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 50% 100%, rgba(0, 180, 145, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: auroraShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes auroraShift {
+  0%   { opacity: 1; transform: scale(1) translateY(0); }
+  50%  { opacity: 0.7; transform: scale(1.05) translateY(-20px); }
+  100% { opacity: 1; transform: scale(0.97) translateY(10px); }
+}
+
+#root { position: relative; z-index: 1; }

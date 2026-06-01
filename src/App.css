@@ -1,70 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DocuIA — App.css  /  Design System "Liquid Intelligence"
+   Variables defined in index.html :root — here we consume them.
+═══════════════════════════════════════════════════════════════════════════ */
+
 .app-root {
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  color: var(--text);
-  background: var(--paper);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: transparent;
   min-height: 100vh;
 }
 
-:root {
-  --ink:         #1e3a5f;
-  --ink-2:       #162e4d;
-  --paper:       #f4f0e6;
-  --paper-2:     #e6e1d4;
-  --paper-3:     #d9d2c1;
-  --line:        #ccc4ae;
-  --muted:       #5c6b7a;
-  --text:        #1a2e45;
-  --accent:      #2d5f9e;
-  --accent-soft: #dde8f7;
-  --accent-ink:  #1b3d6e;
-  --brass:       #c9a84c;
-  --danger:      #9A2A2A;
-  --ok:          #2F6A4A;
-  --warn-bg:     #fffbeb;
-  --warn-border: #c9a84c;
-  --warn-text:   #5c3d0a;
-  --shadow:      0 1px 0 rgba(30,58,95,.05), 0 8px 24px -8px rgba(30,58,95,.12);
-  --shadow-deep: 0 1px 0 rgba(30,58,95,.05), 0 30px 70px -28px rgba(30,58,95,.28);
-}
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink:         #d4c9b8;
-    --ink-2:       #b8a898;
-    --paper:       #1c1916;
-    --paper-2:     #232018;
-    --paper-3:     #2c2820;
-    --line:        #3a342c;
-    --muted:       #8a7a6a;
-    --text:        #d4c9b8;
-    --accent:      #4a85c8;
-    --accent-soft: #1a2540;
-    --accent-ink:  #80b0e0;
-    --brass:       #c9a84c;
-    --danger:      #c44f4f;
-    --ok:          #4a9a6a;
-    --warn-bg:     #1c1600;
-    --warn-border: #8a6c20;
-    --warn-text:   #e8c060;
-    --shadow:      0 1px 0 rgba(0,0,0,.4), 0 8px 24px -8px rgba(0,0,0,.7);
-    --shadow-deep: 0 1px 0 rgba(0,0,0,.4), 0 30px 70px -28px rgba(0,0,0,.9);
-  }
-}
-
-* { box-sizing: border-box; }
-
-.serif { font-family: 'Source Serif 4', Georgia, serif; font-optical-sizing: auto; letter-spacing: -.01em; }
-.mono  { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-
-/* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
+}
+
+@keyframes badgeReveal {
+  from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes titleReveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtitleReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes underlineReveal {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-20px) scale(1.03); }
+}
+
+@keyframes btnShimmer {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(0,212,168,0.4); }
+  50%       { transform: scale(1.08); box-shadow: 0 0 80px rgba(0,212,168,0.6), 0 0 140px rgba(0,212,168,0.2); }
+}
+
+@keyframes loadingSlide {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes reportReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes bannerSlideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: none; }
+  from { transform: translateX(100%) scale(0.9); opacity: 0; }
+  to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes toastSlideOut {
+  to { transform: translateX(120%); opacity: 0; }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalReveal {
+  from { opacity: 0; transform: scale(0.93) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Streaming cursor */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 
 @keyframes stream-cursor {
@@ -72,12 +115,18 @@
   50%       { opacity: 0; }
 }
 
-.streaming-cursor::after {
-  content: "▋";
-  animation: stream-cursor .7s ease infinite;
-  color: var(--accent);
-  font-size: 0.85em;
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: var(--jade-500);
+  border-radius: 1px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursorBlink 0.8s step-end infinite;
 }
+
+/* ── Accessibility ────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -88,49 +137,66 @@
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
+
 .btn {
   all: unset;
   cursor: pointer;
   text-align: center;
-  border-radius: 10px;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-weight: 500;
   font-size: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: opacity .18s ease, background .25s ease, color .25s ease, border-color .25s ease;
+  transition: transform var(--duration-fast) var(--ease-spring),
+              box-shadow var(--duration-base) var(--ease-smooth),
+              background var(--duration-base) var(--ease-smooth),
+              color var(--duration-fast) var(--ease-smooth),
+              border-color var(--duration-fast) var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
 }
-.btn:hover { opacity: .92; }
 
 .btn-primary {
   padding: 12px 24px;
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: 0 6px 18px -8px rgba(30,58,95,.5);
+  background: var(--grad-jade);
+  color: var(--text-inverse);
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,212,168,0.25);
 }
-.btn-primary:hover { opacity: 1; }
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--grad-glow-jade);
+}
+.btn-primary:hover::after { transform: translateX(100%); }
+.btn-primary:active { transform: translateY(0); }
 
 .btn-ghost {
   padding: 10px 20px;
-  border: 1px solid var(--line);
-  color: var(--text);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
   background: transparent;
 }
-.btn-ghost:hover { border-color: var(--ink); opacity: 1; }
-
-/* ── Cards ───────────────────────────────────────────────────────────────── */
-.card {
-  transition: border-color .2s, box-shadow .2s;
-  cursor: pointer;
-}
-.card:hover {
-  border-color: var(--accent) !important;
-  box-shadow: 0 8px 24px -10px rgba(30,58,95,.18);
+.btn-ghost:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  transform: translateY(-1px);
 }
 
 /* ── Download buttons ────────────────────────────────────────────────────── */
+
 .dl-btn {
   all: unset;
   cursor: pointer;
@@ -139,31 +205,73 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border-radius: 8px;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-weight: 500;
   font-size: 13px;
-  transition: opacity .18s, background .2s, border-color .2s;
+  padding: 10px 8px;
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-smooth);
+  will-change: transform;
 }
-.dl-btn:hover { opacity: .9; }
+.dl-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+
+.card {
+  transition: transform var(--duration-base) var(--ease-spring),
+              border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth);
+  cursor: pointer;
+}
+.card:hover {
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 8px 32px rgba(0,212,168,0.12);
+  transform: translateY(-3px);
+}
 
 /* ── Spinner ─────────────────────────────────────────────────────────────── */
+
 .spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,.35);
-  border-top-color: currentColor;
+  border: 2px solid rgba(0,212,168,0.25);
+  border-top-color: var(--jade-500);
   border-radius: 50%;
-  animation: spin .65s linear infinite;
+  animation: spin 0.65s linear infinite;
   vertical-align: middle;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Download grid ───────────────────────────────────────────────────────── */
+
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+/* ── App-root layout ─────────────────────────────────────────────────────── */
+
+.app-root > * { position: relative; z-index: 1; }
+
+/* ── Typography helpers ──────────────────────────────────────────────────── */
+
+.serif  { font-family: var(--font-display); }
+.mono   { font-family: var(--font-mono); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 700px) {
-  .g2      { grid-template-columns: 1fr !important; }
-  .hero-t  { font-size: 28px !important; }
-  .sn      { font-size: 28px !important; }
+
+@media (max-width: 768px) {
   .dl-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .dl-grid { grid-template-columns: 1fr !important; }
 }

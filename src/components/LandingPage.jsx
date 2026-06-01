@@ -3,6 +3,7 @@ import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
 import { getFormatoPreview } from "../utils/formatoText.js";
 import Field from "./Field.jsx";
+import "./LandingPage.css";
 import {
   useEnter,
   useStaggerChildren,
@@ -56,51 +57,23 @@ function HeroSection({ scrollToForm }) {
   const ctaHover = magneticHover();
 
   return (
-    <section style={{
-      background: "var(--ink)",
-      padding: "88px 32px 100px",
-      position: "relative",
-      overflow: "hidden",
-    }}>
-      <div ref={glowRef} style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        background: "radial-gradient(700px 500px at 15% 20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%), radial-gradient(600px 400px at 85% 90%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%)",
-        opacity: .45,
-        willChange: "opacity",
-      }} />
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        backgroundImage: "linear-gradient(to right, color-mix(in srgb, var(--paper) 4%, transparent) 1px, transparent 1px)",
-        backgroundSize: "44px 100%",
-        maskImage: "linear-gradient(to bottom, black, transparent 80%)",
-      }} />
+    <section className="hero-section">
+      <div ref={glowRef} className="hero-aurora" style={{ willChange: "opacity" }} />
+      <div className="hero-grid" />
 
-      <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
-        <p ref={eyebrowRef} style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, fontWeight: 500,
-          color: "color-mix(in srgb, var(--accent) 80%, var(--paper))",
-          letterSpacing: ".12em", textTransform: "uppercase",
-          marginBottom: 28,
-        }}>
-          Plataforma profesional de generación documental con IA
-        </p>
+      <div className="hero-inner">
+        <div ref={eyebrowRef} className="hero-badge" style={{ willChange: "transform, opacity" }}>
+          <span className="hero-badge__dot" />
+          Plataforma IA para docentes
+        </div>
 
-        <h1 ref={titleRef} className="hero-t" style={{
-          fontFamily: "'Source Serif 4', Georgia, serif",
-          fontWeight: 400, fontSize: 52,
-          color: "var(--paper)",
-          lineHeight: 1.1, letterSpacing: "-.02em",
-          margin: "0 0 22px",
-        }}>
-          Seis horas de reportes reducidas a <em style={{ fontStyle: "italic", color: "color-mix(in srgb, var(--accent) 80%, var(--paper))" }}>diez minutos.</em>
+        <h1 ref={titleRef} className="hero-title" style={{ willChange: "transform, opacity" }}>
+          Reportes que antes<br />
+          tomaban horas,{" "}
+          <span className="hero-title__accent">ahora en segundos.</span>
         </h1>
 
-        <p ref={subRef} style={{
-          fontSize: 17, color: "rgba(245,241,232,.6)",
-          lineHeight: 1.65, margin: "0 auto 40px", maxWidth: 520,
-          fontFamily: "'IBM Plex Sans', sans-serif",
-        }}>
+        <p ref={subRef} className="hero-subtitle" style={{ willChange: "transform, opacity" }}>
           Inteligencia artificial que genera informes institucionales completos en el formato exacto que requiere su coordinación.
         </p>
 
@@ -109,21 +82,12 @@ function HeroSection({ scrollToForm }) {
           className="btn btn-primary"
           onClick={scrollToForm}
           {...ctaHover}
-          style={{
-            padding: "14px 36px", fontSize: 15, fontWeight: 600,
-            background: "var(--paper)", color: "var(--ink)",
-            boxShadow: "none",
-            willChange: "transform, opacity",
-          }}
+          style={{ padding: "15px 40px", fontSize: 16, fontWeight: 700, borderRadius: "var(--radius-lg)", willChange: "transform, opacity" }}
         >
           Generar mi primer reporte
         </button>
 
-        <p ref={microRef} style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, color: "rgba(245,241,232,.25)",
-          marginTop: 18, letterSpacing: ".04em",
-        }}>
+        <p ref={microRef} className="hero-micro" style={{ willChange: "transform, opacity" }}>
           Sin registro · Sin costo · Descarga en Word, PDF o Excel
         </p>
       </div>
@@ -170,24 +134,9 @@ function StatItem({ stat, index, triggered }) {
   }, [triggered]);
 
   return (
-    <div ref={cardRef} style={{
-      padding: "36px 20px",
-      textAlign: "center",
-      borderRight: index < 3 ? "1px solid var(--line)" : "none",
-      background: "var(--paper)",
-      willChange: "transform, opacity",
-    }}>
-      <div ref={numRef} className="sn" style={{
-        fontFamily: "'Source Serif 4', Georgia, serif",
-        fontSize: 40, fontWeight: 300,
-        color: "var(--ink)", lineHeight: 1,
-      }}>0{stat.suffix}</div>
-      <div style={{
-        fontFamily: "'IBM Plex Sans', sans-serif",
-        fontSize: 12, color: "var(--muted)",
-        marginTop: 10, lineHeight: 1.5,
-        whiteSpace: "pre-line",
-      }}>{stat.label}</div>
+    <div ref={cardRef} className="stat-item" style={{ willChange: "transform, opacity" }}>
+      <div ref={numRef} className="stat-number">0{stat.suffix}</div>
+      <div className="stat-label">{stat.label}</div>
     </div>
   );
 }
@@ -211,12 +160,8 @@ function StatsSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} style={{ background: "var(--paper-2)", borderBottom: "1px solid var(--line)", padding: "0 32px" }}>
-      <div className="g2" style={{
-        maxWidth: 1000, margin: "0 auto",
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-        transform: "translateY(-1px)",
-      }}>
+    <section ref={sectionRef} className="stats-section">
+      <div className="stats-grid">
         {STATS.map((s, i) => (
           <StatItem key={i} stat={s} index={i} triggered={triggered} />
         ))}
@@ -237,46 +182,35 @@ function HowItWorksSection() {
   useScrollReveal(stepsRef, { selector: ".step-item", y: 26, duration: 800, delay: 140 });
 
   return (
-    <section style={{ padding: "72px 32px", background: "var(--paper)", borderBottom: "1px solid var(--line)" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
-        <p style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, color: "var(--muted)",
-          letterSpacing: ".1em", textTransform: "uppercase",
-          marginBottom: 10, textAlign: "center",
-        }}>Proceso</p>
-
-        <h2 style={{
-          fontFamily: "'Source Serif 4', Georgia, serif",
-          fontWeight: 400, fontSize: 34,
-          color: "var(--ink)", textAlign: "center",
-          margin: "0 0 56px", letterSpacing: "-.02em",
-        }}>
-          Tres pasos. Un resultado <em style={{ fontStyle: "italic" }}>profesional.</em>
+    <section className="how-section">
+      <div className="how-inner">
+        <p className="how-eyebrow">Cómo funciona</p>
+        <h2 className="how-title">
+          Tres pasos. Un resultado <span className="how-title__accent">profesional.</span>
         </h2>
 
-        <div ref={stepsRef} style={{ display: "flex", justifyContent: "center", gap: 60, flexWrap: "wrap" }}>
-          {STEPS.map((st, i) => (
-            <div key={i} className="step-item" style={{ textAlign: "center", maxWidth: 220, willChange: "transform, opacity" }}>
-              <div style={{
-                fontFamily: "'Source Serif 4', Georgia, serif",
-                fontSize: 36, fontWeight: 300,
-                color: "color-mix(in srgb, var(--accent) 70%, var(--paper-3))",
-                marginBottom: 12,
-              }}>{st.num}</div>
-              <div style={{ width: 32, height: 1, background: "var(--line)", margin: "0 auto 14px" }} />
-              <div style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 15, fontWeight: 600,
-                color: "var(--ink)", marginBottom: 8,
-              }}>{st.t}</div>
-              <p style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 13, color: "var(--muted)",
-                lineHeight: 1.6, margin: 0,
-              }}>{st.d}</p>
-            </div>
-          ))}
+        <div ref={stepsRef} className="steps-grid">
+          {STEPS.map((st, i) => {
+            const iconColors = [
+              { bg: "rgba(0,212,168,0.1)", border: "1px solid rgba(0,212,168,0.2)", color: "var(--jade-500)" },
+              { bg: "rgba(245,166,35,0.1)",  border: "1px solid rgba(245,166,35,0.2)",  color: "var(--amber-500)" },
+              { bg: "rgba(74,144,226,0.1)",  border: "1px solid rgba(74,144,226,0.2)",  color: "#4A90E2" },
+            ];
+            const ic = iconColors[i];
+            const elements = [(
+              <div key={i} className="step-item step-card" style={{ willChange: "transform, opacity" }}>
+                <div className="step-icon" style={{ background: ic.bg, border: ic.border, color: ic.color }}>
+                  {st.num}
+                </div>
+                <div className="step-title">{st.t}</div>
+                <p className="step-desc">{st.d}</p>
+              </div>
+            )];
+            if (i < STEPS.length - 1) elements.push(
+              <div key={`c${i}`} className="step-connector" />
+            );
+            return elements;
+          })}
         </div>
       </div>
     </section>
@@ -285,19 +219,7 @@ function HowItWorksSection() {
 
 // ── Form section ──────────────────────────────────────────────────────────────
 function SectionLabel({ children }) {
-  return (
-    <div style={{
-      fontFamily: "'IBM Plex Mono', monospace",
-      fontSize: 10, fontWeight: 500,
-      color: "var(--muted)", letterSpacing: ".1em",
-      textTransform: "uppercase",
-      marginBottom: 10, marginTop: 10,
-      paddingBottom: 8,
-      borderBottom: "1px solid var(--line)",
-    }}>
-      {children}
-    </div>
-  );
+  return <div className="form-section-label">{children}</div>;
 }
 
 // ── Selector de curso guardado ────────────────────────────────────────────────
@@ -312,12 +234,7 @@ function CursoSelector({ cursos, selectedCurso, selectCurso }) {
           const c = cursos.find(x => x.id === e.target.value);
           selectCurso(c || null);
         }}
-        style={{
-          width: "100%", padding: "10px 12px", marginBottom: 16,
-          background: "var(--paper)", border: "1px solid var(--line)",
-          borderRadius: 8, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
-          color: "var(--ink)",
-        }}
+        className="form-select"
       >
         <option value="">— Sin auto-llenar —</option>
         {cursos.map(c => (
@@ -378,20 +295,20 @@ function FormatoInstitucional({
               padding: "3px 8px", borderRadius: 999,
               background: tipoCoincide ? "var(--accent)" : "#c0392b",
               color: "var(--paper)",
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase",
               fontWeight: 600,
             }}>
               {tipoCoincide ? "● Formato activo" : "⚠ Tipo no coincide"}
             </span>
             <span style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: "var(--font-body)",
               fontSize: 13, color: "var(--ink)", fontWeight: 500,
             }}>
               {formatoSubido.nombre_archivo}
             </span>
             <span style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 11, color: "var(--muted)",
             }}>
               {formatoSubido.num_campos_detectados || 0} campos · {formatoSubido.tipo_reporte}
@@ -402,7 +319,7 @@ function FormatoInstitucional({
                 marginLeft: "auto",
                 background: "transparent", border: "1px solid var(--line)",
                 borderRadius: 6, padding: "3px 9px",
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 10, color: "var(--muted)", cursor: "pointer",
               }}
             >
@@ -413,7 +330,7 @@ function FormatoInstitucional({
           {!tipoCoincide && (
             <p style={{
               margin: 0, fontSize: 11, color: "#c0392b",
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "var(--font-mono)",
             }}>
               Este formato fue subido como "{formatoSubido.tipo_reporte}". El reporte actual es "{reportType}". Sube uno específico o quita el actual.
             </p>
@@ -422,7 +339,7 @@ function FormatoInstitucional({
           {/* Toggle modo estricto / guía */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10, color: "var(--muted)",
               letterSpacing: ".05em", textTransform: "uppercase",
             }}>Modo:</span>
@@ -432,7 +349,7 @@ function FormatoInstitucional({
             ].map(opt => (
               <label key={opt.id} style={{
                 display: "inline-flex", alignItems: "center", gap: 5,
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: "var(--font-body)",
                 fontSize: 12, cursor: "pointer",
                 color: formatoModo === opt.id ? "var(--ink)" : "var(--muted)",
                 fontWeight: formatoModo === opt.id ? 600 : 400,
@@ -455,7 +372,7 @@ function FormatoInstitucional({
                 onClick={() => setShowPreview(s => !s)}
                 style={{
                   background: "transparent", border: "none", padding: 0,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 11, color: "var(--accent)", cursor: "pointer",
                   letterSpacing: ".04em",
                 }}
@@ -467,7 +384,7 @@ function FormatoInstitucional({
                   marginTop: 8, padding: 10,
                   background: "var(--paper-3)", border: "1px solid var(--line)",
                   borderRadius: 6, maxHeight: 220, overflow: "auto",
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 11, lineHeight: 1.55, color: "var(--ink)",
                   whiteSpace: "pre-wrap", wordBreak: "break-word",
                 }}>{preview}</pre>
@@ -492,7 +409,7 @@ function FormatoInstitucional({
             style={{
               width: "100%", padding: "9px 12px", marginBottom: 10,
               background: "var(--paper-2)", border: "1px solid var(--line)",
-              borderRadius: 8, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+              borderRadius: 8, fontFamily: "var(--font-body)", fontSize: 13,
               color: "var(--ink)",
             }}
           >
@@ -535,7 +452,7 @@ function FormatoInstitucional({
           </label>
           <label style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12,
+            fontFamily: "var(--font-body)", fontSize: 12,
             color: "var(--muted)",
           }}>
             <input
@@ -550,13 +467,13 @@ function FormatoInstitucional({
         {!reportType && (
           <p style={{
             margin: "8px 0 0", fontSize: 11, color: "var(--muted)",
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "var(--font-mono)",
           }}>Selecciona primero el tipo de reporte para subir un formato.</p>
         )}
         {!formatoSubido && reportType && (
           <p style={{
             margin: "8px 0 0", fontSize: 11, color: "var(--muted)",
-            fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.5,
+            fontFamily: "var(--font-mono)", lineHeight: 1.5,
           }}>
             Si subes un PDF o Excel del formato de tu institución, el reporte se generará replicando esa estructura exacta.
           </p>
@@ -573,37 +490,17 @@ function TypeCard({ rt, onClick }) {
   return (
     <div
       ref={ref}
-      className="card"
+      className="type-card"
       onClick={onClick}
       {...hover}
-      style={{
-        background: "var(--paper)",
-        border: "1px solid var(--line)",
-        borderRadius: 12, padding: "20px 18px",
-        display: "flex", alignItems: "flex-start", gap: 14,
-        willChange: "transform, opacity",
-      }}
+      style={{ willChange: "transform, opacity" }}
     >
-      <div style={{
-        width: 36, height: 36, borderRadius: 8,
-        background: "var(--paper-3)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0,
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: 13, fontWeight: 600, color: "var(--muted)",
-      }}>
-        {rt.id.slice(0, 2).toUpperCase()}
+      <div className="type-card__icon">
+        {rt.icon || rt.id.slice(0, 2).toUpperCase()}
       </div>
       <div>
-        <div style={{
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          fontSize: 14, fontWeight: 600, color: "var(--ink)",
-          marginBottom: 3,
-        }}>{rt.label}</div>
-        <div style={{
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          fontSize: 12, color: "var(--muted)",
-        }}>{rt.desc}</div>
+        <div className="type-card__label">{rt.label}</div>
+        <div className="type-card__desc">{rt.desc}</div>
       </div>
     </div>
   );
@@ -644,107 +541,47 @@ function FormSection({
   const canGenerate = canSubmit && !!user && !generating;
 
   return (
-    <section ref={formRef} style={{ padding: "72px 32px", background: "var(--paper-2)", borderBottom: "1px solid var(--line)" }}>
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <p style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, color: "var(--muted)",
-          letterSpacing: ".1em", textTransform: "uppercase",
-          marginBottom: 10, textAlign: "center",
-        }}>Generador</p>
-
-        <h2 style={{
-          fontFamily: "'Source Serif 4', Georgia, serif",
-          fontWeight: 400, fontSize: 34,
-          color: "var(--ink)", textAlign: "center",
-          margin: "0 0 8px", letterSpacing: "-.02em",
-        }}>
-          Generar reporte <em style={{ fontStyle: "italic" }}>institucional</em>
+    <section ref={formRef} className="form-section">
+      <div className="form-section-inner">
+        <p className="form-section-eyebrow">Generador de reportes</p>
+        <h2 className="form-section-title">
+          Generar reporte <span className="form-section-title__accent">institucional</span>
         </h2>
-        <p style={{
-          textAlign: "center", color: "var(--muted)",
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          fontSize: 14, marginBottom: 16,
-        }}>
-          A mayor detalle, mayor precisión en el documento generado.
-        </p>
-        <p style={{
-          textAlign: "center", color: "var(--muted)",
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          fontSize: 12, lineHeight: 1.55, marginBottom: 28, maxWidth: 520, marginLeft: "auto", marginRight: "auto",
-        }}>
-          Privacidad: el contenido del formulario se envía de forma cifrada (HTTPS) a nuestros servidores y a un proveedor de IA para redactar el informe.
-          No incluyas contraseñas, datos bancarios ni información que tu institución prohíba compartir con terceros. Revisa siempre el texto antes de enviarlo oficialmente.
+        <p className="form-section-desc">A mayor detalle, mayor precisión en el documento generado.</p>
+        <p className="form-section-privacy">
+          Privacidad: el contenido se envía cifrado (HTTPS) a un proveedor de IA. No incluyas contraseñas ni datos sensibles. Revisa siempre el texto antes de enviarlo oficialmente.
         </p>
 
         {draftRestored && (
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "color-mix(in srgb, var(--accent) 8%, var(--paper-2))",
-            border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
-            borderRadius: 8, padding: "10px 14px", marginBottom: 20,
-            fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
-            color: "var(--ink)",
-          }}>
+          <div className="draft-banner">
             <span>Borrador restaurado — continuando desde donde lo dejaste.</span>
-            <button onClick={onDismissDraft} style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--muted)", fontSize: 12, padding: "2px 8px",
-              fontFamily: "inherit",
-            }}>
+            <button className="draft-banner__dismiss" onClick={onDismissDraft}>
               Descartar
             </button>
           </div>
         )}
 
         {!reportType ? (
-          <div ref={cardsRef} className="g2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div ref={cardsRef} className="type-cards-grid">
             {REPORT_TYPES.map(rt => (
               <TypeCard key={rt.id} rt={rt} onClick={() => setReportType(rt.id)} />
             ))}
           </div>
         ) : (
-          <div ref={formInnerRef} style={{
-            background: "var(--paper)",
-            border: "1px solid var(--line)",
-            borderRadius: 14,
-            padding: "28px 28px",
-            boxShadow: "var(--shadow)",
-          }}>
-            <div data-form-block style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              marginBottom: 20, paddingBottom: 16,
-              borderBottom: "1px solid var(--line)",
-            }}>
-              <span style={{
-                fontFamily: "'Source Serif 4', Georgia, serif",
-                fontSize: 18, fontWeight: 400, color: "var(--ink)",
-              }}>
+          <div ref={formInnerRef} className="form-card">
+            <div className="form-card__bar" />
+            <div data-form-block className="form-card-header">
+              <div className="form-card-header__badge">
+                <span className="form-card-header__dot" />
                 {REPORT_TYPES.find(r => r.id === reportType)?.label}
-              </span>
-              <button
-                onClick={() => setReportType(null)}
-                style={{
-                  all: "unset", cursor: "pointer",
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontSize: 13, color: "var(--muted)",
-                  borderBottom: "1px solid var(--line)",
-                  paddingBottom: 1,
-                }}
-              >
+              </div>
+              <button className="form-card-header__change" onClick={() => setReportType(null)}>
                 Cambiar tipo
               </button>
             </div>
 
             {error && (
-              <div data-form-block style={{
-                padding: "12px 16px", background: "#fef2f2",
-                border: "1px solid #f5c6c6", borderRadius: 8,
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 13, color: "var(--danger)", marginBottom: 16,
-              }}>
-                {error}
-              </div>
+              <div data-form-block className="form-error">{error}</div>
             )}
 
             {user && plantillas?.length > 0 && (
@@ -756,12 +593,7 @@ function FormSection({
                     const p = plantillas.find(x => x.id === e.target.value);
                     if (p) loadTemplate(p);
                   }}
-                  style={{
-                    width: "100%", padding: "10px 12px", marginBottom: 16,
-                    background: "var(--paper)", border: "1px solid var(--line)",
-                    borderRadius: 8, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
-                    color: "var(--ink)",
-                  }}
+                  className="form-select"
                 >
                   <option value="">— Seleccionar plantilla —</option>
                   {plantillas
@@ -798,46 +630,46 @@ function FormSection({
 
             <div data-form-block>
               <SectionLabel>Datos del docente</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+              <div className="form-fields-grid">
                 {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half error={erroresForm?.[f.k]} />)}
               </div>
             </div>
 
             <div data-form-block>
               <SectionLabel>Datos del curso</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+              <div className="form-fields-grid">
                 {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} form={form} set={set} half error={erroresForm?.[f.k]} />)}
               </div>
             </div>
 
             <div data-form-block>
               <SectionLabel>Información del reporte</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+              <div className="form-fields-grid">
                 {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} error={erroresForm?.[f.k]} />)}
               </div>
             </div>
 
-            <div data-form-block style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+            <div data-form-block className="form-actions">
               <button
-                className="btn"
+                className="btn btn-primary"
                 onClick={generate}
                 disabled={!canGenerate}
                 {...(canGenerate ? generateHover : {})}
                 style={{
-                  flex: 1, minWidth: 200, padding: "14px 0",
-                  background: canGenerate ? "var(--ink)" : "var(--line)",
-                  color: canGenerate ? "var(--paper)" : "var(--muted)",
-                  fontSize: 14, fontWeight: 600, borderRadius: 10,
+                  flex: 1, minWidth: 200, padding: "15px 0",
+                  fontSize: 15, fontWeight: 700,
+                  borderRadius: "var(--radius-lg)",
+                  background: canGenerate ? "var(--grad-jade)" : "var(--bg-elevated)",
+                  color: canGenerate ? "var(--text-inverse)" : "var(--text-muted)",
                   cursor: canGenerate ? "pointer" : "not-allowed",
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  letterSpacing: ".01em",
+                  boxShadow: canGenerate ? "0 4px 20px rgba(0,212,168,0.3)" : "none",
                   willChange: "transform",
                 }}
               >
                 {generating ? (
                   <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Generando…</>
                 ) : (
-                  <>Generar reporte <span style={{ fontSize: 10, opacity: .55, fontWeight: 400, marginLeft: 4 }}>Ctrl+Enter</span></>
+                  <>Generar reporte <span style={{ fontSize: 10, opacity: .6, fontWeight: 400, marginLeft: 6 }}>Ctrl+Enter</span></>
                 )}
               </button>
               {user && (
@@ -857,12 +689,8 @@ function FormSection({
               )}
             </div>
             {reportType && !user && (
-              <p style={{
-                margin: "12px 0 0", textAlign: "center",
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 13, color: "var(--muted)",
-              }}>
-                <a href="/login.html" style={{ color: "var(--accent)" }}>Inicia sesión</a>
+              <p className="form-login-hint">
+                <a href="/login.html">Inicia sesión</a>
                 {" "}para generar y guardar reportes en tu historial.
               </p>
             )}
@@ -879,90 +707,34 @@ function CtaSection() {
   useScrollReveal(ref, { y: 22, duration: 800 });
   return (
     <>
-      <section style={{ padding: "64px 32px", background: "var(--ink)" }}>
-        <div ref={ref} style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", willChange: "transform, opacity" }}>
-          <p style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 11, color: "color-mix(in srgb, var(--accent) 70%, var(--paper))",
-            letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 12,
-          }}>Licencia institucional</p>
-
-          <h2 style={{
-            fontFamily: "'Source Serif 4', Georgia, serif",
-            fontWeight: 400, fontSize: 28,
-            color: "var(--paper)", margin: "0 0 12px",
-            letterSpacing: "-.02em",
-          }}>
-            ¿Desea DocuIA para toda su institución?
-          </h2>
-          <p style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
-            fontSize: 14, color: "rgba(245,241,232,.45)",
-            marginBottom: 28,
-          }}>
-            Un solo pago. Reportes ilimitados para todos los docentes.
-          </p>
+      <section className="cta-section">
+        <div ref={ref} className="cta-inner" style={{ willChange: "transform, opacity" }}>
+          <p className="cta-eyebrow">Licencia institucional</p>
+          <h2 className="cta-title">¿Desea DocuIA para toda su institución?</h2>
+          <p className="cta-desc">Un solo pago. Reportes ilimitados para todos los docentes.</p>
           <a
             href="mailto:contacto@docuia.app?subject=Interés en DocuIA institucional"
-            className="btn"
-            style={{
-              display: "inline-flex", padding: "12px 28px",
-              border: "1px solid rgba(245,241,232,.2)",
-              color: "var(--paper)", background: "transparent",
-              fontSize: 13, fontWeight: 500, borderRadius: 8,
-              textDecoration: "none", letterSpacing: ".02em",
-            }}
+            className="btn btn-ghost"
+            style={{ display: "inline-flex", padding: "12px 28px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}
           >
             Solicitar información
           </a>
         </div>
       </section>
 
-      <footer style={{
-        padding: "32px 32px 28px",
-        background: "var(--ink)",
-        borderTop: "1px solid rgba(255,255,255,.08)",
-        display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
-      }}>
+      <footer className="site-footer">
         <a
+          className="site-footer__instagram"
           href="https://www.instagram.com/docu_ia?igsh=OXZ2dWw2aDJxYzFj&utm_source=qr"
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 10,
-            textDecoration: "none",
-            background: "rgba(255,255,255,.07)",
-            border: "1px solid rgba(255,255,255,.13)",
-            borderRadius: 40,
-            padding: "10px 20px",
-            color: "#fff",
-            fontSize: 14,
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontWeight: 500,
-            letterSpacing: ".02em",
-            transition: "background .2s, border-color .2s, color .2s",
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)";
-            e.currentTarget.style.borderColor = "transparent";
-            e.currentTarget.style.color = "#fff";
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = "rgba(255,255,255,.07)";
-            e.currentTarget.style.borderColor = "rgba(255,255,255,.13)";
-            e.currentTarget.style.color = "#fff";
-          }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
           </svg>
           @docu_ia
         </a>
-        <p style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, color: "rgba(255,255,255,.3)",
-          margin: 0, letterSpacing: ".06em",
-        }}>
+        <p className="site-footer__copy">
           © {new Date().getFullYear()} DocuIA · Todos los derechos reservados
         </p>
       </footer>

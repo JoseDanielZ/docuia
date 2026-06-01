@@ -5,36 +5,21 @@ import { REPORT_TYPES } from "../config.js";
 import { useEnter, useStaggerChildren } from "../utils/anim.js";
 import { magneticHover } from "../utils/anim.js";
 
-function StatCard({ label, value, sub }) {
+function MetricCard({ label, value, sub }) {
   return (
-    <div style={{
-      background: "var(--paper)",
-      border: "1px solid var(--line)",
-      borderRadius: 12,
-      padding: "24px 28px",
-      boxShadow: "var(--shadow)",
-    }}>
-      <p style={{
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: 10, color: "var(--muted)",
-        letterSpacing: ".1em", textTransform: "uppercase",
-        margin: "0 0 8px",
-      }}>{label}</p>
-      <p style={{
-        fontFamily: "'Source Serif 4', Georgia, serif",
-        fontSize: 42, fontWeight: 400,
-        color: "var(--ink)", margin: "0 0 4px",
-        lineHeight: 1,
-      }}>{value}</p>
-      {sub && (
-        <p style={{
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          fontSize: 12, color: "var(--muted)", margin: 0,
-        }}>{sub}</p>
-      )}
+    <div className="metric-card" style={{ willChange: "transform" }}>
+      <p className="metric-label">{label}</p>
+      <p className="metric-value">{value}</p>
+      {sub && <p className="metric-sub">{sub}</p>}
     </div>
   );
 }
+
+MetricCard.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  sub:   PropTypes.string,
+};
 
 function DashboardView({ reportes, cursos, goBack, loading }) {
   const headerRef = useRef(null);
@@ -44,10 +29,9 @@ function DashboardView({ reportes, cursos, goBack, loading }) {
   useEnter(headerRef, { y: 14, duration: 600 });
   useStaggerChildren(cardsRef, { y: 18, delay: 60, duration: 580, deps: [loading, reportes.length] });
 
-  // Métricas calculadas del lado del cliente
-  const totalReportes = reportes.length;
-  const totalCursos   = cursos.length;
-  const totalCopiados = reportes.filter(r => r.fue_copiado).length;
+  const totalReportes  = reportes.length;
+  const totalCursos    = cursos.length;
+  const totalCopiados  = reportes.filter(r => r.fue_copiado).length;
 
   const porTipo = REPORT_TYPES.map(rt => ({
     id:    rt.id,
@@ -57,21 +41,26 @@ function DashboardView({ reportes, cursos, goBack, loading }) {
 
   const maxCount = porTipo[0]?.count || 1;
 
-  const tipoMasUsado = porTipo[0]
-    ? `${porTipo[0].label} (${porTipo[0].count})`
-    : "—";
-
-  // Reportes del último mes
   const haceUnMes = new Date();
   haceUnMes.setMonth(haceUnMes.getMonth() - 1);
   const recientes = reportes.filter(r => new Date(r.created_at) >= haceUnMes).length;
 
+  const TIPO_BAR_COLORS = {
+    semanal:        "var(--jade-500)",
+    calificaciones: "var(--amber-500)",
+    asistencia:     "#4A90E2",
+    dece:           "#a78bfa",
+    planificacion:  "#34d399",
+  };
+
   return (
     <section className="cursos-section">
       <div className="cursos-container">
+
+        {/* Header */}
         <div ref={headerRef} className="cursos-header" style={{ willChange: "transform, opacity" }}>
           <div>
-            <h1 className="cursos-title">Mis métricas</h1>
+            <h2 className="cursos-title">Mis métricas</h2>
             <p className="cursos-subtitle">Resumen de tu actividad en DocuIA</p>
           </div>
           <button className="cursos-add-btn" onClick={goBack} {...goBackHover}>
@@ -80,33 +69,31 @@ function DashboardView({ reportes, cursos, goBack, loading }) {
         </div>
 
         {loading ? (
-          <p style={{ color: "var(--muted)", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14 }}>
-            Cargando datos…
-          </p>
+          <div className="cursos-empty">
+            <span style={{ fontSize: "1.8rem", animation: "emptyFloat 2s ease-in-out infinite" }}>⏳</span>
+            <p>Cargando datos…</p>
+          </div>
         ) : (
           <div ref={cardsRef}>
+
             {/* Stat cards */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 14, marginBottom: 28,
-            }}>
-              <StatCard
+            <div className="dashboard-grid">
+              <MetricCard
                 label="Reportes generados"
                 value={totalReportes}
                 sub={recientes > 0 ? `${recientes} en el último mes` : "ninguno en el último mes"}
               />
-              <StatCard
+              <MetricCard
                 label="Cursos registrados"
                 value={totalCursos}
                 sub={totalCursos === 1 ? "1 curso activo" : `${totalCursos} cursos activos`}
               />
-              <StatCard
+              <MetricCard
                 label="Reportes copiados"
                 value={totalCopiados}
                 sub={totalReportes > 0 ? `${Math.round((totalCopiados / totalReportes) * 100)}% del total` : "—"}
               />
-              <StatCard
+              <MetricCard
                 label="Tipo más usado"
                 value={porTipo[0]?.count ?? 0}
                 sub={porTipo[0]?.label ?? "Sin datos aún"}
@@ -115,61 +102,36 @@ function DashboardView({ reportes, cursos, goBack, loading }) {
 
             {/* Desglose por tipo */}
             {porTipo.length > 0 && (
-              <div style={{
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
-                borderRadius: 12,
-                padding: "24px 28px",
-                boxShadow: "var(--shadow)",
-              }}>
-                <p style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 10, color: "var(--muted)",
-                  letterSpacing: ".1em", textTransform: "uppercase",
-                  margin: "0 0 20px",
-                }}>Desglose por tipo de reporte</p>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="breakdown-section">
+                <p className="breakdown-title">Desglose por tipo de reporte</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {porTipo.map(({ id, label, count }) => (
-                    <div key={id}>
-                      <div style={{
-                        display: "flex", justifyContent: "space-between",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
-                        fontSize: 13, color: "var(--ink)", marginBottom: 6,
-                      }}>
-                        <span>{label}</span>
-                        <span style={{ color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
-                          {count} {count === 1 ? "reporte" : "reportes"}
-                        </span>
+                    <div key={id} className="breakdown-bar-row">
+                      <span className="breakdown-bar-label">{label}</span>
+                      <div className="breakdown-bar-track">
+                        <div
+                          className="breakdown-bar-fill"
+                          style={{
+                            width: `${(count / maxCount) * 100}%`,
+                            background: TIPO_BAR_COLORS[id] || "var(--grad-jade)",
+                          }}
+                        />
                       </div>
-                      <div style={{
-                        height: 6, borderRadius: 4,
-                        background: "var(--line)",
-                        overflow: "hidden",
-                      }}>
-                        <div style={{
-                          height: "100%",
-                          width: `${(count / maxCount) * 100}%`,
-                          background: "var(--accent)",
-                          borderRadius: 4,
-                          transition: "width .6s ease",
-                        }} />
-                      </div>
+                      <span className="breakdown-bar-count">{count}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Empty */}
             {totalReportes === 0 && (
-              <div style={{
-                textAlign: "center", padding: "48px 0",
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                color: "var(--muted)", fontSize: 14,
-              }}>
-                Aún no tienes reportes generados. Crea tu primer reporte para ver estadísticas.
+              <div className="cursos-empty" style={{ paddingTop: 40 }}>
+                <span style={{ fontSize: "2rem" }}>📊</span>
+                <p>Aún no tienes reportes generados. Crea tu primer reporte para ver estadísticas.</p>
               </div>
             )}
+
           </div>
         )}
       </div>

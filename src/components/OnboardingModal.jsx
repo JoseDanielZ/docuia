@@ -1,20 +1,21 @@
 import { useState } from "react";
+import "./OnboardingModal.css";
 
 const PASOS = [
   {
     icono: "📚",
     titulo: "Agrega tu curso",
-    descripcion: "Guarda los datos de tu curso una vez y se rellenarán automáticamente en cada reporte.",
+    descripcion: "Guarda los datos de tu curso una sola vez y se rellenarán automáticamente en cada reporte.",
   },
   {
     icono: "📄",
     titulo: "Elige el tipo de reporte",
-    descripcion: "Selecciona qué tipo de informe necesitas: semanal, calificaciones, asistencia, DECE o planificación.",
+    descripcion: "Semanal, calificaciones, asistencia, DECE o planificación. Cada tipo tiene su formulario especializado.",
   },
   {
     icono: "✨",
     titulo: "Genera con IA",
-    descripcion: "Completa los campos y en segundos tendrás un reporte listo para revisar, editar y descargar.",
+    descripcion: "Completa los campos y en segundos tendrás un reporte institucional listo para revisar y descargar.",
   },
 ];
 
@@ -31,74 +32,40 @@ export default function OnboardingModal({ onClose }) {
 
   return (
     <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(0,0,0,.5)", display: "flex",
-        alignItems: "center", justifyContent: "center", padding: 24,
-      }}
+      className="onboarding-overlay"
       onClick={handleClose}
       aria-modal="true"
       role="dialog"
       aria-label="Bienvenida a DocuIA"
     >
-      <div
-        style={{
-          background: "var(--paper)", borderRadius: 16,
-          padding: "40px 36px 32px", maxWidth: 420, width: "100%",
-          boxShadow: "0 12px 48px rgba(0,0,0,.22)",
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          position: "relative",
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Cerrar */}
-        <button
-          onClick={handleClose}
-          aria-label="Saltar onboarding"
-          style={{
-            position: "absolute", top: 16, right: 16,
-            all: "unset", cursor: "pointer",
-            fontSize: 18, color: "var(--muted)",
-            lineHeight: 1, padding: "4px 8px",
-          }}
-        >×</button>
+      <div className="onboarding-card" onClick={e => e.stopPropagation()}>
+        <button className="onboarding-close" onClick={handleClose} aria-label="Saltar">
+          ×
+        </button>
 
-        {/* Paso */}
-        <p style={{
-          margin: "0 0 20px",
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, color: "var(--muted)",
-          letterSpacing: ".08em", textTransform: "uppercase",
-        }}>
-          Paso {paso + 1} de {PASOS.length}
-        </p>
+        <p className="onboarding-counter">Paso {paso + 1} de {PASOS.length}</p>
 
-        {/* Contenido */}
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <span style={{ fontSize: "3rem", lineHeight: 1, display: "block", marginBottom: 16 }}>{icono}</span>
-          <h2 style={{
-            margin: "0 0 10px",
-            fontSize: 20, fontWeight: 600, color: "var(--ink)",
-            letterSpacing: "-.02em",
-          }}>{titulo}</h2>
-          <p style={{
-            margin: 0, fontSize: 14, lineHeight: 1.65, color: "var(--muted)",
-          }}>{descripcion}</p>
+        <div className="onboarding-content">
+          <div className="onboarding-icon">{icono}</div>
+          <h2 className="onboarding-title">{titulo}</h2>
+          <p className="onboarding-desc">{descripcion}</p>
         </div>
 
-        {/* Indicadores */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 24 }}>
+        {/* Dots — width es dinámico según el paso activo */}
+        <div className="onboarding-dots">
           {PASOS.map((_, i) => (
-            <span key={i} style={{
-              width: i === paso ? 20 : 8, height: 8,
-              borderRadius: 4, transition: "width .25s ease",
-              background: i === paso ? "var(--accent)" : "var(--line)",
-            }} />
+            <span
+              key={i}
+              className="onboarding-dot"
+              style={{
+                width: i === paso ? 22 : 8,
+                background: i === paso ? "var(--jade-500)" : "var(--border-default)",
+              }}
+            />
           ))}
         </div>
 
-        {/* Botones */}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="onboarding-actions">
           {paso > 0 && (
             <button
               className="btn btn-ghost"
@@ -109,12 +76,9 @@ export default function OnboardingModal({ onClose }) {
             </button>
           )}
           <button
-            className="btn"
+            className="btn btn-primary"
             onClick={() => esUltimo ? handleClose() : setPaso(p => p + 1)}
-            style={{
-              flex: 2, padding: "11px 0", fontSize: 14,
-              background: "var(--ink)", color: "var(--paper)", borderRadius: 10,
-            }}
+            style={{ flex: 2, padding: "11px 0", fontSize: 14 }}
           >
             {esUltimo ? 'Comenzar' : 'Siguiente'}
           </button>

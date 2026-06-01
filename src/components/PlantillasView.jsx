@@ -6,8 +6,8 @@ import { REPORT_TYPES } from "../config.js";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
 function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
-  const headerRef = useRef(null);
-  const gridRef = useRef(null);
+  const headerRef   = useRef(null);
+  const gridRef     = useRef(null);
   const goBackHover = magneticHover();
 
   useEnter(headerRef, { y: 14, duration: 600 });
@@ -16,11 +16,8 @@ function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
   const handleDelete = (id, el) => {
     if (!el) return deletePlantilla(id);
     animate(el, {
-      opacity: [1, 0],
-      scale: [1, 0.92],
-      translateX: [0, 30],
-      duration: 280,
-      ease: "outQuad",
+      opacity: [1, 0], scale: [1, 0.92], translateX: [0, 30],
+      duration: 280, ease: "outQuad",
       onComplete: () => deletePlantilla(id),
     });
   };
@@ -28,29 +25,31 @@ function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
   return (
     <section className="cursos-section">
       <div className="cursos-container">
+
+        {/* Header */}
         <div ref={headerRef} className="cursos-header" style={{ willChange: "transform, opacity" }}>
           <div>
             <h2 className="cursos-title">Mis plantillas</h2>
-            <p className="cursos-subtitle">
-              Plantillas guardadas con datos pre-llenados para acelerar la creación de reportes.
-            </p>
+            <p className="cursos-subtitle">Plantillas guardadas con datos pre-llenados para acelerar la creación de reportes.</p>
           </div>
           <button className="cursos-add-btn" {...goBackHover} onClick={goBack}>
             ← Volver al formulario
           </button>
         </div>
 
+        {/* Estado vacío */}
         {plantillas.length === 0 && (
-          <div className="cursos-empty" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: "2rem" }}>📋</span>
-            <p style={{ margin: 0 }}>No tienes plantillas guardadas.<br />Completa el formulario y usa "Guardar como plantilla" para reutilizarlo.</p>
+          <div className="cursos-empty">
+            <span style={{ fontSize: "2.2rem" }}>📋</span>
+            <p>No tienes plantillas guardadas.<br />Completa el formulario y usa "Guardar como plantilla" para reutilizarlo.</p>
             <button className="cursos-add-btn" onClick={goBack}>Ir al formulario</button>
           </div>
         )}
 
+        {/* Grid */}
         <div ref={gridRef} className="cursos-grid">
           {plantillas.map(p => {
-            const tipo = REPORT_TYPES.find(r => r.id === p.tipo_reporte)?.label || p.tipo_reporte;
+            const tipo      = REPORT_TYPES.find(r => r.id === p.tipo_reporte)?.label || p.tipo_reporte;
             const numCampos = p.datos ? Object.keys(p.datos).filter(k => p.datos[k]).length : 0;
             return (
               <div key={p.id} className="curso-card" style={{ willChange: "transform, opacity" }}>
@@ -60,15 +59,16 @@ function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
                     className="curso-card-delete"
                     onClick={(e) => handleDelete(p.id, e.currentTarget.closest(".curso-card"))}
                     title="Eliminar plantilla"
+                    aria-label={`Eliminar plantilla ${p.nombre}`}
                   >&times;</button>
                 </div>
                 <div className="curso-card-meta">{tipo}</div>
                 <div className="curso-card-details">
-                  {numCampos} campos guardados · {new Date(p.created_at).toLocaleDateString()}
+                  {numCampos} campos · {new Date(p.created_at).toLocaleDateString('es-EC')}
                 </div>
                 <button
                   className="cursos-add-btn"
-                  style={{ marginTop: 12, width: "100%", willChange: "transform" }}
+                  style={{ marginTop: 14, width: "100%", willChange: "transform", justifyContent: "center" }}
                   onClick={(e) => { pop(e.currentTarget, { scale: 1.04 }); loadTemplate(p); }}
                 >
                   Usar plantilla
@@ -77,6 +77,7 @@ function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
             );
           })}
         </div>
+
       </div>
     </section>
   );

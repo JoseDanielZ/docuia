@@ -1,232 +1,296 @@
-.cursos-section {
-  padding: 60px 28px;
-  background: var(--paper-2);
-  min-height: 80vh;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   CursosView.css — compartido por Cursos, Plantillas, Historial, Dashboard
+   Design System: Liquid Intelligence
+═══════════════════════════════════════════════════════════════════════════ */
 
-.cursos-container {
-  max-width: 900px;
+.cursos-section {
+  padding: 32px 24px 80px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
+.cursos-container { width: 100%; }
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
 .cursos-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
+  gap: 16px;
   flex-wrap: wrap;
-  gap: 14px;
 }
 
 .cursos-title {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
   margin: 0 0 4px;
-  letter-spacing: -.02em;
+  line-height: 1.15;
 }
 
 .cursos-subtitle {
-  color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
+  color: var(--text-secondary);
   margin: 0;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  line-height: 1.5;
 }
+
+/* ── Botón de acción ──────────────────────────────────────────────────────── */
 
 .cursos-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 20px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--grad-jade);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
-  border-radius: 8px;
-  border: none;
   cursor: pointer;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  transition: opacity .18s;
+  white-space: nowrap;
+  transition: transform var(--duration-fast) var(--ease-spring),
+              box-shadow var(--duration-base) var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
 }
-.cursos-add-btn:hover { opacity: .88; }
+.cursos-add-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.45s ease;
+}
+.cursos-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,212,168,0.3);
+}
+.cursos-add-btn:hover::after { transform: translateX(100%); }
+.cursos-add-btn:active { transform: translateY(0); }
 
-.cursos-empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--muted);
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  font-size: 14px;
-}
+/* ── Grid ─────────────────────────────────────────────────────────────────── */
 
 .cursos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
 }
 
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+
 .curso-card {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 18px 20px;
-  transition: border-color .2s, box-shadow .2s;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px 18px;
+  cursor: pointer;
+  transition: transform var(--duration-base) var(--ease-spring),
+              border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+}
+.curso-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--grad-jade);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-smooth);
 }
 .curso-card:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow);
+  transform: translateY(-4px);
+  border-color: var(--border-strong);
+  box-shadow: 0 8px 32px rgba(0,212,168,0.12);
 }
+.curso-card:hover::before { transform: scaleX(1); }
 
 .curso-card-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .curso-card-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink);
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .curso-card-delete {
   all: unset;
   cursor: pointer;
-  color: var(--muted);
-  font-size: 20px;
-  line-height: 1;
-  padding: 2px 4px;
-  border-radius: 4px;
-  transition: color .15s, background .15s;
-}
-.curso-card-delete:hover {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
-}
-
-.curso-card-meta {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 6px;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-}
-
-.curso-card-details {
-  font-size: 11px;
-  color: var(--muted);
-  font-family: 'IBM Plex Mono', monospace;
-  opacity: .8;
-}
-
-/* Modal */
-.curso-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(11,31,58,.5);
-  backdrop-filter: blur(4px);
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.curso-card-delete:hover {
+  color: var(--error);
+  background: rgba(255,91,107,0.1);
+}
+
+.curso-card-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  line-height: 1.5;
+}
+
+.curso-card-details {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+
+/* ── Estado vacío ─────────────────────────────────────────────────────────── */
+
+.cursos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.cursos-empty p { margin: 0; line-height: 1.6; max-width: 320px; color: var(--text-secondary); }
+
+/* ── Modal overlay ────────────────────────────────────────────────────────── */
+
+.curso-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6,13,26,0.85);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   z-index: 1000;
-  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: overlayIn 0.25s var(--ease-smooth);
 }
 
 .curso-modal {
-  background: var(--paper);
-  border-radius: 12px;
-  padding: 28px;
-  width: min(500px, 100%);
-  max-height: 80vh;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 36px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  animation: modalReveal 0.4s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+  max-height: 90vh;
   overflow-y: auto;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-deep);
+}
+.curso-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 2px;
+  background: var(--grad-jade);
 }
 
 .curso-modal-title {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 20px;
-  font-weight: 400;
-  color: var(--ink);
-  margin: 0 0 20px;
-  letter-spacing: -.02em;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+  letter-spacing: -0.02em;
 }
 
 .curso-modal-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
+
+.curso-modal-form > div > label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.curso-modal-form input,
+.curso-modal-form select,
+.curso-modal-form textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 11px 14px;
+  transition: border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth),
+              background var(--duration-base) var(--ease-smooth);
+  outline: none;
+  box-sizing: border-box;
+}
+.curso-modal-form input:focus,
+.curso-modal-form select:focus {
+  border-color: var(--jade-500);
+  box-shadow: 0 0 0 3px rgba(0,212,168,0.12);
+  background: rgba(0,212,168,0.03);
+}
+.curso-modal-form input::placeholder { color: var(--text-muted); }
 
 .curso-modal-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
-
-.curso-modal-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink);
-  display: block;
-  margin-bottom: 4px;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  opacity: .8;
-}
-
-.curso-modal-label-req {
-  color: var(--danger);
-}
-
-.curso-modal-input {
-  width: 100%;
-  padding: 10px 13px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  font-size: 13px;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  background: var(--paper);
-  color: var(--text);
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color .18s;
-}
-.curso-modal-input:focus { border-color: var(--accent); }
 
 .curso-modal-actions {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
-.curso-modal-btn-create {
-  flex: 1;
-  padding: 12px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  transition: opacity .18s;
-}
-.curso-modal-btn-create:hover { opacity: .88; }
+/* ── Responsive ───────────────────────────────────────────────────────────── */
 
-.curso-modal-btn-cancel {
-  padding: 12px 20px;
-  background: var(--paper-2);
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  cursor: pointer;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  transition: border-color .18s;
-}
-.curso-modal-btn-cancel:hover { border-color: var(--ink); }
-
-@media (max-width: 500px) {
+@media (max-width: 768px) {
+  .cursos-section  { padding: 20px 16px 60px; }
+  .cursos-title    { font-size: 24px; }
+  .cursos-grid     { grid-template-columns: 1fr; }
+  .curso-modal     { padding: 24px 20px; }
   .curso-modal-row { grid-template-columns: 1fr; }
-  .cursos-header { flex-direction: column; align-items: flex-start; }
 }

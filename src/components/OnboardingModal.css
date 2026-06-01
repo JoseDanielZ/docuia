@@ -1,0 +1,116 @@
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(6, 13, 26, 0.88);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: overlayIn 0.25s var(--ease-smooth);
+}
+
+.onboarding-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px 32px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: modalReveal 0.4s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+/* Línea jade decorativa en la parte superior */
+.onboarding-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: var(--grad-jade);
+}
+
+.onboarding-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  all: unset;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-muted);
+  line-height: 1;
+  padding: 4px 8px;
+  transition: color var(--duration-fast);
+}
+.onboarding-close:hover { color: var(--text-primary); }
+
+.onboarding-counter {
+  margin: 0 0 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.onboarding-content {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.onboarding-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xl);
+  background: rgba(0, 212, 168, 0.08);
+  border: 1px solid rgba(0, 212, 168, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  margin: 0 auto 18px;
+}
+
+.onboarding-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.onboarding-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+/* El ancho de cada dot es dinámico (activo = 22px, inactivo = 8px),
+   por eso se aplica desde el componente vía style */
+.onboarding-dot {
+  height: 8px;
+  border-radius: 4px;
+  display: inline-block;
+  transition: width 250ms var(--ease-smooth), background 250ms;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 8px;
+}

@@ -4,36 +4,68 @@
 <meta charset="utf-8" />
 <title>DocuIA — Acceso</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/login.css" />
 </head>
 <body>
 
-<div class="container">
-  <!-- LEFT VISUAL -->
-  <div class="visual">
-    <div class="v-head"><div class="mark serif">D</div> DocuIA</div>
-    <div class="v-title">
-      <h2 id="visual-title">Informes que <em>se escriben solos.</em></h2>
-      <p id="visual-desc">DocuIA convierte tus notas y observaciones en informes académicos listos para firmar.</p>
+<div class="login-layout">
+
+  <!-- ══ LADO IZQUIERDO — Branding ══ -->
+  <div class="login-brand">
+    <div class="hero-orb"></div>
+    <div class="hero-orb hero-orb--2"></div>
+
+    <div class="brand-content">
+      <div class="brand-logo">
+        Docu<span class="brand-logo-ia">IA</span>
+      </div>
+
+      <h2 class="brand-headline">
+        Reportes que antes<br>tomaban horas,<br>
+        <em class="brand-headline-em">ahora en segundos.</em>
+      </h2>
+
+      <ul class="brand-features">
+        <li class="brand-feature">
+          <span class="brand-feature-icon">⚡</span>
+          <span>Generación instantánea con IA</span>
+        </li>
+        <li class="brand-feature">
+          <span class="brand-feature-icon">🏫</span>
+          <span>Diseñado para Fe y Alegría Ecuador</span>
+        </li>
+        <li class="brand-feature">
+          <span class="brand-feature-icon">📄</span>
+          <span>Formatos institucionales respetados</span>
+        </li>
+      </ul>
+
+      <div class="brand-footer">
+        <span class="brand-status">
+          <span class="brand-status-dot"></span>
+          Activo · Cifrado TLS 1.3
+        </span>
+        <span class="brand-year">docuia · 2026</span>
+      </div>
     </div>
-    <div class="v-foot"><span><i class="dot"></i> Activo · Cifrado TLS 1.3</span><span>docuia · 2026</span></div>
   </div>
 
-  <!-- RIGHT PANEL -->
-  <div class="panel">
+  <!-- ══ LADO DERECHO — Formulario ══ -->
+  <div class="login-panel">
 
     <!-- SCREEN: LOGIN -->
-    <div class="screen active" id="screen-login">
-      <div class="top">
+    <div class="login-card screen active" id="screen-login">
+      <div class="screen-nav">
         <span>¿Nuevo aquí?</span>
         <a href="#" id="nav-login-to-signup">Crea tu cuenta →</a>
       </div>
-      <h1 class="serif">Inicia <em>sesión</em>.</h1>
-      <p class="sub">Usa tu correo institucional para acceder a DocuIA.</p>
+
+      <h1 class="screen-title">Bienvenido de vuelta.</h1>
+      <p class="screen-sub">Usa tu correo institucional para acceder a DocuIA.</p>
 
       <div class="form">
         <div class="field">
@@ -46,35 +78,40 @@
           <span class="toggle-pw" role="button" tabindex="0" id="toggle-login-pw">mostrar</span>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <label class="check"><input type="checkbox" id="login-remember" checked /> <span>Mantener sesión</span></label>
+        <div class="form-row">
+          <label class="check-label">
+            <input type="checkbox" id="login-remember" checked />
+            <span>Mantener sesión</span>
+          </label>
           <a href="#" class="link" id="nav-login-to-recover">¿Olvidaste tu contraseña?</a>
         </div>
 
         <div id="login-msg" class="msg"></div>
 
-        <button type="button" class="btn btn-primary" id="login-btn" style="margin-top:8px">Entrar a DocuIA</button>
+        <button type="button" class="btn-primary" id="login-btn">Entrar a DocuIA</button>
 
-        <div class="divider">o</div>
-        <div class="sso">
-          <button type="button" class="btn btn-ghost" id="nav-sso-signup">Crear cuenta nueva</button>
-          <button type="button" class="btn btn-ghost" id="nav-sso-home" title="Explorar la app; para generar informes necesitas cuenta">Ir al inicio</button>
+        <div class="divider"><span>o</span></div>
+
+        <div class="btn-row">
+          <button type="button" class="btn-ghost" id="nav-sso-signup">Crear cuenta nueva</button>
+          <button type="button" class="btn-ghost" id="nav-sso-home" title="Explorar la app">Ir al inicio</button>
         </div>
       </div>
 
-      <div class="alt">
-        ¿Problemas para entrar? <a href="mailto:docuia.feyalegria@gmail.com">Escríbenos a soporte</a>.
+      <div class="screen-alt">
+        ¿Problemas para entrar? <a href="mailto:docuia.feyalegria@gmail.com">Escríbenos</a>.
       </div>
     </div>
 
     <!-- SCREEN: SIGNUP -->
-    <div class="screen" id="screen-signup">
-      <div class="top">
+    <div class="login-card screen" id="screen-signup">
+      <div class="screen-nav">
         <span>¿Ya tienes cuenta?</span>
         <a href="#" id="nav-signup-to-login">Inicia sesión →</a>
       </div>
-      <h1 class="serif">Crea tu <em>cuenta</em>.</h1>
-      <p class="sub">Empieza gratis. Sin tarjeta, sin letra chica.</p>
+
+      <h1 class="screen-title">Crea tu cuenta.</h1>
+      <p class="screen-sub">Empieza gratis. Sin tarjeta, sin letra chica.</p>
 
       <div class="form">
         <div class="field">
@@ -87,7 +124,7 @@
         </div>
         <div class="field">
           <label>Rol</label>
-          <select id="signup-role">
+          <select id="signup-role" aria-label="Rol en la institución">
             <option>Docente</option>
             <option>Coordinación académica</option>
             <option>Dirección</option>
@@ -109,21 +146,24 @@
           <span class="toggle-pw" role="button" tabindex="0" id="toggle-signup-pw">mostrar</span>
         </div>
 
-        <label class="check"><input type="checkbox" id="signup-terms" /> <span>Acepto los términos y la política de privacidad. El texto que envíe a la IA se transmite a un proveedor seguro para generar el informe; no lo use para contraseñas ni datos altamente sensibles. Mis datos no se usan para entrenar modelos públicos.</span></label>
+        <label class="check-label terms">
+          <input type="checkbox" id="signup-terms" />
+          <span>Acepto los términos y la política de privacidad. El texto que envíe a la IA se transmite a un proveedor seguro; no lo use para datos sensibles. Mis datos no se usan para entrenar modelos públicos.</span>
+        </label>
 
         <div id="signup-msg" class="msg"></div>
-
-        <button type="button" class="btn btn-primary" id="signup-btn" style="margin-top:6px">Crear cuenta</button>
+        <button type="button" class="btn-primary" id="signup-btn">Crear cuenta</button>
       </div>
     </div>
 
     <!-- SCREEN: RECOVER -->
-    <div class="screen" id="screen-recover">
-      <div class="top">
+    <div class="login-card screen" id="screen-recover">
+      <div class="screen-nav">
         <a href="#" id="nav-recover-to-login">← Volver a inicio de sesión</a>
       </div>
-      <h1 class="serif">Recupera tu <em>acceso</em>.</h1>
-      <p class="sub">Escribe el correo de tu cuenta y te enviamos un enlace para crear una nueva contraseña.</p>
+
+      <h1 class="screen-title">Recupera tu acceso.</h1>
+      <p class="screen-sub">Escribe el correo de tu cuenta y te enviamos un enlace para crear una nueva contraseña.</p>
 
       <div class="form">
         <div class="field">
@@ -132,17 +172,16 @@
         </div>
 
         <div id="recover-msg" class="msg"></div>
+        <button type="button" class="btn-primary" id="recover-btn">Enviar enlace de recuperación</button>
 
-        <button type="button" class="btn btn-primary" id="recover-btn">Enviar enlace de recuperación</button>
-
-        <div class="alt" style="font-size:13px">
+        <div class="screen-alt">
           ¿No usas correo institucional? <a href="mailto:docuia.feyalegria@gmail.com">Contacta a soporte</a>.
         </div>
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /login-panel -->
+</div><!-- /login-layout -->
 
 <script src="/login-main.js" defer></script>
 </body>

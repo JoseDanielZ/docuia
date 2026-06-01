@@ -1,0 +1,86 @@
+.loading-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72vh;
+  padding: 48px 24px;
+}
+
+.loading-inner {
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Orb contenedor — tamaño fijo, el glow y SVG van dentro */
+.loading-orb-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 40px;
+}
+
+.loading-orb-glow {
+  position: absolute;
+  inset: -24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 212, 168, 0.18) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: orbPulse 2.5s ease-in-out infinite;
+}
+
+.loading-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.loading-message {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--jade-500);
+  margin: 0 0 24px;
+  min-height: 20px;
+}
+
+.loading-bar-track {
+  width: 260px;
+  height: 3px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 auto 24px;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: var(--grad-jade);
+  border-radius: 3px;
+  animation: loadingSlide 1.8s ease-in-out infinite;
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.loading-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--jade-500);
+}
+
+.loading-footer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin: 0;
+}

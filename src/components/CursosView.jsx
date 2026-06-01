@@ -5,15 +5,14 @@ import "./CursosView.css";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
 function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, createCurso, deleteCurso }) {
-  const headerRef = useRef(null);
-  const gridRef = useRef(null);
+  const headerRef  = useRef(null);
+  const gridRef    = useRef(null);
   const overlayRef = useRef(null);
-  const modalRef = useRef(null);
+  const modalRef   = useRef(null);
 
   useEnter(headerRef, { y: 14, duration: 600 });
   useStaggerChildren(gridRef, { y: 22, delay: 70, duration: 600, deps: [cursos.length] });
 
-  // Animación de entrada del modal (overlay fade + scale del card)
   useEffect(() => {
     if (!showModal) return;
     if (overlayRef.current) {
@@ -22,17 +21,10 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
     }
     if (modalRef.current) {
       utils.set(modalRef.current, { opacity: 0, scale: 0.94, translateY: 12 });
-      animate(modalRef.current, {
-        opacity: [0, 1],
-        scale: [0.94, 1],
-        translateY: [12, 0],
-        duration: 480,
-        ease: "outBack(1.5)",
-      });
+      animate(modalRef.current, { opacity: [0, 1], scale: [0.94, 1], translateY: [12, 0], duration: 480, ease: "outBack(1.5)" });
     }
   }, [showModal]);
 
-  // H3: Cerrar con ESC
   useEffect(() => {
     if (!showModal) return;
     const handler = (e) => { if (e.key === 'Escape') closeModal(); };
@@ -42,58 +34,30 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
 
   const closeModal = () => {
     if (modalRef.current && overlayRef.current) {
-      animate(modalRef.current, {
-        opacity: [1, 0],
-        scale: [1, 0.96],
-        translateY: [0, 8],
-        duration: 200,
-        ease: "outQuad",
-      });
-      animate(overlayRef.current, {
-        opacity: [1, 0],
-        duration: 220,
-        ease: "outQuad",
-        onComplete: () => setShowModal(false),
-      });
-    } else {
-      setShowModal(false);
-    }
+      animate(modalRef.current, { opacity: [1, 0], scale: [1, 0.96], translateY: [0, 8], duration: 200, ease: "outQuad" });
+      animate(overlayRef.current, { opacity: [1, 0], duration: 220, ease: "outQuad", onComplete: () => setShowModal(false) });
+    } else { setShowModal(false); }
   };
 
-  const handleCreate = (e) => {
-    pop(e.currentTarget, { scale: 1.04, duration: 380 });
-    createCurso();
-  };
+  const handleCreate = (e) => { pop(e.currentTarget, { scale: 1.04, duration: 380 }); createCurso(); };
 
   const handleDelete = (id, el) => {
     if (!el) return deleteCurso(id);
-    animate(el, {
-      opacity: [1, 0],
-      scale: [1, 0.92],
-      translateX: [0, 30],
-      duration: 280,
-      ease: "outQuad",
-      onComplete: () => deleteCurso(id),
-    });
+    animate(el, { opacity: [1, 0], scale: [1, 0.92], translateX: [0, 30], duration: 280, ease: "outQuad", onComplete: () => deleteCurso(id) });
   };
 
   const fi = (k) => ({
-    className: "curso-modal-input",
     value: cursoForm[k] || "",
     onChange: e => setCursoForm(p => ({ ...p, [k]: e.target.value })),
   });
-
-  const Label = ({ children, req }) => (
-    <label className="curso-modal-label">
-      {children} {req && <span className="curso-modal-label-req">*</span>}
-    </label>
-  );
 
   const addBtnHover = magneticHover();
 
   return (
     <section className="cursos-section">
       <div className="cursos-container">
+
+        {/* Header */}
         <div ref={headerRef} className="cursos-header" style={{ willChange: "transform, opacity" }}>
           <div>
             <h2 className="cursos-title">Mis Cursos</h2>
@@ -104,14 +68,16 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
           </button>
         </div>
 
+        {/* Estado vacío */}
         {cursos.length === 0 && (
-          <div className="cursos-empty" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: "2rem" }}>📚</span>
-            <p style={{ margin: 0 }}>No tienes cursos guardados.<br />Guarda un curso para rellenar el formulario automáticamente.</p>
+          <div className="cursos-empty">
+            <span style={{ fontSize: "2.2rem" }}>📚</span>
+            <p>No tienes cursos guardados.<br />Guarda un curso para rellenar el formulario automáticamente.</p>
             <button className="cursos-add-btn" onClick={() => setShowModal(true)}>Agregar curso</button>
           </div>
         )}
 
+        {/* Grid */}
         <div ref={gridRef} className="cursos-grid">
           {cursos.map(c => (
             <div key={c.id} className="curso-card" style={{ willChange: "transform, opacity" }}>
@@ -120,51 +86,75 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
                 <button
                   className="curso-card-delete"
                   onClick={(e) => handleDelete(c.id, e.currentTarget.closest(".curso-card"))}
+                  aria-label={`Eliminar ${c.nombre}`}
                 >&times;</button>
               </div>
-              <div className="curso-card-meta">{c.asignatura} — {c.grado} {c.paralelo}</div>
-              <div className="curso-card-details">{c.num_estudiantes || 0} estudiantes · {c.jornada || 'N/A'}</div>
+              <div className="curso-card-meta">{c.asignatura} · {c.grado} {c.paralelo}</div>
+              <div className="curso-card-details">
+                {c.num_estudiantes || 0} estudiantes · {c.jornada || 'N/A'}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Modal */}
       {showModal && (
-        <div ref={overlayRef} className="curso-modal-overlay" onClick={closeModal} style={{ willChange: "opacity" }}>
-          <div ref={modalRef} className="curso-modal" onClick={e => e.stopPropagation()} style={{ willChange: "transform, opacity" }}>
+        <div
+          ref={overlayRef}
+          className="curso-modal-overlay"
+          onClick={closeModal}
+          style={{ willChange: "opacity" }}
+        >
+          <div
+            ref={modalRef}
+            className="curso-modal"
+            onClick={e => e.stopPropagation()}
+            style={{ willChange: "transform, opacity" }}
+          >
             <h3 className="curso-modal-title">Crear nuevo curso</h3>
+
             <div className="curso-modal-form">
               <div>
-                <Label req>Nombre del curso</Label>
-                <input {...fi("nombre")} placeholder="Ej: 8vo B - Matemáticas" />
+                <label>Nombre del curso <span style={{ color: "var(--error)" }}>*</span></label>
+                <input {...fi("nombre")} placeholder="Ej: 8vo B — Matemáticas" />
               </div>
               <div className="curso-modal-row">
                 <div>
-                  <Label req>Grado</Label>
+                  <label>Grado <span style={{ color: "var(--error)" }}>*</span></label>
                   <input {...fi("grado")} placeholder="Ej: 8vo EGB" />
                 </div>
                 <div>
-                  <Label>Paralelo</Label>
+                  <label>Paralelo</label>
                   <input {...fi("paralelo")} placeholder="Ej: B" />
                 </div>
               </div>
               <div>
-                <Label req>Asignatura</Label>
+                <label>Asignatura <span style={{ color: "var(--error)" }}>*</span></label>
                 <input {...fi("asignatura")} placeholder="Ej: Matemáticas" />
               </div>
               <div className="curso-modal-row">
                 <div>
-                  <Label>N° estudiantes</Label>
-                  <input {...fi("num_estudiantes")} placeholder="Ej: 32" />
+                  <label>N° estudiantes</label>
+                  <input {...fi("num_estudiantes")} placeholder="Ej: 32" type="number" min="1" />
                 </div>
                 <div>
-                  <Label>Jornada</Label>
+                  <label>Jornada</label>
                   <input {...fi("jornada")} placeholder="Ej: Matutina" />
                 </div>
               </div>
+
               <div className="curso-modal-actions">
-                <button className="curso-modal-btn-create" onClick={handleCreate}>Crear curso</button>
-                <button className="curso-modal-btn-cancel" onClick={() => { closeModal(); setCursoForm({}); }}>Cancelar</button>
+                <button className="cursos-add-btn" onClick={handleCreate}>
+                  Crear curso
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => { closeModal(); setCursoForm({}); }}
+                  style={{ padding: "10px 18px", fontSize: 13 }}
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>

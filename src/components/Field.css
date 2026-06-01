@@ -1,0 +1,76 @@
+.field-group {
+  margin-bottom: 14px;
+}
+
+/* Ocupa toda la columna del grid por defecto */
+.field-group--full { grid-column: 1 / -1; }
+
+/* Separador de sección dentro del form-grid */
+.field-section-label {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+  transition: color var(--duration-fast);
+  /* color se aplica dinámicamente desde JSX según estado error */
+}
+
+.field-input,
+.field-textarea {
+  all: unset;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth),
+              background var(--duration-base) var(--ease-smooth);
+  display: block;
+  /* border se inyecta desde JSX (depende del estado error) */
+}
+
+.field-textarea {
+  resize: vertical;
+}
+
+.field-input::placeholder,
+.field-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.field-hint {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+.field-error-msg {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--error);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}

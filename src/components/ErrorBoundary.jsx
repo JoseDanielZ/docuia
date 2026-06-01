@@ -1,4 +1,5 @@
 import { Component } from "react";
+import "./ErrorBoundary.css";
 
 export default class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -15,54 +16,18 @@ export default class ErrorBoundary extends Component {
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div style={{
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        minHeight: "80vh", padding: "40px 24px", textAlign: "center",
-        background: "var(--paper)",
-      }}>
-        <div style={{
-          fontFamily: "'Source Serif 4', Georgia, serif",
-          fontSize: 22, color: "var(--ink)", marginBottom: 12, fontWeight: 400,
-        }}>
-          Algo salió mal
-        </div>
-        <p style={{
-          fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-          fontSize: 14, color: "var(--muted)", marginBottom: 24,
-          maxWidth: 400, lineHeight: 1.6,
-        }}>
+      <div className="error-boundary">
+        <div className="error-boundary__title">Algo salió mal</div>
+        <p className="error-boundary__desc">
           Ocurrió un error inesperado. Recarga la página para continuar.
         </p>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            padding: "10px 24px", borderRadius: 8,
-            background: "var(--ink)", color: "var(--paper)",
-            border: "none", cursor: "pointer",
-            fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-            fontSize: 14, fontWeight: 500,
-          }}
-        >
+        <button className="error-boundary__btn" onClick={() => window.location.reload()}>
           Recargar página
         </button>
         {this.state.error && (
-          <details style={{ marginTop: 24, maxWidth: 480, textAlign: "left" }}>
-            <summary style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 11, color: "var(--muted)", cursor: "pointer",
-            }}>
-              Detalles técnicos
-            </summary>
-            <pre style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 11, color: "var(--danger)",
-              whiteSpace: "pre-wrap", marginTop: 8,
-              background: "var(--paper-2)", padding: "12px",
-              borderRadius: 6, overflow: "auto",
-            }}>
-              {this.state.error.message}
-            </pre>
+          <details className="error-boundary__details">
+            <summary className="error-boundary__summary">Detalles técnicos</summary>
+            <pre className="error-boundary__trace">{this.state.error.message}</pre>
           </details>
         )}
       </div>
