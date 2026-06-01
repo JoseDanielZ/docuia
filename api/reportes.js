@@ -89,20 +89,40 @@ async function handleGetList(req, res, user) {
 }
 
 async function handlePatch(req, res, user, id) {
-  const { reporte_generado } = req.body || {};
-  if (typeof reporte_generado !== 'string') {
-    return res.status(400).json({ error: 'reporte_generado debe ser string' });
+  const { reporte_generado, feedback, feedback_nota } = req.body || {};
+
+  const updateFields = {};
+
+  if (reporte_generado !== undefined) {
+    if (typeof reporte_generado !== 'string')
+      return res.status(400).json({ error: 'reporte_generado debe ser string' });
+    if (reporte_generado.length > 500_000)
+      return res.status(413).json({ error: 'El reporte es demasiado largo' });
+    updateFields.reporte_generado = reporte_generado;
   }
-  if (reporte_generado.length > 500_000) {
-    return res.status(413).json({ error: 'El reporte es demasiado largo' });
+
+  if (feedback !== undefined) {
+    if (feedback !== 1 && feedback !== -1 && feedback !== null)
+      return res.status(400).json({ error: 'feedback debe ser 1, -1 o null' });
+    updateFields.feedback = feedback;
   }
+
+  if (feedback_nota !== undefined) {
+    if (typeof feedback_nota !== 'string' && feedback_nota !== null)
+      return res.status(400).json({ error: 'feedback_nota debe ser string o null' });
+    updateFields.feedback_nota = feedback_nota;
+  }
+
+  if (Object.keys(updateFields).length === 0)
+    return res.status(400).json({ error: 'No hay campos para actualizar' });
+
   try {
     const r = await fetch(
       `${supabaseUrl()}/rest/v1/reportes?id=eq.${encodeURIComponent(id)}&user_id=eq.${user.id}`,
       {
         method: 'PATCH',
         headers: { ...serviceRestHeaders(), Prefer: 'return=representation' },
-        body: JSON.stringify({ reporte_generado }),
+        body: JSON.stringify(updateFields),
       }
     );
     const data = await r.json();

@@ -618,6 +618,7 @@ function FormSection({
   formatoModo, setFormatoModo,
   saveAsTemplate, plantillas, loadTemplate,
   draftRestored, onDismissDraft,
+  erroresForm,
 }) {
   const cardsRef = useRef(null);
   const formInnerRef = useRef(null);
@@ -798,21 +799,21 @@ function FormSection({
             <div data-form-block>
               <SectionLabel>Datos del docente</SectionLabel>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-                {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
+                {FORM_FIELDS.common.map(f => <Field key={f.k} {...f} form={form} set={set} half error={erroresForm?.[f.k]} />)}
               </div>
             </div>
 
             <div data-form-block>
               <SectionLabel>Datos del curso</SectionLabel>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-                {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} form={form} set={set} half />)}
+                {FORM_FIELDS.common2.map(f => <Field key={f.k} {...f} form={form} set={set} half error={erroresForm?.[f.k]} />)}
               </div>
             </div>
 
             <div data-form-block>
               <SectionLabel>Información del reporte</SectionLabel>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-                {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} />)}
+                {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} error={erroresForm?.[f.k]} />)}
               </div>
             </div>
 
@@ -980,6 +981,7 @@ export default function LandingPage(props) {
     formatoModo, setFormatoModo,
     saveAsTemplate, plantillas, loadTemplate,
     draftRestored, onDismissDraft,
+    erroresForm,
   } = props;
 
   const formRef = useRef(null);
@@ -1023,6 +1025,7 @@ export default function LandingPage(props) {
         loadTemplate={loadTemplate}
         draftRestored={draftRestored}
         onDismissDraft={onDismissDraft}
+        erroresForm={erroresForm || {}}
       />
       <CtaSection />
     </>

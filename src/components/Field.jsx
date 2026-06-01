@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-export default function Field({ label, k, ph, area, req, half, form, set, group, type, min, max, pattern, hint }) {
+export default function Field({ label, k, ph, area, req, half, form, set, group, type, min, max, pattern, hint, error }) {
   if (typeof k === "string" && k.startsWith("_")) {
     if (!group) return null;
     return (
@@ -27,7 +27,7 @@ export default function Field({ label, k, ph, area, req, half, form, set, group,
   const base = {
     all: "unset",
     background: "transparent",
-    border: "1px solid var(--line)",
+    border: `1px solid ${error ? "var(--danger)" : "var(--line)"}`,
     borderRadius: 10,
     padding: "12px 14px",
     fontSize: 14,
@@ -41,11 +41,11 @@ export default function Field({ label, k, ph, area, req, half, form, set, group,
 
   const focusHandlers = {
     onFocus: e => {
-      e.target.style.borderColor = "var(--accent)";
-      e.target.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent)";
+      e.target.style.borderColor = error ? "var(--danger)" : "var(--accent)";
+      e.target.style.boxShadow = `0 0 0 3px color-mix(in srgb, ${error ? "var(--danger)" : "var(--accent)"} 15%, transparent)`;
     },
     onBlur: e => {
-      e.target.style.borderColor = "var(--line)";
+      e.target.style.borderColor = error ? "var(--danger)" : "var(--line)";
       e.target.style.boxShadow = "none";
     },
   };
@@ -72,6 +72,7 @@ export default function Field({ label, k, ph, area, req, half, form, set, group,
           placeholder={ph}
           required={req}
           rows={3}
+          data-field={k}
           style={{ ...base, resize: "vertical" }}
           {...focusHandlers}
         />
@@ -85,9 +86,22 @@ export default function Field({ label, k, ph, area, req, half, form, set, group,
           min={min}
           max={max}
           pattern={pattern}
+          data-field={k}
           style={base}
           {...focusHandlers}
         />
+      )}
+
+      {error && (
+        <p style={{
+          margin: "4px 0 0",
+          fontSize: 11,
+          color: "var(--danger)",
+          fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+          lineHeight: 1.5,
+        }}>
+          {error}
+        </p>
       )}
 
       {hint && (
@@ -120,6 +134,7 @@ Field.propTypes = {
   max:     PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   pattern: PropTypes.string,
   hint:    PropTypes.string,
+  error:   PropTypes.string,
 };
 
 Field.defaultProps = {

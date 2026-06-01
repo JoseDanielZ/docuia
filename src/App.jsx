@@ -14,7 +14,8 @@ import ReportView     from "./components/ReportView.jsx";
 import CursosView     from "./components/CursosView.jsx";
 import PlantillasView from "./components/PlantillasView.jsx";
 import HistorialView  from "./components/HistorialView.jsx";
-import DashboardView  from "./components/DashboardView.jsx";
+import DashboardView    from "./components/DashboardView.jsx";
+import OnboardingModal  from "./components/OnboardingModal.jsx";
 
 const DRAFT_KEY  = 'docuia_draft';
 const DRAFT_MAX  = 512 * 1024; // 512 KB
@@ -81,7 +82,10 @@ export default function App() {
   const [historialLoading, setHistorialLoading] = useState(false);
   const [historialHasMore, setHistorialHasMore] = useState(false);
   const [historialOffset,  setHistorialOffset]  = useState(0);
-  const [currentReporteId, setCurrentReporteId] = useState(null);
+  const [currentReporteId,      setCurrentReporteId]      = useState(null);
+  const [currentReporteFeedback, setCurrentReporteFeedback] = useState(null);
+  const [showOnboarding,  setShowOnboarding]  = useState(false);
+  const [erroresForm,     setErroresForm]     = useState({});
 
   const user = getUser();
 
@@ -98,6 +102,7 @@ export default function App() {
       loadCursos();
       loadFormatos();
       loadPlantillas();
+      loadReportes(true);
       refreshAccessToken().catch(() => {});
     }
     recordVisita(document.referrer || "directo");
@@ -129,7 +134,10 @@ export default function App() {
     return () => clearTimeout(t);
   }, [form, reportType]);
 
-  const set = (k, v) => setFormState(p => ({ ...p, [k]: v }));
+  const set = (k, v) => {
+    setFormState(p => ({ ...p, [k]: v }));
+    if (erroresForm[k]) setErroresForm(p => { const n = { ...p }; delete n[k]; return n; });
+  };
 
   const scrollToForm = () => {
     setView("form");
@@ -306,6 +314,9 @@ export default function App() {
       setReportes(p => reset ? rows : [...p, ...rows]);
       setHistorialHasMore(data.hasMore ?? false);
       setHistorialOffset(offset + rows.length);
+      if (reset && rows.length === 0 && !localStorage.getItem('docuia_onboarding_done')) {
+        setShowOnboarding(true);
+      }
     } catch { toast.error('Error al cargar el historial'); }
     setHistorialLoading(false);
   }
@@ -328,6 +339,7 @@ export default function App() {
         } catch { /* ignorar */ }
         setReport(r.reporte_generado || '');
         setCurrentReporteId(r.id);
+        setCurrentReporteFeedback(r.feedback ?? null);
         setView('report');
       } else {
         toast.error('No se encontró el reporte');
@@ -363,12 +375,21 @@ export default function App() {
   const generate = async () => {
     if (!getToken()) { setError("Inicia sesión para generar reportes."); return; }
     const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
-    const missing = requiredFields.filter(k => !form[k]?.trim());
-    if (missing.length > 0) {
-      const names = missing.map(k => FIELD_LABELS[k] || k).join(', ');
-      setError(`Por favor completa los campos obligatorios: ${names}`);
+    const errores = {};
+    requiredFields.forEach(k => { if (!form[k]?.trim()) errores[k] = 'Campo requerido'; });
+    if (!reportType) errores._tipo = 'Selecciona el tipo de reporte';
+    if (Object.keys(errores).length > 0) {
+      setErroresForm(errores);
+      toast.error('Completa los campos requeridos antes de generar');
+      const firstKey = Object.keys(errores).find(k => !k.startsWith('_'));
+      if (firstKey) {
+        const el = document.querySelector(`[data-field="${firstKey}"]`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el?.focus();
+      }
       return;
     }
+    setErroresForm({});
 
     setView("loading");
     setError("");
@@ -517,7 +538,9 @@ export default function App() {
     setSelectedCurso(null);
     setFormatoSubido(null);
     setCurrentReporteId(null);
+    setCurrentReporteFeedback(null);
     setStreaming(false);
+    setErroresForm({});
     try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
     setDraftRestored(false);
   };
@@ -642,11 +665,16 @@ export default function App() {
           plantillas={plantillas}
           loadTemplate={loadTemplate}
           draftRestored={draftRestored}
+          erroresForm={erroresForm}
           onDismissDraft={() => {
             try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
             setDraftRestored(false);
           }}
         />
+      )}
+
+      {showOnboarding && user && (
+        <OnboardingModal onClose={() => setShowOnboarding(false)} />
       )}
 
       {view === "loading" && <LoadingView loadMsg={loadMsg} />}
@@ -663,6 +691,8 @@ export default function App() {
           copied={copied}
           onSaveEdits={currentReporteId ? saveReportEdits : null}
           onReferralShare={recordReferralShare}
+          reporteId={currentReporteId}
+          feedbackInicial={currentReporteFeedback}
         />
       )}
     </div>

@@ -53,7 +53,13 @@ EXTENSIÓN:
   - El currículo nacional del Ecuador organiza los aprendizajes en Destrezas con Criterio de Desempeño (DCD) codificadas
   - Los períodos académicos se dividen en quimestres, parciales y semanas
   - El DECE (Departamento de Consejería Estudiantil) maneja casos según los Protocolos de Actuación del MINEDUC
-  - Las planificaciones usan el formato PUD (Planificación de Unidad Didáctica) del MINEDUC`;
+  - Las planificaciones usan el formato PUD (Planificación de Unidad Didáctica) del MINEDUC
+
+═══ RESTRICCIONES DE DATOS ═══
+
+  - NUNCA inventes, corrijas ni modifiques datos del formulario (grado, nombre, número de estudiantes, fechas).
+  - Si un dato parece inconsistente, escríbelo tal como está en el formulario.
+  - El grado del curso es un dato crítico: cópialo literalmente sin ninguna interpretación.`;
 
 // ── Prompt cuando el docente subió SU formato (modo estricto) ───────────────
 const SYSTEM_PROMPT_CON_FORMATO = `Eres el motor de redacción institucional de DocuIA, una plataforma para docentes en Ecuador. Tu trabajo es replicar EXACTAMENTE el formato institucional que el docente ha subido, llenándolo con los datos que él proporciona.
@@ -92,7 +98,13 @@ const SYSTEM_PROMPT_CON_FORMATO = `Eres el motor de redacción institucional de 
   - Escala de calificaciones sobre 10: Sobresaliente (9-10), Muy Buena (8-8.99), Buena (7-7.99), Regular (5-6.99), Insuficiente (<5). El aprobado es 7/10.
   - Currículo nacional: Destrezas con Criterio de Desempeño (DCD) con códigos oficiales.
   - DECE: maneja casos según Protocolos de Actuación del MINEDUC.
-  - Planificaciones: formato PUD (Planificación de Unidad Didáctica) del MINEDUC.`;
+  - Planificaciones: formato PUD (Planificación de Unidad Didáctica) del MINEDUC.
+
+═══ RESTRICCIONES DE DATOS ═══
+
+  - NUNCA inventes, corrijas ni modifiques datos del formulario (grado, nombre, número de estudiantes, fechas).
+  - Si un dato parece inconsistente, escríbelo tal como está en el formulario.
+  - El grado del curso es un dato crítico: cópialo literalmente sin ninguna interpretación.`;
 
 /**
  * Devuelve el SYSTEM_PROMPT correcto según haya formato institucional o no.
@@ -435,6 +447,20 @@ export function getRequiredFields(type) {
 // CONSTRUCTOR DE PROMPT
 // ═══════════════════════════════════════════════════════════════════════════════
 
+function buildAnchorBlock(type, data) {
+  const anchorKeys = ['docente', 'institucion', 'curso', 'asignatura', 'numEstudiantes', 'periodo'];
+  const allFields = [...FORM_FIELDS.common, ...FORM_FIELDS.common2, ...(FORM_FIELDS[type] || [])];
+  let block = `=== DATOS EXACTOS DEL FORMULARIO — COPIA LITERAL, NO MODIFIQUES ===\n`;
+  anchorKeys.forEach(k => {
+    const v = data[k]?.trim();
+    if (!v) return;
+    const field = allFields.find(f => f.k === k);
+    block += `${field?.label || k}: ${v}\n`;
+  });
+  block += `=== FIN DE DATOS ===\nREGLA ABSOLUTA: Usa estos datos exactamente como aparecen arriba. Si el formulario dice "8vo", escribe "8vo". NUNCA cambies grado, nombre, número de estudiantes ni fechas.\n\n`;
+  return block;
+}
+
 /**
  * Construye el prompt para el LLM.
  *
@@ -453,6 +479,8 @@ export function buildPrompt(type, data, opts = {}) {
   // ── Caso A: el docente subió SU formato institucional ─────────────────────
   if (formatoTexto && formatoTexto.trim()) {
     let p = `Genera un ${rt?.label || type} replicando EXACTAMENTE el formato institucional del docente que se proporciona al final de este mensaje.\n\n`;
+
+    p += buildAnchorBlock(type, data);
 
     p += `═══ DATOS INGRESADOS POR EL DOCENTE ═══\n`;
     p += `Estos son los datos que el docente quiere que aparezcan dentro del formato institucional. Encájalos en el lugar correcto del formato. Si un campo del formato no tiene dato disponible, escribe "(Sin información proporcionada)".\n\n`;
@@ -480,6 +508,7 @@ export function buildPrompt(type, data, opts = {}) {
 
   // ── Caso B: no hay formato del docente → estructura por defecto de DocuIA ─
   let p = `Genera un ${rt?.label || type} COMPLETO con formato institucional profesional.\n\n`;
+  p += buildAnchorBlock(type, data);
   p += `DATOS INGRESADOS POR EL DOCENTE:\n`;
 
   Object.entries(data).forEach(([k, v]) => {

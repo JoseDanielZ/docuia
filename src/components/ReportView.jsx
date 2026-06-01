@@ -4,6 +4,24 @@ import { REPORT_TYPES } from "../config.js";
 import { downloadWord, downloadPDF, downloadExcel, printReport } from "../utils/download.js";
 import { pop, magneticHover } from "../utils/anim.js";
 import { useToast } from "./Toast.jsx";
+import { authFetch } from "../utils/auth.js";
+
+function parsearSecciones(texto) {
+  const regex = /(?=\n(?:#{1,3}|\d+\.)\s)/;
+  return texto.split(regex)
+    .map((contenido, index) => ({
+      id: index,
+      contenido: contenido.trim(),
+      titulo: contenido.match(/^(?:#{1,3}|\d+\.)\s+(.+)/m)?.[1]?.trim() || `Sección ${index + 1}`,
+    }))
+    .filter(s => s.contenido.length > 0);
+}
+
+function detectarInconsistencia(reporteTexto, datosFormulario) {
+  const gradoEsperado = datosFormulario.curso?.toLowerCase() || '';
+  const gradosEncontrados = reporteTexto.match(/\b(\d+vo|\d+mo|\d+ro|\d+to)\b/gi) || [];
+  return gradosEncontrados.some(g => !gradoEsperado.includes(g.toLowerCase()));
+}
 
 function FormatToolbar({ onFormat }) {
   const tools = [
@@ -66,11 +84,22 @@ function FormatToolbar({ onFormat }) {
 export default function ReportView({
   report: initialReport, streaming, reportType, form,
   fileName, reset, copyReport, copied, onSaveEdits, onReferralShare,
+  reporteId, feedbackInicial,
 }) {
   const toast   = useToast();
   const [report,   setReport]   = useState(initialReport);
   const [saving,   setSaving]   = useState(false);
   const [savedAt,  setSavedAt]  = useState(null);
+  const [hayInconsistencia,       setHayInconsistencia]       = useState(false);
+  const [inconsistenciaDismissed, setInconsistenciaDismissed]  = useState(false);
+  const [feedback,       setFeedback]       = useState(feedbackInicial ?? null);
+  const [feedbackEnviado, setFeedbackEnviado] = useState(feedbackInicial !== null && feedbackInicial !== undefined);
+  const [mostrarNota,    setMostrarNota]    = useState(false);
+  const [notaTexto,      setNotaTexto]      = useState('');
+  const [seccionSeleccionada,     setSeccionSeleccionada]     = useState(null);
+  const [instruccionRegeneracion, setInstruccionRegeneracion] = useState('');
+  const [mostrarModalRegen,       setMostrarModalRegen]       = useState(false);
+  const [regenerandoSeccion,      setRegenerandoSeccion]      = useState(false);
   const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label;
 
   const rootRef    = useRef(null);
@@ -105,6 +134,11 @@ export default function ReportView({
       });
     }
   }, [streaming]);
+
+  useEffect(() => {
+    if (streaming || !report) return;
+    if (detectarInconsistencia(report, form)) setHayInconsistencia(true);
+  }, [streaming]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (copied && copyBtnRef.current) pop(copyBtnRef.current, { scale: 1.04, duration: 460 });
@@ -151,6 +185,67 @@ export default function ReportView({
     setSaving(false);
     setSavedAt(new Date());
     toast.success('Cambios guardados correctamente');
+  };
+
+  const handleFeedback = async (valor) => {
+    setFeedback(valor);
+    if (valor === 1) {
+      try {
+        await authFetch(`/api/reportes?id=${reporteId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ feedback: 1, feedback_nota: null }),
+        });
+      } catch { /* silencioso */ }
+      setFeedbackEnviado(true);
+    } else {
+      setMostrarNota(true);
+    }
+  };
+
+  const handleEnviarNota = async () => {
+    try {
+      await authFetch(`/api/reportes?id=${reporteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback: -1, feedback_nota: notaTexto || null }),
+      });
+    } catch { /* silencioso */ }
+    setFeedbackEnviado(true);
+    setMostrarNota(false);
+  };
+
+  const handleRegenerarSeccion = async () => {
+    if (!seccionSeleccionada) return;
+    const contenidoPrevio = seccionSeleccionada.contenido;
+    setMostrarModalRegen(false);
+    setRegenerandoSeccion(true);
+
+    const promptRegen = `Contexto del reporte completo:\n${report}\n\nSección a regenerar: ${seccionSeleccionada.titulo}\nContenido actual:\n${contenidoPrevio}\n\nInstrucción adicional: ${instruccionRegeneracion || 'Mejora esta sección manteniendo el mismo estilo y datos.'}\n\nGenera SOLO el contenido de esta sección. No incluyas otras secciones.`;
+
+    try {
+      const res = await authFetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptRegen }),
+      });
+      if (!res.ok) { toast.error('No se pudo regenerar la sección.'); return; }
+      const data = await res.json();
+      if (data.text) {
+        const idx = report.indexOf(contenidoPrevio);
+        if (idx !== -1) {
+          const nuevoTexto = report.slice(0, idx) + data.text.trim() + report.slice(idx + contenidoPrevio.length);
+          setReport(nuevoTexto);
+          toast.success('Sección regenerada. Usa "Guardar cambios" para conservarla.');
+        }
+      }
+    } catch {
+      toast.error('Error al regenerar la sección.');
+    } finally {
+      setRegenerandoSeccion(false);
+      setInstruccionRegeneracion('');
+      setSeccionSeleccionada(null);
+    }
   };
 
   const dlHover = (e) => animate(e.currentTarget, { translateY: -2, duration: 260, ease: "outQuart" });
@@ -235,6 +330,32 @@ export default function ReportView({
         </div>
       </div>
 
+      {/* Banner de inconsistencia de datos */}
+      {hayInconsistencia && !inconsistenciaDismissed && (
+        <div style={{
+          padding: "14px 18px", marginBottom: 12,
+          background: "var(--warn-bg)", border: "1px solid var(--warn-border)",
+          borderRadius: 10, fontSize: 13, color: "var(--warn-text)",
+          lineHeight: 1.55, display: "flex", justifyContent: "space-between",
+          alignItems: "center", fontFamily: "'IBM Plex Sans', sans-serif",
+        }}>
+          <span>
+            <strong>Posible inconsistencia detectada:</strong> el reporte puede contener un grado diferente al del formulario. Revisa los datos antes de usar este documento.
+          </span>
+          <button
+            onClick={() => setInconsistenciaDismissed(true)}
+            style={{
+              all: "unset", cursor: "pointer", marginLeft: 16,
+              color: "var(--warn-text)", fontWeight: 600, fontSize: 13,
+              flexShrink: 0,
+            }}
+            aria-label="Descartar aviso"
+          >
+            Entendido
+          </button>
+        </div>
+      )}
+
       {/* Aviso */}
       <div ref={warnRef} style={{
         padding: "14px 18px",
@@ -247,12 +368,104 @@ export default function ReportView({
         <strong>Nota importante:</strong> Revise el informe antes de enviarlo. Puede editar el texto directamente abajo. No confíe en la IA al 100%.
       </div>
 
+      {/* Modal de regeneración de sección */}
+      {mostrarModalRegen && seccionSeleccionada && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9000,
+          background: "rgba(0,0,0,.45)", display: "flex",
+          alignItems: "center", justifyContent: "center", padding: 24,
+        }} onClick={() => setMostrarModalRegen(false)}>
+          <div style={{
+            background: "var(--paper)", borderRadius: 14, padding: "28px 32px",
+            maxWidth: 480, width: "100%", boxShadow: "0 8px 40px rgba(0,0,0,.18)",
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{
+              margin: "0 0 16px", fontSize: 16, fontWeight: 600,
+              color: "var(--ink)", fontFamily: "'IBM Plex Sans', sans-serif",
+            }}>Regenerar: {seccionSeleccionada.titulo}</h3>
+            <label style={{ fontSize: 13, color: "var(--muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}>
+              Instrucción adicional (opcional)
+            </label>
+            <textarea
+              value={instruccionRegeneracion}
+              onChange={e => setInstruccionRegeneracion(e.target.value)}
+              placeholder="Ej: Agrega más detalle sobre los estudiantes en riesgo..."
+              rows={3}
+              style={{
+                display: "block", width: "100%", marginTop: 8,
+                padding: "10px 12px", border: "1px solid var(--line)",
+                borderRadius: 8, background: "var(--paper-2)", color: "var(--ink)",
+                fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+                resize: "vertical", outline: "none", boxSizing: "border-box",
+              }}
+            />
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button
+                className="btn"
+                onClick={handleRegenerarSeccion}
+                style={{ fontSize: 13, padding: "10px 20px", background: "var(--ink)", color: "var(--paper)", borderRadius: 8 }}
+              >
+                Regenerar
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => { setMostrarModalRegen(false); setInstruccionRegeneracion(''); }}
+                style={{ fontSize: 13, padding: "10px 20px" }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Editor */}
       <div ref={editorRef} style={{
         border: "1px solid var(--line)", borderRadius: 12,
         overflow: "hidden", willChange: "transform, opacity",
       }}>
         <FormatToolbar onFormat={applyFormat} />
+        {!streaming && (() => {
+          const secciones = parsearSecciones(report);
+          return secciones.length > 1 ? (
+            <div style={{
+              display: "flex", gap: 8, alignItems: "center", padding: "8px 12px",
+              background: "var(--paper-2)", borderBottom: "1px solid var(--line)",
+              flexWrap: "wrap",
+            }}>
+              <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                Regenerar sección
+              </span>
+              <select
+                value={seccionSeleccionada?.id ?? ''}
+                onChange={e => {
+                  const idx = Number(e.target.value);
+                  setSeccionSeleccionada(secciones.find(s => s.id === idx) || null);
+                }}
+                style={{
+                  fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12,
+                  padding: "5px 8px", border: "1px solid var(--line)",
+                  borderRadius: 6, background: "var(--paper)", color: "var(--ink)",
+                  outline: "none", flex: 1, minWidth: 140,
+                }}
+                aria-label="Seleccionar sección a regenerar"
+              >
+                <option value="">— Selecciona sección —</option>
+                {secciones.map(s => (
+                  <option key={s.id} value={s.id}>{s.titulo}</option>
+                ))}
+              </select>
+              <button
+                className="btn btn-ghost"
+                onClick={() => { if (seccionSeleccionada) setMostrarModalRegen(true); }}
+                disabled={!seccionSeleccionada || regenerandoSeccion}
+                style={{ fontSize: 12, padding: "6px 12px" }}
+              >
+                {regenerandoSeccion ? 'Regenerando…' : '↺ Regenerar'}
+              </button>
+            </div>
+          ) : null;
+        })()}
         <textarea
           id="report-textarea"
           value={report}
@@ -314,6 +527,66 @@ export default function ReportView({
           </button>
         )}
       </div>
+
+      {/* Feedback 👍👎 */}
+      {reporteId && !streaming && (
+        <div style={{
+          marginTop: 16, padding: "18px 22px",
+          background: "var(--paper-2)", border: "1px solid var(--line)",
+          borderRadius: 12, fontFamily: "'IBM Plex Sans', sans-serif",
+        }}>
+          {feedbackEnviado ? (
+            <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+              Valoración: {feedback === 1 ? '👍 Útil' : '👎 Mejorable'} — ¡Gracias por tu opinión!
+            </p>
+          ) : mostrarNota ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
+                ¿Qué mejorarías? <span style={{ fontWeight: 400, color: "var(--muted)" }}>(opcional)</span>
+              </p>
+              <textarea
+                value={notaTexto}
+                onChange={e => setNotaTexto(e.target.value)}
+                placeholder="Describe qué salió mal o qué podrías mejorar..."
+                rows={3}
+                style={{
+                  width: "100%", padding: "10px 12px",
+                  border: "1px solid var(--line)", borderRadius: 8,
+                  background: "var(--paper)", color: "var(--ink)",
+                  fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13,
+                  resize: "vertical", outline: "none", boxSizing: "border-box",
+                }}
+              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn" onClick={handleEnviarNota}
+                  style={{ fontSize: 13, padding: "9px 18px", background: "var(--ink)", color: "var(--paper)", borderRadius: 8 }}>
+                  Enviar
+                </button>
+                <button className="btn btn-ghost" onClick={() => { setMostrarNota(false); handleEnviarNota(); }}
+                  style={{ fontSize: 13, padding: "9px 18px" }}>
+                  Omitir
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>¿Este reporte fue útil?</span>
+              <button
+                onClick={() => handleFeedback(1)}
+                style={{ all: "unset", cursor: "pointer", fontSize: 22, lineHeight: 1 }}
+                aria-label="Reporte útil"
+                title="Útil"
+              >👍</button>
+              <button
+                onClick={() => handleFeedback(-1)}
+                style={{ all: "unset", cursor: "pointer", fontSize: 22, lineHeight: 1 }}
+                aria-label="Reporte mejorable"
+                title="Mejorable"
+              >👎</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Compartir */}
       <div ref={shareRef} style={{

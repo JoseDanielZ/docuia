@@ -41,8 +41,10 @@ function PlantillasView({ plantillas, deletePlantilla, loadTemplate, goBack }) {
         </div>
 
         {plantillas.length === 0 && (
-          <div className="cursos-empty">
-            Aún no tienes plantillas. Llena un formulario y pulsa <b>Guardar como plantilla</b>.
+          <div className="cursos-empty" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: "2rem" }}>📋</span>
+            <p style={{ margin: 0 }}>No tienes plantillas guardadas.<br />Completa el formulario y usa "Guardar como plantilla" para reutilizarlo.</p>
+            <button className="cursos-add-btn" onClick={goBack}>Ir al formulario</button>
           </div>
         )}
 

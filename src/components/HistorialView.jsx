@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { animate } from "animejs";
 import "./CursosView.css";
@@ -13,8 +13,22 @@ export default function HistorialView({
   const gridRef    = useRef(null);
   const goBackHover = magneticHover();
 
+  const [filtros, setFiltros] = useState({ tipo: '', desde: '', hasta: '' });
+
+  const reportesFiltrados = reportes.filter(r => {
+    const matchTipo = !filtros.tipo || r.tipo_reporte === filtros.tipo;
+    const fecha = new Date(r.created_at);
+    const matchDesde = !filtros.desde || fecha >= new Date(filtros.desde);
+    const matchHasta = !filtros.hasta || fecha <= new Date(filtros.hasta + 'T23:59:59');
+    return matchTipo && matchDesde && matchHasta;
+  });
+  const hayFiltros = filtros.tipo || filtros.desde || filtros.hasta;
+
   useEnter(headerRef, { y: 14, duration: 600 });
-  useStaggerChildren(gridRef, { y: 22, delay: 70, duration: 600, deps: [reportes.length, loading] });
+  useStaggerChildren(gridRef, {
+    y: 22, delay: 70, duration: 600,
+    deps: [reportesFiltrados.length, loading, filtros],
+  });
 
   const handleArchive = (id, el) => {
     if (!el) return deleteReport(id);
@@ -23,6 +37,14 @@ export default function HistorialView({
       duration: 280, ease: "outQuad",
       onComplete: () => deleteReport(id),
     });
+  };
+
+  const inputStyle = {
+    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontSize: 13, padding: "8px 10px",
+    border: "1px solid var(--line)", borderRadius: 8,
+    background: "var(--paper)", color: "var(--ink)",
+    outline: "none",
   };
 
   return (
@@ -42,20 +64,87 @@ export default function HistorialView({
           </button>
         </div>
 
+        {/* Barra de filtros */}
+        {reportes.length > 0 && (
+          <div style={{
+            display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center",
+            marginBottom: 20, padding: "14px 16px",
+            background: "var(--paper-2)", border: "1px solid var(--line)",
+            borderRadius: 10,
+          }}>
+            <select
+              value={filtros.tipo}
+              onChange={e => setFiltros(f => ({ ...f, tipo: e.target.value }))}
+              style={{ ...inputStyle, minWidth: 160 }}
+              aria-label="Filtrar por tipo de reporte"
+            >
+              <option value="">Todos los tipos</option>
+              {REPORT_TYPES.map(rt => (
+                <option key={rt.id} value={rt.id}>{rt.label}</option>
+              ))}
+            </select>
+
+            <input
+              type="date"
+              value={filtros.desde}
+              onChange={e => setFiltros(f => ({ ...f, desde: e.target.value }))}
+              style={inputStyle}
+              aria-label="Desde fecha"
+              title="Desde"
+            />
+            <input
+              type="date"
+              value={filtros.hasta}
+              onChange={e => setFiltros(f => ({ ...f, hasta: e.target.value }))}
+              style={inputStyle}
+              aria-label="Hasta fecha"
+              title="Hasta"
+            />
+
+            {hayFiltros && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => setFiltros({ tipo: '', desde: '', hasta: '' })}
+                style={{ fontSize: 12, padding: "8px 14px" }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+
+            {hayFiltros && (
+              <span style={{
+                fontSize: 12, color: "var(--muted)",
+                fontFamily: "'IBM Plex Mono', monospace",
+                marginLeft: "auto",
+              }}>
+                {reportesFiltrados.length} de {reportes.length} cargados
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Estados */}
         {loading && reportes.length === 0 && (
           <div className="cursos-empty" aria-live="polite">Cargando historial…</div>
         )}
 
         {!loading && reportes.length === 0 && (
+          <div className="cursos-empty" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: "2rem" }}>📄</span>
+            <p style={{ margin: 0 }}>Todavía no has generado reportes.</p>
+            <button className="cursos-add-btn" onClick={goBack}>Generar mi primer reporte</button>
+          </div>
+        )}
+
+        {!loading && reportes.length > 0 && reportesFiltrados.length === 0 && (
           <div className="cursos-empty">
-            Aún no tienes reportes guardados. Genera uno desde el formulario.
+            No hay reportes que coincidan con los filtros seleccionados.
           </div>
         )}
 
         {/* Grid */}
         <div ref={gridRef} className="cursos-grid" role="list">
-          {reportes.map(r => {
+          {reportesFiltrados.map(r => {
             const tipo = REPORT_TYPES.find(rt => rt.id === r.tipo_reporte)?.label || r.tipo_reporte;
             return (
               <article

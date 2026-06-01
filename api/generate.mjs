@@ -6,9 +6,24 @@ import { logger } from '../lib/server/logger.js';
 const MAX_PROMPT_CHARS  = 48_000;
 const GEN_PER_USER_HOUR = 45;
 const GEN_PER_IP_HOUR   = 120;
+const MODEL_PRIMARY     = 'llama-3.3-70b-versatile';
+const MODEL_FALLBACK    = 'llama-3.1-8b-instant';
+const GROQ_TIMEOUT_MS   = 30_000;
 
 function detectHasFormato(prompt) {
   return typeof prompt === 'string' && prompt.includes('FORMATO INSTITUCIONAL DEL DOCENTE');
+}
+
+async function callGroq(model, payload, signal, apiKey) {
+  return fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ ...payload, model }),
+    signal,
+  });
 }
 
 export default async function handler(req, res) {
@@ -57,31 +72,62 @@ export default async function handler(req, res) {
   const system     = getSystemPrompt({ hasFormato });
   const useStream  = req.headers['accept'] === 'text/event-stream';
 
+  const groqPayload = {
+    max_tokens:  6000,
+    temperature: 0.3,
+    stream:      useStream,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user',   content: trimmed },
+    ],
+  };
+
   const t0 = Date.now();
 
   try {
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model:      'llama-3.3-70b-versatile',
-        max_tokens: 6000,
-        temperature: 0.3,
-        stream:     useStream,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user',   content: trimmed },
-        ],
-      }),
-    });
+    // ── Primary model attempt ─────────────────────────────────────────────
+    const primaryController = new AbortController();
+    const primaryTimeout = setTimeout(() => primaryController.abort(), GROQ_TIMEOUT_MS);
+    let groqRes;
+    let usedFallback = false;
+
+    try {
+      groqRes = await callGroq(MODEL_PRIMARY, groqPayload, primaryController.signal, GROQ_API_KEY);
+    } finally {
+      clearTimeout(primaryTimeout);
+    }
+
+    // ── Fallback on 5xx ───────────────────────────────────────────────────
+    if (!groqRes.ok && groqRes.status >= 500) {
+      logger.warn('Groq primary failed, switching to fallback', {
+        status: groqRes.status, userId: user.id,
+      });
+
+      const fallbackController = new AbortController();
+      const fallbackTimeout = setTimeout(() => fallbackController.abort(), GROQ_TIMEOUT_MS);
+
+      try {
+        groqRes = await callGroq(MODEL_FALLBACK, groqPayload, fallbackController.signal, GROQ_API_KEY);
+      } finally {
+        clearTimeout(fallbackTimeout);
+      }
+
+      if (!groqRes.ok && groqRes.status >= 500) {
+        logger.error('Groq fallback also failed', { status: groqRes.status, userId: user.id });
+        return res.status(503).json({ error: 'Servicio IA no disponible, intenta en unos minutos' });
+      }
+
+      usedFallback = true;
+    }
 
     if (!groqRes.ok) {
       const errData = await groqRes.json().catch(() => ({}));
       logger.error('Groq HTTP error', { status: groqRes.status, err: errData?.error?.message });
       return res.status(502).json({ error: 'No se pudo generar el reporte. Intenta de nuevo.' });
+    }
+
+    if (usedFallback) {
+      res.setHeader('X-Model-Used', MODEL_FALLBACK);
     }
 
     // ── Streaming (SSE) mode ──────────────────────────────────────────────
@@ -120,6 +166,10 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: 'No se pudo generar el reporte. Intenta de nuevo.' });
 
   } catch (err) {
+    if (err.name === 'AbortError') {
+      logger.warn('Groq timeout', { userId: user.id, ms: Date.now() - t0 });
+      return res.status(503).json({ error: 'El servicio de IA tardó demasiado, intenta de nuevo.' });
+    }
     logger.error('generate exception', { userId: user.id, err: err.message });
     return res.status(500).json({ error: 'Error al contactar el servicio de IA' });
   }

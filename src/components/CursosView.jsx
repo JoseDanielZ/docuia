@@ -105,7 +105,11 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
         </div>
 
         {cursos.length === 0 && (
-          <div className="cursos-empty">No tienes cursos guardados. Crea uno para comenzar.</div>
+          <div className="cursos-empty" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: "2rem" }}>📚</span>
+            <p style={{ margin: 0 }}>No tienes cursos guardados.<br />Guarda un curso para rellenar el formulario automáticamente.</p>
+            <button className="cursos-add-btn" onClick={() => setShowModal(true)}>Agregar curso</button>
+          </div>
         )}
 
         <div ref={gridRef} className="cursos-grid">
