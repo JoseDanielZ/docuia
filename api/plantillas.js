@@ -8,7 +8,7 @@ function supabaseUrl() {
 async function handleGet(res, user) {
   try {
     const r = await fetch(
-      `${supabaseUrl()}/rest/v1/plantillas?user_id=eq.${user.id}&activo=eq.true&order=created_at.desc`,
+      `${supabaseUrl()}/rest/v1/plantillas?user_id=eq.${user.id}&activo=eq.true&order=created_at.desc&limit=50`,
       { headers: serviceRestHeaders() }
     );
     const plantillas = await r.json();

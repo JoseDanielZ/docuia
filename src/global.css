@@ -12,47 +12,47 @@
 /* ── Design tokens ────────────────────────────────────────────────────────── */
 
 :root {
-  /* Fondos */
-  --bg-base:        #060D1A;
-  --bg-surface:     #0D1829;
-  --bg-elevated:    #14223A;
-  --bg-hover:       #1A2D4A;
+  /* Fondos — derivados de Tory Blue */
+  --bg-base:        #04101E;
+  --bg-surface:     #081839;
+  --bg-elevated:    #0C2156;
+  --bg-hover:       #102A6B;
 
-  /* Acento primario — Jade eléctrico */
-  --jade-50:        #E6FFF9;
-  --jade-100:       #CCFFF3;
-  --jade-400:       #2EEABC;
-  --jade-500:       #00D4A8;
-  --jade-600:       #00B891;
-  --jade-700:       #009678;
+  /* Acento primario — Tory Blue */
+  --jade-50:        #EBF0FB;
+  --jade-100:       #C5D3F5;
+  --jade-400:       #4F7EC4;
+  --jade-500:       #0e4da4;
+  --jade-600:       #0B3E87;
+  --jade-700:       #082D62;
 
-  /* Acento secundario — Ámbar dorado */
-  --amber-400:      #FFC24A;
-  --amber-500:      #F5A623;
+  /* Acento secundario — Buttercup */
+  --amber-400:      #FFCA4A;
+  --amber-500:      #f5a524;
   --amber-600:      #D4881A;
 
   /* Texto */
-  --text-primary:   #F0F4FF;
-  --text-secondary: #8BA3C7;
-  --text-muted:     #4A6080;
-  --text-inverse:   #060D1A;
+  --text-primary:   #f2f2f2;
+  --text-secondary: #A0B2CC;
+  --text-muted:     #527090;
+  --text-inverse:   #3b3b3b;
 
   /* Bordes */
-  --border-subtle:  rgba(45, 120, 200, 0.12);
-  --border-default: rgba(45, 120, 200, 0.22);
-  --border-strong:  rgba(0, 212, 168, 0.35);
+  --border-subtle:  rgba(14, 77, 164, 0.12);
+  --border-default: rgba(14, 77, 164, 0.22);
+  --border-strong:  rgba(14, 77, 164, 0.40);
 
   /* Estados */
-  --success:  #00D4A8;
-  --error:    #FF5B6B;
-  --warning:  #F5A623;
-  --info:     #4A90E2;
+  --success:  #0e4da4;
+  --error:    #c92c3c;
+  --warning:  #f5a524;
+  --info:     #3A72C4;
 
   /* Gradientes */
-  --grad-jade:      linear-gradient(135deg, #00D4A8 0%, #00B891 100%);
-  --grad-amber:     linear-gradient(135deg, #FFC24A 0%, #F5A623 100%);
-  --grad-surface:   linear-gradient(135deg, #0D1829 0%, #14223A 100%);
-  --grad-glow-jade: 0 0 40px rgba(0, 212, 168, 0.25), 0 0 80px rgba(0, 212, 168, 0.10);
+  --grad-jade:      linear-gradient(135deg, #0e4da4 0%, #0B3E87 100%);
+  --grad-amber:     linear-gradient(135deg, #FFCA4A 0%, #f5a524 100%);
+  --grad-surface:   linear-gradient(135deg, #081839 0%, #0C2156 100%);
+  --grad-glow-jade: 0 0 40px rgba(14, 77, 164, 0.30), 0 0 80px rgba(14, 77, 164, 0.12);
   --grad-glow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
 
   /* Espaciado */
@@ -84,23 +84,23 @@
   --duration-xslow: 600ms;
 
   /* Aliases de compatibilidad con código existente */
-  --ink:         #F0F4FF;
-  --ink-2:       #8BA3C7;
-  --paper:       #060D1A;
-  --paper-2:     #0D1829;
-  --paper-3:     #14223A;
-  --line:        rgba(45, 120, 200, 0.22);
-  --muted:       #4A6080;
-  --text:        #F0F4FF;
-  --accent:      #00D4A8;
-  --accent-soft: rgba(0, 212, 168, 0.1);
-  --accent-ink:  #060D1A;
-  --brass:       #F5A623;
-  --danger:      #FF5B6B;
-  --ok:          #00D4A8;
-  --warn-bg:     rgba(245, 166, 35, 0.08);
-  --warn-border: rgba(245, 166, 35, 0.30);
-  --warn-text:   #F5A623;
+  --ink:         #f2f2f2;
+  --ink-2:       #A0B2CC;
+  --paper:       #04101E;
+  --paper-2:     #081839;
+  --paper-3:     #0C2156;
+  --line:        rgba(14, 77, 164, 0.22);
+  --muted:       #527090;
+  --text:        #f2f2f2;
+  --accent:      #0e4da4;
+  --accent-soft: rgba(14, 77, 164, 0.1);
+  --accent-ink:  #f2f2f2;
+  --brass:       #f5a524;
+  --danger:      #c92c3c;
+  --ok:          #0e4da4;
+  --warn-bg:     rgba(245, 165, 36, 0.08);
+  --warn-border: rgba(245, 165, 36, 0.30);
+  --warn-text:   #f5a524;
   --shadow:      0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
@@ -109,31 +109,31 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg-base:        #F4F7FB;
+    --bg-base:        #f2f2f2;
     --bg-surface:     #FFFFFF;
     --bg-elevated:    #FFFFFF;
-    --bg-hover:       #EEF3FA;
-    --text-primary:   #0D1829;
-    --text-secondary: #4A6080;
-    --text-muted:     #8BA3C7;
-    --border-subtle:  rgba(13, 24, 41, 0.08);
-    --border-default: rgba(13, 24, 41, 0.14);
+    --bg-hover:       #E5EAF5;
+    --text-primary:   #3b3b3b;
+    --text-secondary: #5B6B7B;
+    --text-muted:     #8B9BB0;
+    --border-subtle:  rgba(59, 59, 59, 0.08);
+    --border-default: rgba(59, 59, 59, 0.14);
     --grad-glow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
     /* Aliases compat */
-    --ink:         #0D1829;
-    --ink-2:       #4A6080;
-    --paper:       #F4F7FB;
+    --ink:         #3b3b3b;
+    --ink-2:       #5B6B7B;
+    --paper:       #f2f2f2;
     --paper-2:     #FFFFFF;
-    --paper-3:     #EEF3FA;
-    --line:        rgba(13, 24, 41, 0.14);
-    --muted:       #8BA3C7;
-    --text:        #0D1829;
-    --accent-soft: rgba(0, 212, 168, 0.1);
-    --accent-ink:  #F4F7FB;
+    --paper-3:     #E5EAF5;
+    --line:        rgba(59, 59, 59, 0.14);
+    --muted:       #8B9BB0;
+    --text:        #3b3b3b;
+    --accent-soft: rgba(14, 77, 164, 0.1);
+    --accent-ink:  #f2f2f2;
     --shadow:      0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
     --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.12);
-    --warn-bg:     rgba(245, 166, 35, 0.08);
-    --warn-border: rgba(245, 166, 35, 0.30);
+    --warn-bg:     rgba(245, 165, 36, 0.08);
+    --warn-border: rgba(245, 165, 36, 0.30);
     --warn-text:   #92400e;
   }
 }
@@ -166,9 +166,9 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(0, 212, 168, 0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(245, 166, 35, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 50% 100%, rgba(0, 180, 145, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(14, 77, 164, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(245, 165, 36, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 50% 100%, rgba(11, 62, 135, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
   animation: auroraShift 20s ease-in-out infinite alternate;

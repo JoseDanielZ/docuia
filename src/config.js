@@ -106,13 +106,63 @@ const SYSTEM_PROMPT_CON_FORMATO = `Eres el motor de redacción institucional de 
   - Si un dato parece inconsistente, escríbelo tal como está en el formulario.
   - El grado del curso es un dato crítico: cópialo literalmente sin ninguna interpretación.`;
 
+// ── System prompts específicos Fe y Alegría (Caso B sin formato propio) ─────
+const SYSTEM_PROMPTS_FEA = {
+  informe_tutor: `Eres el motor de redacción institucional de DocuIA para la Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa". Genera el Informe Académico y Comportamental del Docente Tutor/a siguiendo EXACTAMENTE esta estructura:
+1. DATOS GENERALES (tabla con todos los campos del formulario)
+2. ASPECTOS ACADÉMICOS POR MEJORAR (por asignatura: docente, N° en riesgo, compromisos y estudiantes reincidentes)
+3. ASPECTOS COMPORTAMENTALES POR MEJORAR (convivencia general, normas institucionales, seguimiento tutorial individual como tabla)
+4. JÓVENES EN MOVIMIENTO (temas trabajados en el trimestre y temas sugeridos para el siguiente)
+5. ASPECTOS COMPLEMENTARIOS (estudiantes con dificultades de convivencia, casos de vulnerabilidad/DECE, sugerencias a cada estamento en el orden: DECE → Inspección → Vicerrectorado → Rectorado → Docentes)
+FIRMAS (docente tutor, vicerrectorado, rectorado)
+
+REGLAS ESTRICTAS:
+- Usa EXACTAMENTE los nombres, grados, trimestres y fechas del formulario. NUNCA los cambies.
+- No inventes estudiantes, casos ni situaciones que no estén en el formulario.
+- Si un campo del formulario está vacío, escribe "Sin novedad" o "No aplica" en esa subsección.
+- Tono institucional formal, tercera persona.
+- Escala de calificaciones ecuatoriana: Sobresaliente 9-10, Muy Buena 8-8.99, Buena 7-7.99, Regular 5-6.99, Insuficiente <5. Aprobado: 7/10.`,
+
+  contingencia: `Eres el motor de redacción institucional de DocuIA para la Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa". Genera el Plan de Contingencia Pedagógica con el formato oficial de la institución.
+Estructura obligatoria:
+1. DATOS GENERALES (tabla: fecha, trimestre, asignatura, docente, grado/curso, estudiante/s)
+2. PLANIFICACIÓN DE LA ACTIVIDAD (tabla: tema, objetivo, instrucciones, actividades, fecha de entrega, observación)
+3. MATERIAL DE APOYO (listado de recursos: páginas del texto, materiales, links si se mencionan)
+4. FIRMAS (docente, vicerrector/a, representante)
+
+REGLAS ESTRICTAS:
+- Usa los datos exactos del formulario sin modificarlos.
+- Las actividades deben ser claras, concretas y ejecutables de forma autónoma por el estudiante.
+- Tono formal; las instrucciones y actividades se redactan en segunda persona para el estudiante.
+- No inventes datos que no figuren en el formulario; si falta un campo escribe "(Sin información proporcionada)".`,
+
+  microcurricular: `Eres el motor de redacción institucional de DocuIA para la Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa" — Bachillerato Técnico. Genera la Planificación Microcurricular con el formato oficial del año lectivo 2025-2026.
+Estructura obligatoria:
+1. DATOS DE REFERENCIA (tabla completa con todos los campos del formulario)
+2. DESARROLLO DE LA UNIDAD DE TRABAJO (tabla con columnas: Contenidos Procedimentales | Contenidos Conceptuales | Contenidos Actitudinales | Actividades de Aprendizaje | Recursos | Criterios de Evaluación | Técnicas e Instrumentos — una fila por semana)
+3. ADAPTACIONES CURRICULARES (tabla: Estudiante iniciales | Necesidad Educativa Específica)
+4. ESTRATEGIAS METODOLÓGICAS ACTIVAS POR SEMANA (tabla: Semana | Competencia | Estrategias)
+5. OBSERVACIONES DE LA UNIDAD
+FIRMAS (docente, coordinador/a de área, DECE, vicerrector/a)
+
+REGLAS ESTRICTAS:
+- Usa EXACTAMENTE la figura profesional, módulo, fechas y número de horas indicados.
+- Genera exactamente el número de filas de semanas que el docente especificó en "num_semanas".
+- Si el docente no desglosó cada semana individualmente, distribuye los contenidos de forma progresiva a partir del contenido_semanal.
+- Encabezado institucional obligatorio: Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa" — "Ser más para servir mejor".
+- Escala de calificaciones ecuatoriana: Sobresaliente 9-10, Muy Buena 8-8.99, Buena 7-7.99, Regular 5-6.99, Insuficiente <5.`,
+};
+
 /**
- * Devuelve el SYSTEM_PROMPT correcto según haya formato institucional o no.
+ * Devuelve el SYSTEM_PROMPT correcto según haya formato institucional o tipo específico.
  * @param {Object} opts
  * @param {boolean} [opts.hasFormato=false] - true si el docente subió un formato propio.
+ * @param {string}  [opts.type='']          - id del tipo de reporte.
  */
-export function getSystemPrompt({ hasFormato = false } = {}) {
-  return hasFormato ? SYSTEM_PROMPT_CON_FORMATO : SYSTEM_PROMPT_DEFAULT;
+export function getSystemPrompt({ hasFormato = false, type = '' } = {}) {
+  if (hasFormato) return SYSTEM_PROMPT_CON_FORMATO;
+  if (SYSTEM_PROMPTS_FEA[type]) return SYSTEM_PROMPTS_FEA[type];
+  return SYSTEM_PROMPT_DEFAULT;
 }
 
 // Backwards compat: re-exporta el default para llamadas existentes
@@ -125,11 +175,11 @@ export const SYSTEM_PROMPT = SYSTEM_PROMPT_DEFAULT;
 
 export const REPORT_TYPES = [
   {
-    id: "semanal",
-    label: "Informe Semanal",
-    icon: "SE",
-    desc: "Progreso semanal: logros, desafíos y plan de acción",
-    structure: "Pasado (resultados) → Presente (desafíos) → Futuro (plan)",
+    id: "contingencia",
+    label: "Plan de Contingencia",
+    icon: "CO",
+    desc: "Plan pedagógico para estudiantes suspendidos, hospitalizados o en vulnerabilidad",
+    structure: "Datos generales → Planificación → Material de apoyo → Firmas",
   },
   {
     id: "calificaciones",
@@ -146,18 +196,18 @@ export const REPORT_TYPES = [
     structure: "Datos → Patrones → Acciones → Prevención",
   },
   {
-    id: "dece",
-    label: "Informe DECE",
-    icon: "DE",
-    desc: "Consejería estudiantil, intervención y actas de compromiso",
-    structure: "Contexto → Intervención → Acuerdos → Seguimiento",
+    id: "informe_tutor",
+    label: "Informe Docente Tutor/a",
+    icon: "IT",
+    desc: "Informe trimestral académico y comportamental del docente tutor de curso",
+    structure: "Datos generales → Académico → Comportamental → Jóvenes en Movimiento → Complementarios → Firmas",
   },
   {
-    id: "planificacion",
-    label: "Planificación (PUD)",
-    icon: "PL",
-    desc: "Unidad didáctica con destrezas, metodología y adaptaciones NEE",
-    structure: "Objetivos → Destrezas → Metodología → Evaluación → NEE",
+    id: "microcurricular",
+    label: "Planificación Microcurricular",
+    icon: "MC",
+    desc: "Planificación semanal de módulo formativo para Bachillerato Técnico",
+    structure: "Datos referencia → Tabla semanal → Adaptaciones NEE → Estrategias → Firmas",
   },
 ];
 
@@ -184,48 +234,38 @@ export const FORM_FIELDS = {
   ],
 
 
-  // ── 1. INFORME SEMANAL ─────────────────────────────────────────────────────
-  // Estructura: PASADO (resultados) → PRESENTE (desafíos) → FUTURO (plan)
-  semanal: [
-    // Grupo: Contexto académico
-    { k: "_g1", group: "Contexto académico" },
-    { k: "asignatura",   label: "Asignatura",              ph: "Ej: Matemáticas",                                                      half: true },
-    { k: "tema",         label: "Tema / contenido desarrollado", ph: "Ej: Operaciones con fracciones heterogéneas — suma y resta con diferente denominador", half: true },
-    { k: "objetivo",     label: "Objetivo de aprendizaje de la semana",
-      ph: "Ej: Los estudiantes resuelven problemas de suma y resta de fracciones heterogéneas aplicando el mínimo común múltiplo",
-      area: true, hint: "Copie el objetivo del PUD o redáctelo en términos de lo que el estudiante debería lograr al final de la semana" },
+  // ── 1. PLAN DE CONTINGENCIA ──────────────────────────────────────────────
+  // Estructura: DATOS GENERALES → PLANIFICACIÓN → MATERIAL DE APOYO → FIRMAS
+  contingencia: [
+    // Grupo: Datos generales
+    { k: "_g1", group: "Datos generales" },
+    { k: "fecha",               label: "Fecha",                ph: "Ej: 10 de junio de 2026",                half: true },
+    { k: "trimestre",           label: "Trimestre",            ph: "Ej: I / II / III",                        half: true },
+    { k: "asignatura",          label: "Asignatura",           ph: "Ej: Matemáticas",                        half: true },
+    { k: "grado_curso",         label: "Grado / Curso",        ph: "Ej: 3° BT \"A\"",                        half: true },
+    { k: "nombres_estudiantes", label: "Nombre(s) del/los estudiante(s)",
+      ph: "Ej: Juan Pérez\nMaría López",
+      area: true, hint: "Un nombre por línea. Aplica a suspendidos, hospitalizados o en situación de vulnerabilidad" },
 
-    // Grupo: Resultados (pasado)
-    { k: "_g2", group: "Resultados de la semana (pasado)" },
-    { k: "tareasCompletadas", label: "Actividades y tareas completadas",
-      ph: "Ej: Explicación teórica con 5 ejemplos, ejercicios guiados en parejas (hoja de trabajo págs. 45-48), evaluación formativa de 10 preguntas, retroalimentación grupal",
-      area: true, hint: "Detalle cronológicamente las actividades realizadas durante la semana" },
-    { k: "hitosLogrados", label: "Logros alcanzados (datos concretos)",
-      ph: "Ej: El 78% aprobó la evaluación formativa (25 de 32). 5 estudiantes mejoraron su nota respecto a la semana anterior. El grupo completó los ejercicios del texto págs. 45-52",
-      area: true, hint: "Use datos medibles: porcentajes, cantidades, comparaciones con períodos anteriores" },
-    { k: "asistenciaSemanal", label: "Resumen de asistencia de la semana",
-      ph: "Ej: 29 presentes promedio, 3 ausentes (2 justificados, 1 sin justificación), 2 tardanzas recurrentes (Pedro S. y Luisa V.)" },
-
-    // Grupo: Desafíos (presente)
-    { k: "_g3", group: "Desafíos y obstáculos (presente)" },
-    { k: "dificultades", label: "Dificultades y obstáculos observados",
-      ph: "Ej: 8 estudiantes no dominan tablas de multiplicar, lo que impide calcular el MCM correctamente. 3 no entregaron la tarea del miércoles. El proyector falló el jueves",
-      area: true, hint: "Describa las dificultades observadas, tanto académicas como logísticas o conductuales" },
-    { k: "impacto", label: "Impacto de las dificultades en el aprendizaje",
-      ph: "Ej: Los 8 estudiantes con dificultad en tablas obtuvieron promedios bajo 6 en la evaluación. Se retrasa el avance a multiplicación de fracciones previsto para esta semana",
-      area: true, hint: "Explique cómo las dificultades afectaron los resultados o el cronograma" },
-
-    // Grupo: Plan (futuro)
-    { k: "_g4", group: "Plan para la próxima semana (futuro)" },
-    { k: "planSiguiente", label: "Prioridades y contenidos de la próxima semana",
-      ph: "Ej: Lunes y miércoles: refuerzo de tablas de multiplicar con material concreto. Jueves: introducción a multiplicación de fracciones. Viernes: ejercicios guiados",
-      area: true, hint: "Detalle día por día o por bloques qué planifica hacer" },
-    { k: "compromisos", label: "Compromisos y recursos necesarios",
-      ph: "Ej: Coordinar con DECE caso de Carlos R. antes del martes. Solicitar 35 copias de hoja de trabajo a coordinación. Comunicar a padres de los 3 estudiantes sin tarea",
+    // Grupo: Planificación pedagógica
+    { k: "_g2", group: "Planificación pedagógica" },
+    { k: "tema_clase",     label: "Tema de la clase",           ph: "Ej: Operaciones con fracciones heterogéneas",           half: true },
+    { k: "fecha_entrega",  label: "Fecha de entrega",           ph: "Ej: 20 de junio de 2026",                              half: true },
+    { k: "objetivo_clase", label: "Objetivo de clase",
+      ph: "Ej: El estudiante resuelve sumas y restas de fracciones con distinto denominador usando el MCM",
       area: true },
-    { k: "observaciones", label: "Observaciones adicionales",
-      ph: "Ej: Se detectó caso de posible bullying entre dos estudiantes que será derivado al DECE el lunes. El grupo muestra mejor disposición al trabajo en equipo que la semana anterior",
+    { k: "instrucciones",  label: "Instrucciones para el estudiante",
+      ph: "Ej: Lee el material de apoyo. Resuelve los ejercicios del 1 al 10. Envía fotos de tu trabajo al correo del docente",
       area: true },
+    { k: "actividades",    label: "Actividades a realizar",
+      ph: "Ej: 1. Leer págs. 45-48 del texto MINEDUC\n2. Resolver hoja de trabajo adjunta\n3. Realizar 5 problemas del contexto cotidiano",
+      area: true },
+    { k: "observacion",    label: "Observación",
+      ph: "Ej: El estudiante debe presentar el trabajo a la vuelta de su suspensión",
+      area: true },
+    { k: "material_apoyo", label: "Material de apoyo",
+      ph: "Ej: Texto MINEDUC 8vo EGB págs. 45-52\nHoja de trabajo adjunta\nVideo tutorial: youtube.com/...",
+      area: true, hint: "Liste recursos: páginas del texto, links, materiales físicos" },
   ],
 
 
@@ -319,109 +359,134 @@ export const FORM_FIELDS = {
   ],
 
 
-  // ── 4. INFORME DECE ───────────────────────────────────────────────────────
-  // Estructura: CONTEXTO → INTERVENCIÓN → ACUERDOS → SEGUIMIENTO
-  dece: [
-    // Grupo: Identificación
-    { k: "_g1", group: "Identificación del caso" },
-    { k: "tipoIntervencion", label: "Tipo de intervención DECE",
-      ph: "Ej: Seguimiento de caso / Atención individual / Intervención en crisis / Derivación externa / Mediación de conflictos" },
-    { k: "motivoDerivacion", label: "Motivo de derivación o seguimiento",
-      ph: "Ej: Bajo rendimiento académico repentino en las últimas 3 semanas (promedio bajó de 8.5 a 5.1) y cambio conductual reportado por 3 docentes (aislamiento, irritabilidad, llanto en clase)",
-      area: true, hint: "Describa la situación de forma objetiva: qué se observó, quién lo reportó, desde cuándo" },
+  // ── 4. INFORME DOCENTE TUTOR/A ────────────────────────────────────────────
+  // Estructura: DATOS GENERALES → ACADÉMICO → COMPORTAMENTAL → JM → COMPLEMENTARIOS → FIRMAS
+  informe_tutor: [
+    // Grupo: Datos generales del curso
+    { k: "_g1", group: "Datos generales del curso" },
+    { k: "trimestre",       label: "Trimestre",                  ph: "Ej: I / II / III",               half: true },
+    { k: "fecha",           label: "Fecha del informe",          ph: "Ej: 10 de junio de 2026",         half: true },
+    { k: "grado_curso",     label: "Grado / Curso",              ph: "Ej: 3° BT \"A\"",                half: true },
+    { k: "paralelo",        label: "Paralelo",                   ph: "Ej: A",                           half: true },
+    { k: "num_matriculados",label: "N° matriculados",            ph: "Ej: 35",                          half: true },
+    { k: "num_asisten",     label: "N° que asisten",             ph: "Ej: 32",                          half: true },
+    { k: "num_retirados",   label: "N° retirados",               ph: "Ej: 3",                           half: true },
+    { k: "motivos_desercion", label: "Motivos de deserción",     ph: "Ej: Trabajo, cambio de domicilio", area: true },
 
-    // Grupo: Antecedentes
-    { k: "_g2", group: "Antecedentes e historial" },
-    { k: "antecedentes", label: "Antecedentes relevantes del caso",
-      ph: "Ej: Estudiante de 14 años, sin historial previo de dificultades académicas ni conductuales. Promedio anterior: 8.5. Promedio actual: 5.1. Los padres se separaron hace 2 meses. Vive con la madre y 2 hermanos menores. La madre trabaja turno completo",
-      area: true, hint: "Incluya: trayectoria académica, contexto familiar relevante, historial de intervenciones previas" },
-    { k: "accionesPrevias", label: "Acciones previas realizadas por el docente ANTES de derivar al DECE",
-      ph: "Ej: 1/abr: conversación informal con el estudiante durante recreo (refirió estar 'bien'). 3/abr: revisión del cuaderno (tareas incompletas desde hace 2 semanas). 5/abr: llamada a la madre (no contestó). 6/abr: email a la madre (sin respuesta)",
-      area: true, hint: "Documente todo lo que el docente hizo antes de derivar — esto es obligatorio en los protocolos del MINEDUC" },
+    // Grupo: Aspectos académicos
+    { k: "_g2", group: "Aspectos académicos por mejorar" },
+    { k: "asignaturas_reporte",      label: "Asignaturas con estudiantes en riesgo",
+      ph: "Ej: Matemáticas — Lcda. Torres — 8 estudiantes en riesgo\nLengua — Lcdo. Vega — 5 estudiantes en riesgo",
+      area: true, hint: "Formato: Asignatura — Docente — N° en riesgo, una asignatura por línea" },
+    { k: "compromisos_docentes",     label: "Compromisos adquiridos por docentes",
+      ph: "Ej: Lcda. Torres: refuerzo martes y jueves 13:00-13:40\nLcdo. Vega: material diferenciado para los 5 estudiantes",
+      area: true },
+    { k: "compromisos_estudiantes",  label: "Compromisos adquiridos por estudiantes",
+      ph: "Ej: Asistir a clases de refuerzo. Entregar recuperaciones antes del 20 de junio",
+      area: true },
+    { k: "estudiantes_reincidentes", label: "Estudiantes reincidentes (I y II trimestre)",
+      ph: "Ej: Apellido Nombre — riesgo persistente en Matemáticas y Lengua",
+      area: true, hint: "Un estudiante por línea" },
 
-    // Grupo: Intervención
-    { k: "_g3", group: "Intervención realizada" },
-    { k: "intervencion", label: "Cronología detallada de la intervención",
-      ph: "Ej: 7/abr 10:00: entrevista individual con estudiante (45 min) — se aplicó cuestionario de bienestar emocional\n8/abr 14:00: entrevista con representante (madre) — duración 30 min\n9/abr 11:00: reunión con tutora de curso y 2 docentes para coordinar apoyo académico",
-      area: true, hint: "Incluya fecha, hora, duración, participantes y herramientas aplicadas" },
-    { k: "hallazgos", label: "Hallazgos y análisis profesional",
-      ph: "Ej: El estudiante refiere tristeza persistente y falta de concentración desde la separación de sus padres. Expresa preocupación por la situación económica familiar. La madre confirma cambios de comportamiento en casa (no come, duerme poco). No se evidencian indicadores de riesgo de autolesión. El cuestionario de bienestar arroja puntaje 12/30 (rango de atención)",
-      area: true, hint: "Describa objetivamente sin emitir diagnósticos no validados. Use los resultados de instrumentos si los aplicó" },
+    // Grupo: Aspectos comportamentales
+    { k: "_g3", group: "Aspectos comportamentales por mejorar" },
+    { k: "convivencia_general",   label: "Convivencia general del curso",
+      ph: "Ej: El curso mantiene una convivencia adecuada. Se registraron 2 casos de conflicto verbal resueltos con mediación",
+      area: true },
+    { k: "normas_institucionales", label: "Cumplimiento de normas institucionales",
+      ph: "Ej: 5 estudiantes presentan reincidencia en uso del celular en clase. El uniforme se cumple al 90%",
+      area: true },
+    { k: "seguimiento_tutorial",  label: "Seguimiento tutorial individual",
+      ph: "Ej: Juan Pérez — ausentismo reiterado\nMaría López — bajo rendimiento + situación familiar",
+      area: true, hint: "Formato: Estudiante — motivo de seguimiento, uno por línea" },
 
-    // Grupo: Acuerdos
-    { k: "_g4", group: "Acuerdos y compromisos" },
-    { k: "acuerdos", label: "Acuerdos por actor (quién, qué, cuándo)",
-      ph: "Ej: Madre: acompañamiento diario en tareas (verificación de cuaderno cada noche). Compromiso de asistir a reunión quincenal con DECE\nDocentes: apoyo pedagógico diferenciado (plazos extendidos en entregas por 2 semanas). Informe semanal de rendimiento al DECE\nEstudiante: asistir al grupo de apoyo emocional los miércoles a las 11:00\nDECE: seguimiento quincenal. Próxima cita: 21 de abril",
-      area: true, hint: "Sea específico: quién se compromete a qué y para cuándo. Esto se convierte en el acta de compromiso" },
-    { k: "actaCompromiso", label: "Acta de compromiso firmada",
-      ph: "Ej: Sí — firmada por la madre y el estudiante el 8/abr. Copia archivada en expediente del DECE. Copia entregada a coordinación académica y a la madre" },
-    { k: "derivacionExterna", label: "Derivación externa (si aplica)",
-      ph: "Ej: Se recomienda valoración psicológica externa con profesional especializado en duelo adolescente. Se entregó a la familia listado de 3 profesionales con tarifa social. No se requiere derivación a salud pública / DINAPEN / Fiscalía",
+    // Grupo: Jóvenes en Movimiento
+    { k: "_g4", group: "Jóvenes en Movimiento" },
+    { k: "temas_trabajados",  label: "Temas abordados en el trimestre",
+      ph: "Ej: Proyecto de vida. Manejo de emociones. Resolución de conflictos. Educación sexual integral",
+      area: true },
+    { k: "temas_sugeridos",   label: "Temas sugeridos para el próximo trimestre",
+      ph: "Ej: Orientación vocacional. Liderazgo juvenil. Habilidades para la vida",
       area: true },
 
-    // Grupo: Seguimiento
-    { k: "_g5", group: "Plan de seguimiento" },
-    { k: "planSeguimiento", label: "Próximas acciones de seguimiento (fechas concretas)",
-      ph: "Ej: 21/abr: segunda entrevista con estudiante y revisión de cuestionario de bienestar\n30/abr: revisión de rendimiento académico con docentes\n5/may: reunión de seguimiento con la madre\nIndicador de mejora esperado: promedio sube a ≥6.5 y asistencia regular",
-      area: true, hint: "Incluya fechas, responsables e indicadores medibles de mejora" },
-    { k: "confidencialidad", label: "Nota de confidencialidad y protocolo aplicado",
-      ph: "Ej: Caso manejado según Protocolo de Actuación frente a Situaciones de Vulneración de Derechos del MINEDUC (2023). Información clasificada como RESERVADA. Acceso restringido a: profesional DECE, coordinadora académica y tutora de curso. No se comparte con otros docentes ni estudiantes",
+    // Grupo: Aspectos complementarios
+    { k: "_g5", group: "Aspectos complementarios y sugerencias" },
+    { k: "estudiantes_convivencia",    label: "Estudiantes con dificultades de convivencia",
+      ph: "Ej: Apellido Nombre — descripción de la situación",
+      area: true },
+    { k: "casos_vulnerabilidad",       label: "Estudiantes en situación de vulnerabilidad / seguimiento DECE",
+      ph: "Ej: Caso 1: estudiante con situación de violencia intrafamiliar, derivado al DECE el 5/jun\nCaso 2: ...",
+      area: true, hint: "Use \"Caso N:\" para cada situación. No incluya información que identifique al estudiante más allá de lo necesario" },
+    { k: "sugerencias_dece",           label: "Sugerencias para el DECE",
+      ph: "Ej: Seguimiento a 3 casos derivados. Charla sobre manejo emocional para el curso",
+      area: true },
+    { k: "sugerencias_inspeccion",     label: "Sugerencias para Inspección General",
+      ph: "Ej: Reforzar control de asistencia en hora 1. Revisión de carnet de identificación",
+      area: true },
+    { k: "sugerencias_vicerrectorado", label: "Sugerencias para Vicerrectorado",
+      ph: "Ej: Socializar criterios de evaluación unificados. Reunión de docentes de área",
+      area: true },
+    { k: "sugerencias_rectorado",      label: "Sugerencias para Rectorado (PMF / RL)",
+      ph: "Ej: Gestionar talleres de orientación vocacional para 3ro BT",
+      area: true },
+    { k: "sugerencias_docentes",       label: "Sugerencias para docentes de asignatura",
+      ph: "Ej: Coordinar recuperaciones pedagógicas antes del cierre del trimestre",
+      area: true },
+    { k: "problemas_padres",           label: "Registro de problemas con representantes",
+      ph: "Ej: Representante de Juan Pérez no asiste a citaciones. Se intentó contacto el 3 y 7 de junio sin respuesta",
       area: true },
   ],
 
 
-  // ── 5. PLANIFICACIÓN (PUD) ────────────────────────────────────────────────
-  // Estructura: OBJETIVOS → DESTREZAS → METODOLOGÍA → EVALUACIÓN → NEE
-  planificacion: [
-    // Grupo: Datos de la unidad
-    { k: "_g1", group: "Datos de la unidad didáctica" },
-    { k: "asignatura",  label: "Asignatura / área de conocimiento", ph: "Ej: Matemáticas — Álgebra y Funciones",               half: true },
-    { k: "unidad",      label: "Número y título de la unidad",      ph: "Ej: Unidad 3 — Operaciones con números racionales",    half: true },
-    { k: "duracion",    label: "Duración total (semanas y períodos)", ph: "Ej: 6 semanas — 30 períodos de 40 minutos cada uno" },
+  // ── 5. PLANIFICACIÓN MICROCURRICULAR ─────────────────────────────────────
+  // Estructura: DATOS REFERENCIA → DESARROLLO SEMANAL → NEE → ESTRATEGIAS → FIRMAS
+  microcurricular: [
+    // Grupo: Datos de referencia
+    { k: "_g1", group: "Datos de referencia" },
+    { k: "figura_profesional", label: "Figura Profesional",         ph: "Ej: Bachillerato Técnico en Informática", half: true },
+    { k: "area",               label: "Área",                       ph: "Ej: Informática / Contabilidad",          half: true },
+    { k: "curso_modulo",       label: "Curso",                      ph: "Ej: 3° BT \"A\"",                        half: true },
+    { k: "año_lectivo",        label: "Año Lectivo",                ph: "Ej: 2025-2026",                           half: true },
+    { k: "numero_trimestre",   label: "Trimestre N°",               ph: "Ej: 1 / 2 / 3",                          half: true },
+    { k: "nombre_modulo",      label: "Nombre del Módulo Formativo", ph: "Ej: Programación Orientada a Objetos",   half: true },
+    { k: "num_horas",          label: "N° de Horas Pedagógicas",    ph: "Ej: 96",                                  half: true },
+    { k: "fecha_inicio",       label: "Fecha de inicio",            ph: "Ej: 5 de mayo de 2026",                   half: true },
+    { k: "fecha_fin",          label: "Fecha de finalización",      ph: "Ej: 31 de julio de 2026",                 half: true },
 
-    // Grupo: Objetivos y destrezas
-    { k: "_g2", group: "Objetivos y destrezas (qué van a aprender)" },
-    { k: "objetivos", label: "Objetivos de aprendizaje (con código del currículo)",
-      ph: "Ej: O.M.4.2. Utilizar patrones numéricos para resolver problemas de la vida cotidiana aplicando operaciones con fracciones y decimales\nO.M.4.3. Resolver problemas cotidianos que requieran cálculo de porcentajes",
-      area: true, hint: "Use los códigos oficiales del currículo nacional del MINEDUC" },
-    { k: "destrezas", label: "Destrezas con criterio de desempeño (DCD) a desarrollar",
-      ph: "Ej: M.4.1.14. Resolver operaciones combinadas con fracciones, decimales y enteros aplicando el orden de operaciones\nM.4.1.15. Calcular porcentajes en contextos comerciales y estadísticos\nM.4.1.16. Representar fracciones en la recta numérica",
-      area: true, hint: "Liste cada DCD con su código. Estas destrezas son las que se evaluarán al final de la unidad" },
-    { k: "ejeTransversal", label: "Eje transversal y cómo se integra",
-      ph: "Ej: Educación para la interculturalidad — Los problemas de aplicación usarán contextos de comercio justo y economía solidaria de comunidades ecuatorianas",
+    // Grupo: Objetivos y ejes
+    { k: "_g2", group: "Objetivos y ejes transversales" },
+    { k: "objetivo_modulo",        label: "Objetivo del Módulo Formativo",
+      ph: "Ej: Desarrollar aplicaciones orientadas a objetos usando Java para resolver problemas del entorno productivo local",
+      area: true },
+    { k: "nombre_unidad_trabajo",  label: "N° y Nombre de la Unidad de Trabajo",
+      ph: "Ej: Unidad 1 — Fundamentos de clases y objetos en Java" },
+    { k: "objetivo_unidad_trabajo",label: "Objetivo de la Unidad de Trabajo",
+      ph: "Ej: El estudiante crea clases con atributos y métodos básicos para modelar entidades del mundo real",
+      area: true },
+    { k: "ejes_transversales",     label: "Ejes Transversales",
+      ph: "Ej: Educación para el trabajo colaborativo. Uso responsable de la tecnología. Emprendimiento social",
       area: true },
 
-    // Grupo: Metodología
-    { k: "_g3", group: "Metodología (cómo van a aprender)" },
-    { k: "metodologia", label: "Estrategias metodológicas",
-      ph: "Ej: Aprendizaje basado en problemas reales (ABP) con situaciones de compra-venta del barrio. Trabajo colaborativo en grupos de 4 con roles asignados. Clase invertida con 3 videos cortos (canal YouTube institucional). Uso de material concreto (regletas de Cuisenaire) para visualización",
-      area: true, hint: "Describa cómo va a enseñar, no solo qué va a enseñar" },
-    { k: "cronograma", label: "Distribución semanal de contenidos",
-      ph: "Ej: Sem 1: fracciones equivalentes y simplificación\nSem 2: suma y resta de fracciones con mismo denominador\nSem 3: suma y resta con diferente denominador (MCM)\nSem 4: multiplicación de fracciones\nSem 5: división de fracciones y porcentajes\nSem 6: repaso, evaluación sumativa y retroalimentación",
-      area: true, hint: "Detalle semana por semana para que la planificación sea ejecutable" },
-    { k: "recursos", label: "Recursos y materiales necesarios",
-      ph: "Ej: Texto del MINEDUC págs. 45-72. Calculadora científica. Software GeoGebra (laboratorio). Regletas de Cuisenaire (30 juegos). Hojas de trabajo diseñadas por el docente (6 sets). Proyector para videos" },
-
-    // Grupo: Evaluación
-    { k: "_g4", group: "Evaluación (cómo se va a medir)" },
-    { k: "evaluacion", label: "Instrumentos y criterios de evaluación por momento",
-      ph: "Ej: Diagnóstica (Sem 1): prueba escrita de prerrequisitos — 10 preguntas\nFormativa (Sem 2-5): rúbrica de trabajo grupal + portafolio de ejercicios resueltos\nSumativa (Sem 6): prueba escrita — 20 preguntas (60%) + proyecto grupal de aplicación (40%)",
-      area: true, hint: "Incluya evaluación diagnóstica (inicio), formativa (proceso) y sumativa (cierre)" },
-    { k: "indicadores", label: "Indicadores de logro esperados",
-      ph: "Ej: El estudiante resuelve correctamente el 80% de operaciones combinadas con fracciones. El estudiante aplica porcentajes en al menos 2 contextos de la vida real. El estudiante justifica sus procedimientos oralmente",
-      area: true, hint: "Indicadores medibles que permitan verificar si la destreza fue alcanzada" },
-
-    // Grupo: NEE
-    { k: "_g5", group: "Adaptaciones curriculares (NEE)" },
-    { k: "adaptacionesNEE", label: "Adaptaciones para estudiantes con Necesidades Educativas Específicas",
-      ph: "Ej: 2 estudiantes con TDAH (Grado 2):\n— Instrucciones fragmentadas en pasos cortos\n— Tiempo adicional del 25% en evaluaciones\n— Ubicación preferencial (primera fila, cerca del docente)\n— Uso de temporizador visual para actividades\n\n1 estudiante con discalculia (Grado 3):\n— Uso permanente de calculadora\n— Material concreto en evaluaciones\n— Evaluación oral complementaria\n— Adaptación de la prueba sumativa: 12 preguntas en vez de 20",
-      area: true, hint: "Detalle los ajustes por cada estudiante: grado de adaptación, tipo de NEE y estrategias específicas" },
-
-    // Grupo: Cierre
-    { k: "_g6", group: "Observaciones finales" },
-    { k: "observaciones", label: "Observaciones, coordinaciones y bibliografía",
-      ph: "Ej: Esta planificación se alinea con el PCI institucional 2025-2026 y fue socializada en la junta de área del 4 de abril. Se coordinará con el área de Ciencias Naturales para proyecto interdisciplinario sobre porcentajes en contexto ambiental. Bibliografía: Texto del MINEDUC 8vo EGB, Estándares de Aprendizaje 2016",
+    // Grupo: Desarrollo curricular
+    { k: "_g3", group: "Desarrollo curricular semanal" },
+    { k: "num_semanas",         label: "Número de semanas de la unidad", ph: "Ej: 8 / 10 / 12",   half: true },
+    { k: "contenido_semanal",   label: "Contenido semanal (un bloque por semana)",
+      ph: "Semana 1: Contenidos procedimentales: crear clases simples. Conceptuales: definición de clase, atributo y método. Actitudinales: responsabilidad en el trabajo. Actividades: ejercicios guiados. Recursos: IDE NetBeans. Criterios: crea correctamente una clase con al menos 3 atributos. Técnicas: lista de cotejo\n\nSemana 2: ...",
+      area: true, hint: "Un bloque de texto por semana. La IA generará la tabla oficial con 7 columnas a partir de este contenido" },
+    { k: "adaptaciones_curriculares", label: "Adaptaciones curriculares (estudiantes con NEE)",
+      ph: "Ej: J.P. — TDAH Grado 2: instrucciones fragmentadas, 25% tiempo adicional\nM.L. — Discapacidad visual leve: materiales en fuente 16pt",
+      area: true, hint: "Iniciales del estudiante — tipo de NEE y ajuste curricular. Un estudiante por línea" },
+    { k: "estrategias_metodologicas", label: "Estrategias metodológicas activas generales",
+      ph: "Ej: Aprendizaje basado en proyectos. Trabajo colaborativo en grupos de 3. Clase invertida con tutoriales en video. Exposición entre pares en la semana final",
       area: true },
+    { k: "observaciones_unidad",label: "Observaciones de la unidad",
+      ph: "Ej: Esta unidad se desarrolla en el laboratorio de informática (sala 201). Coordinar disponibilidad con DTIC",
+      area: true },
+
+    // Grupo: Firmantes
+    { k: "_g4", group: "Firmantes" },
+    { k: "nombre_coordinador",  label: "Coordinador/a de Área",   ph: "Ej: Lcdo. Carlos Suárez",   half: true },
+    { k: "nombre_vicerrector",  label: "Vicerrector/a",           ph: "Ej: Mgs. Ana Mora",          half: true },
   ],
 };
 
@@ -433,11 +498,11 @@ export const FORM_FIELDS = {
 export function getRequiredFields(type) {
   const common = ["docente", "curso", "periodo"];
   const byType = {
-    semanal:        ["asignatura", "tema", "tareasCompletadas"],
-    calificaciones: ["asignatura", "tipoEvaluacion", "promedioGeneral"],
-    asistencia:     ["totalPresentes", "totalAusentes"],
-    dece:           ["tipoIntervencion", "motivoDerivacion", "intervencion"],
-    planificacion:  ["asignatura", "unidad", "objetivos", "destrezas"],
+    contingencia:    ["asignatura", "grado_curso", "nombres_estudiantes", "tema_clase"],
+    calificaciones:  ["asignatura", "tipoEvaluacion", "promedioGeneral"],
+    asistencia:      ["totalPresentes", "totalAusentes"],
+    informe_tutor:   ["trimestre", "grado_curso", "asignaturas_reporte"],
+    microcurricular: ["figura_profesional", "nombre_modulo", "objetivo_modulo", "contenido_semanal"],
   };
   return [...common, ...(byType[type] || [])];
 }
@@ -521,15 +586,13 @@ export function buildPrompt(type, data, opts = {}) {
 
   p += `\nESTRUCTURA OBLIGATORIA DEL REPORTE:\n`;
 
-  if (type === "semanal") p += `
-Genera estas secciones exactas usando ## para cada título:
-## 1. DATOS INFORMATIVOS — institución, docente, cargo, curso, paralelo, asignatura, jornada, período evaluado, total de estudiantes
-## 2. RESULTADOS DE LA SEMANA — tema desarrollado, objetivo planteado, actividades completadas e hitos logrados. Incluir datos cuantitativos concretos (porcentajes, cantidades). Si se proporcionaron datos de asistencia, incluir resumen aquí
-## 3. DESAFÍOS Y OBSTÁCULOS — descripción de cada dificultad observada (académica, logística o conductual) y su impacto específico en el aprendizaje o el cronograma del grupo
-## 4. PLAN PARA LA PRÓXIMA SEMANA — cronograma de prioridades (día por día si es posible), contenidos a desarrollar, estrategias a aplicar
-## 5. COMPROMISOS — lista numerada de compromisos del docente, recursos solicitados y coordinaciones pendientes, cada uno con fecha límite
-## 6. RECOMENDACIONES — mínimo 3 acciones específicas con responsable y fecha. Al menos 1 dirigida al docente, 1 a los estudiantes y 1 a las familias
-## FIRMA — nombre del docente, cargo y fecha`;
+  if (type === "contingencia") p += `
+Genera el Plan de Contingencia con estas secciones usando ## para cada título:
+## DATOS GENERALES — tabla con: fecha, trimestre, asignatura, docente, grado/curso, nombre(s) del estudiante (copia exactamente los nombres del formulario)
+## PLANIFICACIÓN DE LA ACTIVIDAD — tabla con: tema de la clase, objetivo, instrucciones (redactadas en segunda persona para el estudiante), actividades a realizar, fecha de entrega, observación
+## MATERIAL DE APOYO — listado de recursos mencionados. Si no se especificaron recursos adicionales, indica "Texto MINEDUC del área correspondiente"
+## FIRMAS — Elaborado por (docente), Aprobado por (vicerrector/a), Recibido por (representante — espacio para firma)
+REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "(Sin información proporcionada)". NUNCA inventes nombres de estudiantes ni datos no presentes en el formulario.`;
 
   else if (type === "calificaciones") p += `
 Genera estas secciones exactas usando ## para cada título:
@@ -553,31 +616,25 @@ Genera estas secciones exactas usando ## para cada título:
 ## 7. RECOMENDACIONES — mínimo 3 medidas preventivas para reducir el ausentismo y las tardanzas. Al menos 1 a nivel de aula, 1 a nivel institucional y 1 dirigida a las familias
 ## FIRMA — nombre del docente, cargo y fecha`;
 
-  else if (type === "dece") p += `
-Genera estas secciones exactas usando ## para cada título:
-## 1. DATOS INFORMATIVOS — institución, profesional DECE responsable, docente que derivó el caso, curso, fecha del informe. IMPORTANTE: no incluir el nombre del estudiante en el cuerpo del informe, usar "el/la estudiante"
-## 2. MOTIVO DE DERIVACIÓN — descripción objetiva y detallada de la situación que originó la intervención: qué se observó, quién lo reportó, desde cuándo, cuántos docentes lo notaron
-## 3. ANTECEDENTES — trayectoria académica del estudiante, contexto familiar relevante, historial de intervenciones anteriores del DECE si las hay, acciones previas del docente antes de derivar
-## 4. INTERVENCIÓN REALIZADA — cronología completa con fechas, horas, participantes, duración de cada sesión e instrumentos aplicados
-## 5. HALLAZGOS Y ANÁLISIS PROFESIONAL — síntesis del contexto psicológico, educativo, emocional y social identificado. Resultados de instrumentos aplicados. IMPORTANTE: no emitir diagnósticos clínicos no validados, usar lenguaje descriptivo
-## 6. ACUERDOS Y COMPROMISOS — lista de compromisos organizados por actor (estudiante, familia, docentes, DECE) con responsable, acción específica y fecha. Referencia al acta de compromiso firmada
-## 7. DERIVACIÓN EXTERNA — si aplica: institución o profesional recomendado, motivo de la derivación, información entregada a la familia
-## 8. PLAN DE SEGUIMIENTO — próximas fechas de revisión con responsables. Indicadores medibles de mejora esperados (ej: promedio sube a ≥6.5, asistencia regular por 3 semanas consecutivas)
-## 9. NOTA DE CONFIDENCIALIDAD — protocolo del MINEDUC aplicado, clasificación de la información, lista de personas con acceso autorizado al caso
-## FIRMA — nombre del profesional DECE, cargo y fecha`;
+  else if (type === "informe_tutor") p += `
+Genera el Informe Académico y Comportamental del Docente Tutor/a con estas secciones usando ## para cada título:
+## 1. DATOS GENERALES — tabla con: tutor/a, trimestre, fecha, grado/curso, paralelo, N° matriculados, N° que asisten, N° retirados, motivos de deserción
+## 2. ASPECTOS ACADÉMICOS POR MEJORAR EN EL SIGUIENTE TRIMESTRE — para cada asignatura reportada: nombre de la asignatura, docente, N° estudiantes en riesgo, compromisos del docente, compromisos de los estudiantes. Al final: lista de estudiantes reincidentes (si los hay)
+## 3. ASPECTOS COMPORTAMENTALES POR MEJORAR — convivencia general del curso, cumplimiento de normas institucionales, seguimiento tutorial individual (tabla: Estudiante | Razón de seguimiento)
+## 4. JÓVENES EN MOVIMIENTO — temas abordados en el trimestre, temas sugeridos para el siguiente trimestre (lista)
+## 5. ASPECTOS COMPLEMENTARIOS — estudiantes con dificultades de convivencia (tabla si hay datos), casos de vulnerabilidad/seguimiento DECE, sugerencias para cada estamento en este orden: DECE, Inspección General, Vicerrectorado, Rectorado (PMF/RL), Docentes de asignatura, problemas con representantes (tabla si hay datos)
+## FIRMAS — Elaborado por (Docente Tutor/a + firma + fecha), Recibido por (Vicerrectorado), Aprobado por (Rectorado)
+REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "Sin novedad" o "No aplica". NUNCA inventes nombres de estudiantes, casos ni datos no presentes en el formulario.`;
 
-  else if (type === "planificacion") p += `
-Genera estas secciones exactas usando ## para cada título:
-## 1. DATOS INFORMATIVOS — institución, docente, asignatura/área, número y título de la unidad, curso, duración (semanas y períodos), período lectivo
-## 2. OBJETIVOS DE APRENDIZAJE — listado con código oficial del currículo nacional. Explicar brevemente qué logrará el estudiante al completar la unidad
-## 3. DESTREZAS CON CRITERIO DE DESEMPEÑO — listado numerado de cada DCD con su código oficial completo. Estas son las que se evaluarán
-## 4. EJE TRANSVERSAL — cuál eje se integra y cómo se aborda concretamente dentro de las actividades de la unidad (no solo mencionarlo, explicar la conexión)
-## 5. ESTRATEGIAS METODOLÓGICAS — descripción detallada de cómo van a aprender los estudiantes. Incluir CRONOGRAMA SEMANAL: qué contenido se aborda cada semana, con qué estrategia y en cuántos períodos
-## 6. RECURSOS Y MATERIALES — listado completo de recursos físicos y digitales necesarios, con cantidades cuando aplique
-## 7. EVALUACIÓN — instrumentos y criterios organizados por momento: diagnóstica (inicio de unidad), formativa (durante el proceso) y sumativa (cierre). Incluir ponderación si aplica. Incluir indicadores de logro esperados para cada DCD
-## 8. ADAPTACIONES CURRICULARES PARA ESTUDIANTES CON NEE — para cada estudiante con necesidades educativas específicas: tipo de NEE, grado de adaptación curricular (1, 2 o 3), y listado de ajustes específicos en metodología, evaluación, tiempos y recursos
-## 9. OBSERVACIONES Y BIBLIOGRAFÍA — alineación con el PCI institucional, coordinaciones interdisciplinarias planificadas, y referencias bibliográficas
-## FIRMA — nombre del docente, cargo y fecha`;
+  else if (type === "microcurricular") p += `
+Genera la Planificación Microcurricular para Bachillerato Técnico de Fe y Alegría con estas secciones usando ## para cada título. El encabezado institucional obligatorio es: Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa" — "Ser más para servir mejor"
+## 1. DATOS DE REFERENCIA — tabla con todos los campos del formulario: figura profesional, docente, área, curso, año lectivo, trimestre N°, nombre del módulo formativo, N° de horas, fecha de inicio, fecha de finalización, objetivo del módulo, N° y nombre de la unidad de trabajo, objetivo de la unidad de trabajo, ejes transversales
+## 2. DESARROLLO DE LA UNIDAD DE TRABAJO — tabla con estas 7 columnas exactas: "Contenidos Procedimentales" | "Contenidos Conceptuales" | "Contenidos Actitudinales" | "Actividades de Aprendizaje (Estrategias Metodológicas)" | "Recursos" | "Criterios de Evaluación" | "Técnicas e Instrumentos de Evaluación". Genera EXACTAMENTE el número de filas indicado en num_semanas. Distribuye el contenido_semanal del formulario en esas filas.
+## 3. ADAPTACIONES CURRICULARES — tabla: "Estudiante (iniciales)" | "Especificación de la Necesidad Educativa". Si no hay datos, escribe "No se reportan estudiantes con NEE en esta unidad"
+## 4. ESTRATEGIAS METODOLÓGICAS ACTIVAS POR SEMANA — tabla: "Semana" | "Competencia" | "Estrategias Metodológicas Activas para la Enseñanza y Aprendizaje". Mismas filas que la tabla de desarrollo
+## 5. OBSERVACIONES DE LA UNIDAD — texto libre con lo que el docente indicó. Si no hay datos escribe "Sin observaciones adicionales"
+## FIRMAS — tabla con 4 firmantes: Docente (elaborado), Coordinador/a de Área (revisado), DECE (aprobado), Vicerrector/a (revisado)
+REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "(Sin información proporcionada)". Genera EXACTAMENTE el número de semanas indicado — no más, no menos.`;
 
   p += `\n\nNOTA FINAL: Al terminar el reporte, agrega una línea separada que diga: "Documento generado con asistencia de DocuIA. El docente responsable debe revisar y validar todos los datos antes de su envío oficial."`;
 

@@ -70,7 +70,7 @@
 }
 .cursos-add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0,212,168,0.3);
+  box-shadow: 0 6px 24px rgba(14,77,164,0.3);
 }
 .cursos-add-btn:hover::after { transform: translateX(100%); }
 .cursos-add-btn:active { transform: translateY(0); }
@@ -111,7 +111,7 @@
 .curso-card:hover {
   transform: translateY(-4px);
   border-color: var(--border-strong);
-  box-shadow: 0 8px 32px rgba(0,212,168,0.12);
+  box-shadow: 0 8px 32px rgba(14,77,164,0.15);
 }
 .curso-card:hover::before { transform: scaleX(1); }
 
@@ -132,6 +132,32 @@
   letter-spacing: -0.01em;
 }
 
+.curso-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.curso-card-edit {
+  all: unset;
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.curso-card-edit:hover {
+  color: var(--jade-500);
+  background: rgba(14,77,164,0.1);
+}
+
 .curso-card-delete {
   all: unset;
   cursor: pointer;
@@ -149,7 +175,7 @@
 }
 .curso-card-delete:hover {
   color: var(--error);
-  background: rgba(255,91,107,0.1);
+  background: rgba(201,44,60,0.1);
 }
 
 .curso-card-meta {
@@ -190,7 +216,7 @@
 .curso-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(6,13,26,0.85);
+  background: rgba(4,16,30,0.85);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 1000;
@@ -268,8 +294,8 @@
 .curso-modal-form input:focus,
 .curso-modal-form select:focus {
   border-color: var(--jade-500);
-  box-shadow: 0 0 0 3px rgba(0,212,168,0.12);
-  background: rgba(0,212,168,0.03);
+  box-shadow: 0 0 0 3px rgba(14,77,164,0.15);
+  background: rgba(14,77,164,0.04);
 }
 .curso-modal-form input::placeholder { color: var(--text-muted); }
 

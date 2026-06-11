@@ -63,6 +63,7 @@ export default function App() {
   const [selectedCurso,  setSelectedCurso]  = useState(null);
   const [showCursoModal, setShowCursoModal] = useState(false);
   const [cursoForm,      setCursoForm]      = useState({});
+  const [editingCursoId, setEditingCursoId] = useState(null);
 
   // Formato institucional
   const [uploadingFormato,    setUploadingFormato]    = useState(false);
@@ -76,6 +77,9 @@ export default function App() {
 
   // Borrador automático
   const [draftRestored, setDraftRestored] = useState(false);
+
+  // Métricas server-side
+  const [metricas, setMetricas] = useState(null);
 
   // Historial (paginado)
   const [reportes,        setReportes]        = useState([]);
@@ -103,6 +107,7 @@ export default function App() {
       loadFormatos();
       loadPlantillas();
       loadReportes(true);
+      loadMetricas();
       refreshAccessToken().catch(() => {});
     }
     recordVisita(document.referrer || "directo");
@@ -174,6 +179,29 @@ export default function App() {
         toast.error(data.error || 'Error al crear curso');
       }
     } catch { toast.error('Error al crear curso'); }
+  }
+
+  async function updateCurso() {
+    if (!cursoForm.nombre || !cursoForm.grado || !cursoForm.asignatura) {
+      toast.warning('Nombre, grado y asignatura son obligatorios'); return;
+    }
+    try {
+      const res  = await authFetch(`/api/cursos?id=${editingCursoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cursoForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCursos(p => p.map(c => c.id === editingCursoId ? data.curso : c));
+        setCursoForm({});
+        setEditingCursoId(null);
+        setShowCursoModal(false);
+        toast.success('Curso actualizado correctamente');
+      } else {
+        toast.error(data.error || 'Error al actualizar curso');
+      }
+    } catch { toast.error('Error al actualizar el curso'); }
   }
 
   async function deleteCurso(id) {
@@ -302,6 +330,16 @@ export default function App() {
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   }
 
+  // ===== MÉTRICAS =====
+  async function loadMetricas() {
+    if (!getToken()) return;
+    try {
+      const res  = await authFetch('/api/metricas');
+      const data = await res.json();
+      if (data.total_reportes !== undefined) setMetricas(data);
+    } catch { /* silencioso — el dashboard usa cálculo local como fallback */ }
+  }
+
   // ===== HISTORIAL (paginado) =====
   async function loadReportes(reset = true) {
     if (!getToken()) return;
@@ -412,7 +450,7 @@ export default function App() {
       const res = await authFetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-        body: JSON.stringify({ prompt: finalPrompt }),
+        body: JSON.stringify({ prompt: finalPrompt, type: reportType }),
       });
 
       clearInterval(iv);
@@ -585,7 +623,7 @@ export default function App() {
         onCursosClick={() => setView("cursos")}
         onPlantillasClick={() => setView("plantillas")}
         onHistorialClick={() => { setView("historial"); loadReportes(true); }}
-        onDashboardClick={() => { setView("dashboard"); loadReportes(true); }}
+        onDashboardClick={() => { setView("dashboard"); loadReportes(true); loadMetricas(); }}
       />
 
       {view === "cursos" && (
@@ -596,7 +634,10 @@ export default function App() {
           cursoForm={cursoForm}
           setCursoForm={setCursoForm}
           createCurso={createCurso}
+          updateCurso={updateCurso}
           deleteCurso={deleteCurso}
+          editingCursoId={editingCursoId}
+          setEditingCursoId={setEditingCursoId}
         />
       )}
 
@@ -625,6 +666,7 @@ export default function App() {
         <DashboardView
           reportes={reportes}
           cursos={cursos}
+          metricas={metricas}
           goBack={() => setView("form")}
           loading={historialLoading}
         />

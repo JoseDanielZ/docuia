@@ -6,19 +6,29 @@ import { REPORT_TYPES } from "../config.js";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
 const TIPO_ICONS = {
-  semanal:        "📋",
-  calificaciones: "📊",
-  asistencia:     "📅",
-  dece:           "🧠",
-  planificacion:  "📐",
+  // tipos actuales
+  contingencia:    "📋",
+  calificaciones:  "📊",
+  asistencia:      "📅",
+  informe_tutor:   "🧑‍🏫",
+  microcurricular: "📐",
+  // backward compat — reportes anteriores a la migración SQL
+  semanal:         "📋",
+  dece:            "🧠",
+  planificacion:   "📐",
 };
 
 const TIPO_CSS_CLASS = {
-  semanal:        "tipo-semanal",
-  calificaciones: "tipo-calificaciones",
-  asistencia:     "tipo-asistencia",
-  dece:           "tipo-dece",
-  planificacion:  "tipo-planificacion",
+  // tipos actuales
+  contingencia:    "tipo-semanal",
+  calificaciones:  "tipo-calificaciones",
+  asistencia:      "tipo-asistencia",
+  informe_tutor:   "tipo-dece",
+  microcurricular: "tipo-planificacion",
+  // backward compat
+  semanal:         "tipo-semanal",
+  dece:            "tipo-dece",
+  planificacion:   "tipo-planificacion",
 };
 
 export default function HistorialView({

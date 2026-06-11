@@ -4,7 +4,7 @@ import { animate, utils } from "animejs";
 import "./CursosView.css";
 import { useEnter, useStaggerChildren, magneticHover, pop } from "../utils/anim.js";
 
-function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, createCurso, deleteCurso }) {
+function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, createCurso, updateCurso, deleteCurso, editingCursoId, setEditingCursoId }) {
   const headerRef  = useRef(null);
   const gridRef    = useRef(null);
   const overlayRef = useRef(null);
@@ -35,11 +35,42 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
   const closeModal = () => {
     if (modalRef.current && overlayRef.current) {
       animate(modalRef.current, { opacity: [1, 0], scale: [1, 0.96], translateY: [0, 8], duration: 200, ease: "outQuad" });
-      animate(overlayRef.current, { opacity: [1, 0], duration: 220, ease: "outQuad", onComplete: () => setShowModal(false) });
-    } else { setShowModal(false); }
+      animate(overlayRef.current, { opacity: [1, 0], duration: 220, ease: "outQuad", onComplete: () => {
+        setShowModal(false);
+        setEditingCursoId(null);
+        setCursoForm({});
+      }});
+    } else {
+      setShowModal(false);
+      setEditingCursoId(null);
+      setCursoForm({});
+    }
   };
 
-  const handleCreate = (e) => { pop(e.currentTarget, { scale: 1.04, duration: 380 }); createCurso(); };
+  const openCreate = () => {
+    setCursoForm({});
+    setEditingCursoId(null);
+    setShowModal(true);
+  };
+
+  const openEdit = (curso) => {
+    setCursoForm({
+      nombre:          curso.nombre          || '',
+      grado:           curso.grado           || '',
+      paralelo:        curso.paralelo        || '',
+      asignatura:      curso.asignatura      || '',
+      num_estudiantes: curso.num_estudiantes || '',
+      jornada:         curso.jornada         || '',
+    });
+    setEditingCursoId(curso.id);
+    setShowModal(true);
+  };
+
+  const handleSubmit = (e) => {
+    pop(e.currentTarget, { scale: 1.04, duration: 380 });
+    if (editingCursoId) updateCurso();
+    else createCurso();
+  };
 
   const handleDelete = (id, el) => {
     if (!el) return deleteCurso(id);
@@ -63,7 +94,7 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
             <h2 className="cursos-title">Mis Cursos</h2>
             <p className="cursos-subtitle">Gestiona los cursos que dictas para auto-llenar reportes</p>
           </div>
-          <button className="cursos-add-btn" {...addBtnHover} onClick={() => setShowModal(true)}>
+          <button className="cursos-add-btn" {...addBtnHover} onClick={openCreate}>
             + Nuevo curso
           </button>
         </div>
@@ -73,7 +104,7 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
           <div className="cursos-empty">
             <span style={{ fontSize: "2.2rem" }}>📚</span>
             <p>No tienes cursos guardados.<br />Guarda un curso para rellenar el formulario automáticamente.</p>
-            <button className="cursos-add-btn" onClick={() => setShowModal(true)}>Agregar curso</button>
+            <button className="cursos-add-btn" onClick={openCreate}>Agregar curso</button>
           </div>
         )}
 
@@ -83,11 +114,18 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
             <div key={c.id} className="curso-card" style={{ willChange: "transform, opacity" }}>
               <div className="curso-card-header">
                 <div className="curso-card-name">{c.nombre}</div>
-                <button
-                  className="curso-card-delete"
-                  onClick={(e) => handleDelete(c.id, e.currentTarget.closest(".curso-card"))}
-                  aria-label={`Eliminar ${c.nombre}`}
-                >&times;</button>
+                <div className="curso-card-actions">
+                  <button
+                    className="curso-card-edit"
+                    onClick={() => openEdit(c)}
+                    aria-label={`Editar ${c.nombre}`}
+                  >✎</button>
+                  <button
+                    className="curso-card-delete"
+                    onClick={(e) => handleDelete(c.id, e.currentTarget.closest(".curso-card"))}
+                    aria-label={`Eliminar ${c.nombre}`}
+                  >&times;</button>
+                </div>
               </div>
               <div className="curso-card-meta">{c.asignatura} · {c.grado} {c.paralelo}</div>
               <div className="curso-card-details">
@@ -112,7 +150,9 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
             onClick={e => e.stopPropagation()}
             style={{ willChange: "transform, opacity" }}
           >
-            <h3 className="curso-modal-title">Crear nuevo curso</h3>
+            <h3 className="curso-modal-title">
+              {editingCursoId ? 'Editar curso' : 'Crear nuevo curso'}
+            </h3>
 
             <div className="curso-modal-form">
               <div>
@@ -145,12 +185,12 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
               </div>
 
               <div className="curso-modal-actions">
-                <button className="cursos-add-btn" onClick={handleCreate}>
-                  Crear curso
+                <button className="cursos-add-btn" onClick={handleSubmit}>
+                  {editingCursoId ? 'Guardar cambios' : 'Crear curso'}
                 </button>
                 <button
                   className="btn btn-ghost"
-                  onClick={() => { closeModal(); setCursoForm({}); }}
+                  onClick={closeModal}
                   style={{ padding: "10px 18px", fontSize: 13 }}
                 >
                   Cancelar
@@ -165,13 +205,16 @@ function CursosView({ cursos, showModal, setShowModal, cursoForm, setCursoForm, 
 }
 
 CursosView.propTypes = {
-  cursos:       PropTypes.arrayOf(PropTypes.object).isRequired,
-  showModal:    PropTypes.bool.isRequired,
-  setShowModal: PropTypes.func.isRequired,
-  cursoForm:    PropTypes.object.isRequired,
-  setCursoForm: PropTypes.func.isRequired,
-  createCurso:  PropTypes.func.isRequired,
-  deleteCurso:  PropTypes.func.isRequired,
+  cursos:          PropTypes.arrayOf(PropTypes.object).isRequired,
+  showModal:       PropTypes.bool.isRequired,
+  setShowModal:    PropTypes.func.isRequired,
+  cursoForm:       PropTypes.object.isRequired,
+  setCursoForm:    PropTypes.func.isRequired,
+  createCurso:     PropTypes.func.isRequired,
+  updateCurso:     PropTypes.func.isRequired,
+  deleteCurso:     PropTypes.func.isRequired,
+  editingCursoId:  PropTypes.string,
+  setEditingCursoId: PropTypes.func.isRequired,
 };
 
 export default CursosView;

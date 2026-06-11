@@ -21,7 +21,7 @@ MetricCard.propTypes = {
   sub:   PropTypes.string,
 };
 
-function DashboardView({ reportes, cursos, goBack, loading }) {
+function DashboardView({ reportes, cursos, metricas, goBack, loading }) {
   const headerRef = useRef(null);
   const cardsRef  = useRef(null);
   const goBackHover = magneticHover();
@@ -29,21 +29,23 @@ function DashboardView({ reportes, cursos, goBack, loading }) {
   useEnter(headerRef, { y: 14, duration: 600 });
   useStaggerChildren(cardsRef, { y: 18, delay: 60, duration: 580, deps: [loading, reportes.length] });
 
-  const totalReportes  = reportes.length;
-  const totalCursos    = cursos.length;
-  const totalCopiados  = reportes.filter(r => r.fue_copiado).length;
+  // Usar métricas server-side si están disponibles; si no, calcular localmente como fallback
+  const totalReportes = metricas ? metricas.total_reportes : reportes.length;
+  const totalCursos   = metricas ? metricas.cursos_activos : cursos.length;
+  const totalCopiados = metricas ? metricas.total_copiados : reportes.filter(r => r.fue_copiado).length;
+  const recientes     = metricas ? metricas.ultimo_mes     : (() => {
+    const haceUnMes = new Date();
+    haceUnMes.setMonth(haceUnMes.getMonth() - 1);
+    return reportes.filter(r => new Date(r.created_at) >= haceUnMes).length;
+  })();
 
   const porTipo = REPORT_TYPES.map(rt => ({
     id:    rt.id,
     label: rt.label,
-    count: reportes.filter(r => r.tipo_reporte === rt.id).length,
+    count: metricas ? (metricas.por_tipo?.[rt.id] || 0) : reportes.filter(r => r.tipo_reporte === rt.id).length,
   })).filter(x => x.count > 0).sort((a, b) => b.count - a.count);
 
   const maxCount = porTipo[0]?.count || 1;
-
-  const haceUnMes = new Date();
-  haceUnMes.setMonth(haceUnMes.getMonth() - 1);
-  const recientes = reportes.filter(r => new Date(r.created_at) >= haceUnMes).length;
 
   const TIPO_BAR_COLORS = {
     semanal:        "var(--jade-500)",
@@ -142,6 +144,7 @@ function DashboardView({ reportes, cursos, goBack, loading }) {
 DashboardView.propTypes = {
   reportes: PropTypes.arrayOf(PropTypes.object).isRequired,
   cursos:   PropTypes.arrayOf(PropTypes.object).isRequired,
+  metricas: PropTypes.object,
   goBack:   PropTypes.func.isRequired,
   loading:  PropTypes.bool.isRequired,
 };

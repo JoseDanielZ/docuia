@@ -202,8 +202,8 @@ export default function ReportView({
   const primaryHover = magneticHover();
 
   /* Colores de badge según tipo */
-  const tipoBg     = { semanal: "rgba(0,212,168,0.12)", calificaciones: "rgba(245,166,35,0.12)", asistencia: "rgba(74,144,226,0.12)", dece: "rgba(167,139,250,0.12)", planificacion: "rgba(52,211,153,0.12)" };
-  const tipoBorder = { semanal: "rgba(0,212,168,0.25)", calificaciones: "rgba(245,166,35,0.25)", asistencia: "rgba(74,144,226,0.25)", dece: "rgba(167,139,250,0.25)", planificacion: "rgba(52,211,153,0.25)" };
+  const tipoBg     = { semanal: "rgba(14,77,164,0.12)", calificaciones: "rgba(245,165,36,0.12)", asistencia: "rgba(14,77,164,0.14)", dece: "rgba(201,44,60,0.12)", planificacion: "rgba(14,77,164,0.10)" };
+  const tipoBorder = { semanal: "rgba(14,77,164,0.28)", calificaciones: "rgba(245,165,36,0.28)", asistencia: "rgba(14,77,164,0.28)", dece: "rgba(201,44,60,0.28)", planificacion: "rgba(14,77,164,0.22)" };
 
   return (
     <div ref={rootRef} className="report-view">

@@ -14,6 +14,8 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 | **Base de datos** | Supabase (PostgreSQL + Auth) |
 | **IA generativa** | Groq API — modelo `llama-3.3-70b-versatile` |
 | **Auth** | Supabase Auth (JWT + refresh token) |
+| **Tipografías** | Syne · Figtree · JetBrains Mono (Google Fonts) |
+| **Validación** | prop-types (type checking en componentes React) |
 
 ---
 
@@ -21,15 +23,29 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 
 ### Generación de reportes con IA
 
-- **5 tipos de reporte:** Semanal, Calificaciones, Asistencia, DECE, Planificación
+- **5 tipos de reporte institucionales Fe y Alegría:**
+
+| ID | Label | Descripción |
+| --- | --- | --- |
+| `contingencia` | Plan de Contingencia | Plan pedagógico para estudiantes suspendidos, hospitalizados o en vulnerabilidad |
+| `calificaciones` | Reporte de Calificaciones | Rendimiento cuantitativo + análisis cualitativo + estrategias de refuerzo |
+| `asistencia` | Registro de Asistencia | Asistencia, tardanzas, patrones y prevención de deserción |
+| `informe_tutor` | Informe Docente Tutor/a | Informe trimestral académico y comportamental con estructura oficial Fe y Alegría |
+| `microcurricular` | Planificación Microcurricular | Planificación semanal de módulo formativo para Bachillerato Técnico |
+
+> Los tipos `informe_tutor`, `contingencia` y `microcurricular` reemplazaron a `dece`, `semanal` y `planificacion` (tipos genéricos) al integrar los formatos oficiales entregados por los docentes de la institución. La migración en Supabase actualiza los registros existentes con los nuevos IDs.
+
 - Formulario dinámico con campos condicionales según el tipo seleccionado
-- Prompt construido en el servidor (el cliente nunca controla el `system`)
+- Prompt del cliente sanitizado en el servidor (strip de patrones de inyección: `System:`, `Ignore`, `[INST]`, etc.) antes de enviarlo a Groq; el `system prompt` es 100% server-side
 - Respuesta en **streaming SSE** (`Accept: text/event-stream`) con cursor animado, o JSON como fallback
-- Límites: 45 generaciones/usuario/hora · 120/IP/hora · 48 000 caracteres de prompt
+- **Modelo primario:** `llama-3.3-70b-versatile` · **Fallback automático:** `llama-3.1-8b-instant` (activado si timeout >30 s o error 5xx de Groq) · Header `X-Model-Used` en la respuesta para debugging
+- **Rate limit persistente:** 45 generaciones/usuario/hora verificadas contra la tabla `reportes` en Supabase (efectivo en serverless) · 120/IP/hora por capa in-memory · 48 000 caracteres de prompt
 
 ### Gestión de cursos
 
 - CRUD completo de cursos: nombre, grado, paralelo, asignatura, número de estudiantes, jornada
+- Botón ✎ en cada tarjeta abre el modal pre-relleno con los datos del curso para editar
+- Modal dual: "Crear nuevo curso" / "Editar curso" según el modo activo; botón cambia a "Guardar cambios"
 - Seleccionar un curso auto-rellena los campos del formulario
 - Borrado lógico (`activo = false`)
 
@@ -64,9 +80,14 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 
 - Visualización completa del reporte
 - Edición inline con soporte Markdown
+- **Toolbar de formato:** Negrita (`**`), cursiva (`*`), título de sección (`##`), línea separadora
+- **Detección de inconsistencias:** alerta automática si el reporte contiene datos que no coinciden con el formulario (ej. grado distinto)
+- **Regeneración parcial:** selecciona una sección → modal con instrucción opcional → la IA regenera solo esa sección sin tocar el resto
+- **Feedback del reporte:** 👍 / 👎 al finalizar; el 👎 abre un campo de nota libre. Guardado como `feedback` (1/-1) y `feedback_nota` en historial
 - Exportar: Word (`.doc`), PDF (diálogo de impresión), CSV (`.csv`)
 - Copiar al portapapeles
 - Guardar ediciones en el historial (`PATCH /api/reportes`)
+- Compartir enlace de referido (copia URL al portapapeles y registra el referral)
 
 ### Dashboard de métricas
 
@@ -74,7 +95,15 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 - Cursos registrados · Reportes copiados
 - Tipo de reporte más usado
 - Barras de desglose por tipo (porcentaje relativo al máximo)
-- Todo calculado en el cliente a partir de los datos del usuario autenticado
+- Totales obtenidos de `GET /api/metricas` (agregaciones server-side sobre todos los reportes, no solo los 20 paginados)
+- Fallback: si la llamada falla, calcula localmente sobre los reportes ya cargados en memoria
+
+### Onboarding para nuevos usuarios
+
+- Modal de 3 pasos que se muestra la primera vez que el usuario accede a la app
+- Pasos: "Agrega tu curso" → "Elige el tipo de reporte" → "Genera con IA"
+- Se persiste en `localStorage` (`docuia_onboarding_done`) para no repetirse
+- Dots de progreso animados · botones Anterior / Siguiente / Comenzar · accesible (`role="dialog"`, `aria-modal`)
 
 ### Sistema de notificaciones Toast
 
@@ -89,13 +118,17 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 - Registro incluye: nombre, email, contraseña, rol, institución y cargo
 - **Refresh token automático:** `authFetch()` reintenta en 401 antes de redirigir al login
 - Sesión persistida en `localStorage` (`docuia_token`, `docuia_refresh`, `docuia_user`)
+- **Enriquecimiento de perfil en login:** al iniciar sesión, el servidor fusiona los datos de la tabla `profiles` (name, role, institucion, cargo) en `user_metadata`, cubriendo usuarios registrados antes de que se añadiera el campo institución
 
 ### Diseño y accesibilidad
 
-- **Dark mode** automático vía `@media (prefers-color-scheme: dark)`
+- **Design token system** en `src/global.css`: paleta Superman (Tory Blue `#0e4da4`, Brick Red `#c92c3c`, Buttercup `#f5a524`, Concrete `#f2f2f2`, Mine Shaft `#3b3b3b`), escala de espaciado, radios, easings y duraciones como variables CSS
+- **Prefijos vendor CSS:** `-webkit-user-select` y `-webkit-mask-image` añadidos para compatibilidad con Safari/Chrome
+- **Tipografías:** Syne (display), Figtree (body), JetBrains Mono (mono) — cargadas vía Google Fonts
+- **Dark mode** automático vía `@media (prefers-color-scheme: dark)` · variables de light mode en `@media (prefers-color-scheme: light)`
 - Respeta `prefers-reduced-motion`
 - Diseño responsive (mobile-first)
-- Atributos ARIA en componentes críticos
+- Atributos ARIA en componentes críticos · heurísticas Nielsen H1–H9
 - Animaciones con Anime.js (fade-up, stagger, count-up, word-by-word, scroll-reveal, magnetic hover)
 
 ### Seguridad
@@ -161,7 +194,9 @@ CREATE TABLE reportes (
   datos_ingresados JSONB,
   reporte_generado TEXT,
   fue_copiado      BOOLEAN DEFAULT false,
-  archivado        BOOLEAN DEFAULT false
+  archivado        BOOLEAN DEFAULT false,
+  feedback         SMALLINT,          -- 1 = positivo, -1 = negativo, NULL = sin feedback
+  feedback_nota    TEXT               -- nota libre cuando feedback = -1
 );
 
 -- Tabla de reportes copiados (analítica)
@@ -312,12 +347,13 @@ docuia/
 ├── api/                        ← 8 handlers serverless (Vercel en prod, Express en dev)
 │   ├── auth.js                 ← POST { action: 'login'|'signup'|'recover'|'refresh' }
 │   ├── generate.mjs            ← POST → Groq (streaming SSE o JSON)
-│   ├── cursos.js               ← GET / POST / DELETE (borrado lógico)
+│   ├── cursos.js               ← GET / POST / PATCH / DELETE (borrado lógico)
 │   ├── upload-formato.js       ← POST base64 PDF/Excel → extrae texto
 │   ├── formatos.js             ← GET { mios, compartidos } / PATCH / DELETE
 │   ├── plantillas.js           ← GET / POST / DELETE
 │   ├── reportes.js             ← GET (paginado) / POST / PATCH / DELETE
-│   └── telemetry.js            ← POST { kind: 'visita'|'reporte_copiado'|'referral' }
+│   ├── telemetry.js            ← POST { kind: 'visita'|'reporte_copiado'|'referral' }
+│   └── metricas.js             ← GET agregaciones server-side (evita cálculo sobre 20 reportes paginados)
 │
 ├── lib/server/
 │   ├── verifyUser.js           ← verifyBearerUser(), serviceRestHeaders()
@@ -328,7 +364,8 @@ docuia/
 └── src/
     ├── main.jsx                ← monta App dentro de ToastProvider + ErrorBoundary
     ├── App.jsx                 ← orquestador: vistas, estado, CRUD, draft, streaming
-    ├── App.css                 ← design system: variables CSS, dark mode, animaciones
+    ├── App.css                 ← animaciones globales y estilos de layout de la SPA
+    ├── global.css              ← design tokens: paleta, tipografía, espaciado, easings (importado en main.jsx)
     ├── config.js               ← REPORT_TYPES, FORM_FIELDS, buildPrompt(), SYSTEM_PROMPT
     ├── utils/
     │   ├── auth.js             ← getUser/getToken, setSession, logout, authFetch (auto-refresh 401)
@@ -339,18 +376,27 @@ docuia/
     │                              useSplitWordsEnter, useScrollReveal, magneticHover, pop
     └── components/
         ├── Navbar.jsx          ← barra superior: Mis cursos (N), Plantillas, Historial, Métricas, Salir
+        ├── Navbar.css
         ├── LandingPage.jsx     ← HeroSection, StatsSection, HowItWorksSection,
         │                          FormSection (cursos, formato, borrador), CtaSection, Footer
+        ├── LandingPage.css
         ├── Field.jsx           ← input/textarea reutilizable con label, hint y grupos de tags
-        ├── CursosView.jsx      ← grid de cursos + modal de creación
+        ├── Field.css
+        ├── CursosView.jsx      ← grid de cursos + modal crear/editar (CRUD completo)
         ├── CursosView.css      ← estilos compartidos: Cursos, Plantillas, Historial, Dashboard
         ├── PlantillasView.jsx  ← plantillas guardadas (cargar / eliminar)
         ├── HistorialView.jsx   ← lista paginada de reportes (carga más, ARIA)
         ├── DashboardView.jsx   ← métricas: tarjetas + barras por tipo
         ├── LoadingView.jsx     ← spinner + mensajes rotativos durante generación
-        ├── ReportView.jsx      ← reporte final: edición inline, descarga, copiar, guardar
+        ├── LoadingView.css
+        ├── ReportView.jsx      ← reporte final: toolbar formato, detección inconsistencias,
+        │                          regeneración parcial, feedback 👍/👎, descarga, copiar, guardar
+        ├── ReportView.css
+        ├── OnboardingModal.jsx ← tutorial 3 pasos para primeros usuarios (se muestra una vez)
+        ├── OnboardingModal.css
         ├── Toast.jsx           ← sistema de notificaciones: success/error/warn/info + confirm/prompt
-        └── ErrorBoundary.jsx   ← captura crashes de React y muestra fallback
+        ├── ErrorBoundary.jsx   ← captura crashes de React y muestra fallback
+        └── ErrorBoundary.css
 ```
 
 ---
@@ -403,6 +449,7 @@ Formulario → buildPrompt(type, form)
 | `POST` | `/api/generate` | Generación IA (streaming SSE o JSON) |
 | `GET` | `/api/cursos` | Lista cursos del usuario |
 | `POST` | `/api/cursos` | Crear curso |
+| `PATCH` | `/api/cursos?id=` | Actualizar datos del curso |
 | `DELETE` | `/api/cursos?id=` | Borrado lógico |
 | `POST` | `/api/upload-formato` | Subir PDF/Excel institucional |
 | `GET` | `/api/formatos` | `{ mios, compartidos, institucion }` |
@@ -414,9 +461,10 @@ Formulario → buildPrompt(type, form)
 | `GET` | `/api/reportes` | Lista paginada (`limit`, `offset`) |
 | `GET` | `/api/reportes?id=` | Obtener reporte completo |
 | `POST` | `/api/reportes` | Guardar reporte en historial |
-| `PATCH` | `/api/reportes?id=` | Actualizar `reporte_generado` |
+| `PATCH` | `/api/reportes?id=` | Actualizar `reporte_generado`, `feedback` y/o `feedback_nota` |
 | `DELETE` | `/api/reportes?id=` | Archivar reporte |
 | `POST` | `/api/telemetry` | `kind: visita\|reporte_copiado\|referral` |
+| `GET` | `/api/metricas` | Totales server-side: reportes, copiados, por tipo, cursos activos |
 
 ---
 

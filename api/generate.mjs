@@ -1,4 +1,4 @@
-import { verifyBearerUser } from '../lib/server/verifyUser.js';
+import { verifyBearerUser, getSupabaseEnv, serviceRestHeaders } from '../lib/server/verifyUser.js';
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 import { getSystemPrompt } from '../src/config.js';
 import { logger } from '../lib/server/logger.js';
@@ -12,6 +12,33 @@ const GROQ_TIMEOUT_MS   = 30_000;
 
 function detectHasFormato(prompt) {
   return typeof prompt === 'string' && prompt.includes('FORMATO INSTITUCIONAL DEL DOCENTE');
+}
+
+function sanitizePrompt(raw) {
+  const injectionRe = /^(System:|Ignore\s|<\|system\|>|\[INST\]|###\s*System|Assistant:)/im;
+  if (injectionRe.test(raw)) {
+    logger.warn('prompt_injection_attempt', { snippet: raw.slice(0, 120) });
+  }
+  return raw
+    .replace(injectionRe, '')
+    .replace(/\n{4,}/g, '\n\n')
+    .trim();
+}
+
+async function countRecentReports(userId) {
+  const { url } = getSupabaseEnv();
+  if (!url) return 0;
+  const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
+  try {
+    const r = await fetch(
+      `${url}/rest/v1/reportes?user_id=eq.${userId}&created_at=gte.${hourAgo}&select=id`,
+      { headers: serviceRestHeaders() }
+    );
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows.length : 0;
+  } catch {
+    return 0;
+  }
 }
 
 async function callGroq(model, payload, signal, apiKey) {
@@ -31,7 +58,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt } = req.body || {};
+  const { prompt, type = '' } = req.body || {};
 
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'Falta el texto del reporte (prompt)' });
@@ -48,6 +75,8 @@ export default async function handler(req, res) {
     });
   }
 
+  const sanitized = sanitizePrompt(trimmed);
+
   const { user, error: authErr, status: authStatus } = await verifyBearerUser(req);
   if (authErr || !user) {
     return res.status(authStatus || 401).json({
@@ -55,12 +84,16 @@ export default async function handler(req, res) {
     });
   }
 
+  // Rate limit persistente: contar reportes reales en la última hora desde Supabase
+  const recentCount = await countRecentReports(user.id);
+  if (recentCount >= GEN_PER_USER_HOUR) {
+    return res.status(429).json({ error: `Límite de ${GEN_PER_USER_HOUR} reportes por hora alcanzado. Intenta más tarde.` });
+  }
+
+  // Segunda capa: rate limit in-memory por IP (sigue siendo útil para ráfagas)
   const ip = clientIp(req);
   if (!allowRateLimit(`gen:ip:${ip}`, GEN_PER_IP_HOUR, 3_600_000)) {
     return res.status(429).json({ error: 'Demasiadas solicitudes desde esta red. Intenta más tarde.' });
-  }
-  if (!allowRateLimit(`gen:user:${user.id}`, GEN_PER_USER_HOUR, 3_600_000)) {
-    return res.status(429).json({ error: 'Has alcanzado el límite de generaciones por hora.' });
   }
 
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -68,8 +101,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Servicio de IA no configurado' });
   }
 
-  const hasFormato = detectHasFormato(trimmed);
-  const system     = getSystemPrompt({ hasFormato });
+  const hasFormato = detectHasFormato(sanitized);
+  const system     = getSystemPrompt({ hasFormato, type });
   const useStream  = req.headers['accept'] === 'text/event-stream';
 
   const groqPayload = {
@@ -78,7 +111,7 @@ export default async function handler(req, res) {
     stream:      useStream,
     messages: [
       { role: 'system', content: system },
-      { role: 'user',   content: trimmed },
+      { role: 'user',   content: sanitized },
     ],
   };
 

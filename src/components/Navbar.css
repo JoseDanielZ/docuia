@@ -2,7 +2,7 @@
   position: sticky;
   top: 12px;
   margin: 12px 20px 0;
-  background: rgba(13, 24, 41, 0.80);
+  background: rgba(8, 24, 57, 0.80);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
@@ -72,9 +72,9 @@
               border-color var(--duration-fast) var(--ease-smooth);
 }
 .navbar__link--logout:hover {
-  border-color: rgba(255, 91, 107, 0.3);
-  color: #FF5B6B;
-  background: rgba(255, 91, 107, 0.06);
+  border-color: rgba(201, 44, 60, 0.3);
+  color: #c92c3c;
+  background: rgba(201, 44, 60, 0.06);
 }
 
 .navbar__badge {
