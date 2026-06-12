@@ -401,6 +401,25 @@ export default function App() {
     } catch { toast.error('Error al archivar el reporte'); }
   }
 
+  async function duplicateReporte(id) {
+    const res = await authFetch(`/api/reportes?id=${id}`);
+    const data = await res.json();
+    if (!data.reporte) throw new Error('No se encontró el reporte');
+    const r = data.reporte;
+    await authFetch('/api/reportes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo_reporte:     r.tipo_reporte,
+        curso:            r.curso ? r.curso + ' (copia)' : '(copia)',
+        periodo:          r.periodo,
+        datos_ingresados: r.datos_ingresados,
+        reporte_generado: r.reporte_generado,
+      }),
+    });
+    loadReportes(true);
+  }
+
   async function saveReportEdits(newText) {
     if (!currentReporteId || !getToken()) return;
     try {
@@ -660,20 +679,20 @@ export default function App() {
           reportes={reportes}
           openReport={openReportFromHistory}
           deleteReport={deleteReporte}
-          goBack={() => setView("form")}
           loading={historialLoading}
-          hasMore={historialHasMore}
-          onLoadMore={loadMoreReportes}
+          onGenerar={scrollToForm}
+          onDuplicateReport={duplicateReporte}
         />
       )}
 
       {view === "dashboard" && (
         <DashboardView
           reportes={reportes}
-          cursos={cursos}
           metricas={metricas}
-          goBack={() => setView("form")}
           loading={historialLoading}
+          scrollToForm={scrollToForm}
+          onCursosClick={() => setView("cursos")}
+          onVerHistorial={() => { setView("historial"); loadReportes(true); }}
         />
       )}
 

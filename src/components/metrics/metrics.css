@@ -1,0 +1,299 @@
+/* ── Metrics layout ─────────────────────────────────────── */
+.metrics-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.metrics-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.metrics-header__titles h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.metrics-header__titles p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.metrics-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.metrics-filters select {
+  all: unset;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 6px 28px 6px 10px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color var(--duration-fast), color var(--duration-fast);
+}
+
+.metrics-filters select:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* ── Metric cards grid ──────────────────────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.metric-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.metric-card:hover {
+  border-color: var(--border-default);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.metric-card__icon {
+  font-size: 18px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.metric-card__value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.metric-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.metric-card__sublabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.metric-card__cta {
+  all: unset;
+  cursor: pointer;
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jade-500);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity var(--duration-fast);
+}
+
+.metric-card__cta:hover { opacity: 0.75; }
+
+/* ── Bar chart ──────────────────────────────────────────── */
+.metric-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metric-section__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metric-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metric-bar-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 36px;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-bar-row__label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-bar-track {
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  background: var(--jade-500);
+  border-radius: var(--radius-full);
+  transition: width 600ms var(--ease-smooth);
+}
+
+.metric-bar-row__count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ── Recent list ────────────────────────────────────────── */
+.metric-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-recent-link {
+  all: unset;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jade-500);
+  transition: opacity var(--duration-fast);
+}
+
+.metric-recent-link:hover { opacity: 0.75; }
+
+.metric-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.metric-recent-item__badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.metric-recent-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.metric-recent-item__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-recent-item__date {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Empty state ────────────────────────────────────────── */
+.metric-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.metric-empty__icon { font-size: 48px; opacity: 0.5; }
+
+.metric-empty h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.metric-empty p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 320px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.metric-empty__cta {
+  all: unset;
+  cursor: pointer;
+  margin-top: 8px;
+  padding: 10px 20px;
+  background: var(--grad-jade);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: opacity var(--duration-fast), transform var(--duration-fast);
+}
+
+.metric-empty__cta:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}

@@ -48,6 +48,7 @@ export default async function handler(req, res) {
       total_copiados,
       por_tipo,
       cursos_activos: cursos.length,
+      minutos_ahorrados: reportes.length * 45,
     });
   } catch (error_) {
     logger.error('metricas GET', { userId: user.id, err: error_.message });
