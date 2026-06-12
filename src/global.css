@@ -107,8 +107,39 @@
 
 /* ── Light mode ───────────────────────────────────────────────────────────── */
 
+/* Toggle manual — tiene prioridad sobre el media query del sistema */
+[data-theme="light"] {
+  --bg-base:        #f2f2f2;
+  --bg-surface:     #FFFFFF;
+  --bg-elevated:    #FFFFFF;
+  --bg-hover:       #E5EAF5;
+  --text-primary:   #3b3b3b;
+  --text-secondary: #5B6B7B;
+  --text-muted:     #8B9BB0;
+  --border-subtle:  rgba(59, 59, 59, 0.08);
+  --border-default: rgba(59, 59, 59, 0.14);
+  --border-strong:  rgba(59, 59, 59, 0.28);
+  --grad-glow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  --ink:         #3b3b3b;
+  --ink-2:       #5B6B7B;
+  --paper:       #f2f2f2;
+  --paper-2:     #FFFFFF;
+  --paper-3:     #E5EAF5;
+  --line:        rgba(59, 59, 59, 0.14);
+  --muted:       #8B9BB0;
+  --text:        #3b3b3b;
+  --accent-soft: rgba(14, 77, 164, 0.1);
+  --accent-ink:  #f2f2f2;
+  --shadow:      0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.12);
+  --warn-bg:     rgba(245, 165, 36, 0.08);
+  --warn-border: rgba(245, 165, 36, 0.30);
+  --warn-text:   #92400e;
+}
+
+/* Respeta el sistema cuando el usuario no eligió manualmente */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --bg-base:        #f2f2f2;
     --bg-surface:     #FFFFFF;
     --bg-elevated:    #FFFFFF;
@@ -118,8 +149,8 @@
     --text-muted:     #8B9BB0;
     --border-subtle:  rgba(59, 59, 59, 0.08);
     --border-default: rgba(59, 59, 59, 0.14);
+    --border-strong:  rgba(59, 59, 59, 0.28);
     --grad-glow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-    /* Aliases compat */
     --ink:         #3b3b3b;
     --ink-2:       #5B6B7B;
     --paper:       #f2f2f2;

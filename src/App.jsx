@@ -17,6 +17,7 @@ import HistorialView  from "./components/HistorialView.jsx";
 import DashboardView    from "./components/DashboardView.jsx";
 import OnboardingModal  from "./components/OnboardingModal.jsx";
 import AssistantBot     from "./components/assistant/AssistantBot.jsx";
+import { useTheme }     from "./hooks/useTheme.js";
 
 const DRAFT_KEY  = 'docuia_draft';
 const DRAFT_MAX  = 512 * 1024; // 512 KB
@@ -48,6 +49,7 @@ function parseSSEChunk(raw) {
 
 export default function App() {
   const toast = useToast();
+  const [theme, toggleTheme] = useTheme();
 
   const [view,       setView]      = useState("landing");
   const [reportType, setReportType] = useState(null);
@@ -625,6 +627,8 @@ export default function App() {
         onPlantillasClick={() => setView("plantillas")}
         onHistorialClick={() => { setView("historial"); loadReportes(true); }}
         onDashboardClick={() => { setView("dashboard"); loadReportes(true); loadMetricas(); }}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {view === "cursos" && (

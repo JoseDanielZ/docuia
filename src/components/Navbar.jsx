@@ -14,6 +14,8 @@ function Navbar({
   onPlantillasClick,
   onHistorialClick,
   onDashboardClick,
+  theme,
+  onToggleTheme,
 }) {
   const navRef   = useRef(null);
   const logoRef  = useRef(null);
@@ -75,6 +77,15 @@ function Navbar({
         )}
 
         <button
+          className="navbar__theme-toggle"
+          onClick={onToggleTheme}
+          aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+
+        <button
           className="btn btn-primary"
           onClick={scrollToForm}
           style={{ padding: "9px 18px", fontSize: 13, fontWeight: 600, willChange: "transform" }}
@@ -97,6 +108,8 @@ Navbar.propTypes = {
   onPlantillasClick: PropTypes.func.isRequired,
   onHistorialClick:  PropTypes.func.isRequired,
   onDashboardClick:  PropTypes.func.isRequired,
+  theme:             PropTypes.string,
+  onToggleTheme:     PropTypes.func,
 };
 
 Navbar.defaultProps = { user: null, cursos: [] };
