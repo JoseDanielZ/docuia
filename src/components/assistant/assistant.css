@@ -1,0 +1,510 @@
+/* ── Animations ─────────────────────────────────────── */
+@keyframes lucia-slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes lucia-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes lucia-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes lucia-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+
+/* ── Floating Button ────────────────────────────────── */
+.lucia-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--grad-jade);
+  border: none;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(14, 77, 164, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform var(--duration-base) var(--ease-spring),
+              box-shadow var(--duration-base) var(--ease-smooth);
+  animation: lucia-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.lucia-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(14, 77, 164, 0.4);
+}
+
+.lucia-fab.has-hint {
+  animation: lucia-pulse 2s ease-in-out infinite;
+}
+
+.lucia-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--amber-500);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-base);
+}
+
+/* ── Chat Panel ─────────────────────────────────────── */
+.lucia-chat {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 360px;
+  max-height: 520px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: lucia-slide-up var(--duration-slow) var(--ease-spring);
+  box-shadow: var(--shadow-deep);
+}
+
+.lucia-chat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.lucia-chat-header-avatar {
+  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--grad-jade);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lucia-chat-header-info {
+  flex: 1;
+}
+
+.lucia-chat-header-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.lucia-chat-header-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+
+.lucia-chat-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast), background var(--duration-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.lucia-chat-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* ── Search ─────────────────────────────────────────── */
+.lucia-search {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.lucia-search input {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--duration-fast);
+  box-sizing: border-box;
+}
+
+.lucia-search input:focus {
+  border-color: var(--jade-500);
+}
+
+.lucia-search input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Category Pills ─────────────────────────────────── */
+.lucia-categories {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.lucia-categories::-webkit-scrollbar { display: none; }
+
+.lucia-cat-pill {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast);
+}
+
+.lucia-cat-pill:hover {
+  border-color: var(--jade-500);
+  color: var(--text-primary);
+}
+
+.lucia-cat-pill.active {
+  background: var(--jade-500);
+  border-color: var(--jade-500);
+  color: #fff;
+}
+
+/* ── FAQ List / Accordion ───────────────────────────── */
+.lucia-faq-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-2) var(--space-4);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.lucia-welcome {
+  padding: var(--space-3) var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  border-left: 3px solid var(--jade-500);
+}
+
+.lucia-faq-item {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--space-1);
+  border: 1px solid transparent;
+  transition: border-color var(--duration-fast);
+}
+
+.lucia-faq-item.open {
+  border-color: var(--border-default);
+}
+
+.lucia-faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background var(--duration-fast);
+}
+
+.lucia-faq-question:hover {
+  background: var(--bg-surface);
+}
+
+.lucia-faq-chevron {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform var(--duration-base) var(--ease-smooth);
+}
+
+.lucia-faq-item.open .lucia-faq-chevron {
+  transform: rotate(180deg);
+}
+
+.lucia-faq-answer {
+  padding: 0 var(--space-3) var(--space-3);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  white-space: pre-line;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.lucia-faq-feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.lucia-faq-feedback span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lucia-thumb-btn {
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.lucia-thumb-btn:hover { background: var(--bg-hover); }
+.lucia-thumb-btn.active { background: var(--bg-hover); border-color: var(--jade-500); }
+
+.lucia-no-results {
+  padding: var(--space-6) var(--space-3);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+/* ── Contextual Popup ───────────────────────────────── */
+.lucia-ctx-popup {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  width: 280px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--info);
+  border-radius: var(--radius-lg);
+  z-index: 9998;
+  padding: var(--space-4);
+  animation: lucia-slide-up var(--duration-slow) var(--ease-spring);
+  box-shadow: var(--shadow);
+}
+
+.lucia-ctx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.lucia-ctx-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lucia-ctx-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  padding: 2px;
+  line-height: 1;
+  transition: color var(--duration-fast);
+}
+
+.lucia-ctx-close:hover { color: var(--text-primary); }
+
+.lucia-ctx-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  margin-bottom: var(--space-3);
+}
+
+.lucia-ctx-cta {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--jade-500);
+  background: transparent;
+  color: var(--jade-400, #4F7EC4);
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lucia-ctx-cta:hover {
+  background: rgba(14, 77, 164, 0.12);
+  color: var(--text-primary);
+}
+
+/* ── Idle Popup ─────────────────────────────────────── */
+.lucia-idle-popup {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  z-index: 9998;
+  padding: var(--space-4) var(--space-5);
+  animation: lucia-slide-up var(--duration-slow) var(--ease-spring);
+  box-shadow: var(--shadow-deep);
+  text-align: center;
+  min-width: 260px;
+  max-width: 320px;
+}
+
+.lucia-idle-popup.hiding {
+  animation: lucia-fade-out var(--duration-base) var(--ease-smooth) forwards;
+}
+
+.lucia-idle-message {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  margin-bottom: var(--space-3);
+  line-height: 1.4;
+}
+
+.lucia-idle-cta {
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--grad-jade);
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--duration-fast);
+}
+
+.lucia-idle-cta:hover { opacity: 0.85; }
+
+/* ── Tooltip ────────────────────────────────────────── */
+.lucia-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.lucia-tooltip-box {
+  position: absolute;
+  z-index: 10000;
+  background: rgba(4, 16, 30, 0.92);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-body);
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  max-width: 200px;
+  white-space: normal;
+  pointer-events: none;
+  animation: lucia-fade-in 0.15s ease-out;
+  border: 1px solid var(--border-default);
+}
+
+.lucia-tooltip-box.top    { bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+.lucia-tooltip-box.bottom { top: calc(100% + 8px);    left: 50%; transform: translateX(-50%); }
+.lucia-tooltip-box.left   { right: calc(100% + 8px);  top: 50%;  transform: translateY(-50%); }
+.lucia-tooltip-box.right  { left: calc(100% + 8px);   top: 50%;  transform: translateY(-50%); }
+
+/* ── Mobile ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .lucia-chat {
+    width: 100vw;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 80vh;
+  }
+
+  .lucia-ctx-popup {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
+
+/* ── Reduced Motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .lucia-fab,
+  .lucia-chat,
+  .lucia-ctx-popup,
+  .lucia-idle-popup,
+  .lucia-tooltip-box {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .lucia-fab.has-hint {
+    animation: none !important;
+  }
+}

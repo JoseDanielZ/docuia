@@ -16,6 +16,7 @@ import PlantillasView from "./components/PlantillasView.jsx";
 import HistorialView  from "./components/HistorialView.jsx";
 import DashboardView    from "./components/DashboardView.jsx";
 import OnboardingModal  from "./components/OnboardingModal.jsx";
+import AssistantBot     from "./components/assistant/AssistantBot.jsx";
 
 const DRAFT_KEY  = 'docuia_draft';
 const DRAFT_MAX  = 512 * 1024; // 512 KB
@@ -718,6 +719,14 @@ export default function App() {
       {showOnboarding && user && (
         <OnboardingModal onClose={() => setShowOnboarding(false)} />
       )}
+
+      <AssistantBot
+        currentView={
+          view === 'form' || view === 'landing'
+            ? (reportType || 'nuevo_reporte')
+            : view
+        }
+      />
 
       {view === "loading" && <LoadingView loadMsg={loadMsg} />}
 

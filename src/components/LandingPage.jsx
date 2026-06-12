@@ -3,6 +3,7 @@ import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
 import { getFormatoPreview } from "../utils/formatoText.js";
 import Field from "./Field.jsx";
+import TooltipHelper from "./assistant/TooltipHelper.jsx";
 import "./LandingPage.css";
 import {
   useEnter,
@@ -650,6 +651,7 @@ function FormSection({
             </div>
 
             <div data-form-block className="form-actions">
+              <TooltipHelper text="La IA creará tu documento con los datos del formulario" position="top">
               <button
                 className="btn btn-primary"
                 onClick={generate}
@@ -672,20 +674,23 @@ function FormSection({
                   <>Generar reporte <span style={{ fontSize: 10, opacity: .6, fontWeight: 400, marginLeft: 6 }}>Ctrl+Enter</span></>
                 )}
               </button>
+              </TooltipHelper>
               {user && (
-                <button
-                  className="btn btn-ghost"
-                  onClick={saveAsTemplate}
-                  disabled={!reportType}
-                  style={{
-                    padding: "13px 18px", fontSize: 13, borderRadius: 10,
-                    border: "1px solid var(--line)", background: "var(--paper)",
-                    color: reportType ? "var(--ink)" : "var(--muted)",
-                    cursor: reportType ? "pointer" : "not-allowed",
-                  }}
-                >
-                  Guardar como plantilla
-                </button>
+                <TooltipHelper text="Guarda estos datos para reutilizarlos la próxima vez" position="top">
+                  <button
+                    className="btn btn-ghost"
+                    onClick={saveAsTemplate}
+                    disabled={!reportType}
+                    style={{
+                      padding: "13px 18px", fontSize: 13, borderRadius: 10,
+                      border: "1px solid var(--line)", background: "var(--paper)",
+                      color: reportType ? "var(--ink)" : "var(--muted)",
+                      cursor: reportType ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    Guardar como plantilla
+                  </button>
+                </TooltipHelper>
               )}
             </div>
             {reportType && !user && (

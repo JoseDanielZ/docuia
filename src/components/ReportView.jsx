@@ -5,6 +5,7 @@ import { downloadWord, downloadPDF, downloadExcel, printReport } from "../utils/
 import { pop, magneticHover } from "../utils/anim.js";
 import { useToast } from "./Toast.jsx";
 import { authFetch } from "../utils/auth.js";
+import TooltipHelper from "./assistant/TooltipHelper.jsx";
 import "./ReportView.css";
 
 /* ── Utilidades puras ──────────────────────────────────────────────────── */
@@ -261,20 +262,21 @@ export default function ReportView({
         <p className="report-dl-bar__label">Descargar reporte</p>
         <div className="dl-grid">
           {[
-            { label: "Word (.doc)",  action: () => downloadWord(report, fileName)  },
-            { label: "PDF",          action: () => downloadPDF(report, fileName)   },
-            { label: "Excel (.csv)", action: () => downloadExcel(report, fileName) },
-            { label: "Imprimir",     action: () => printReport(report)             },
-          ].map(({ label, action }) => (
-            <button
-              key={label}
-              className="dl-btn"
-              onClick={(e) => { action(); pop(e.currentTarget, { scale: 1.06, duration: 360 }); }}
-              onMouseEnter={dlHover}
-              onMouseLeave={dlLeave}
-            >
-              {label}
-            </button>
+            { label: "Word (.doc)",  action: () => downloadWord(report, fileName),  tip: "Descarga el documento en formato .docx compatible con Word" },
+            { label: "PDF",          action: () => downloadPDF(report, fileName),    tip: "Descarga el documento en formato PDF listo para imprimir" },
+            { label: "Excel (.csv)", action: () => downloadExcel(report, fileName),  tip: null },
+            { label: "Imprimir",     action: () => printReport(report),              tip: null },
+          ].map(({ label, action, tip }) => (
+            <TooltipHelper key={label} text={tip} position="top">
+              <button
+                className="dl-btn"
+                onClick={(e) => { action(); pop(e.currentTarget, { scale: 1.06, duration: 360 }); }}
+                onMouseEnter={dlHover}
+                onMouseLeave={dlLeave}
+              >
+                {label}
+              </button>
+            </TooltipHelper>
           ))}
         </div>
       </div>
