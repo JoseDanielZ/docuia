@@ -98,6 +98,17 @@ Plataforma web que convierte datos del docente en informes institucionales compl
 - Totales obtenidos de `GET /api/metricas` (agregaciones server-side sobre todos los reportes, no solo los 20 paginados)
 - Fallback: si la llamada falla, calcula localmente sobre los reportes ya cargados en memoria
 
+### Asistente virtual Lucía
+
+- Botón flotante fijo (esquina inferior derecha) visible en todas las vistas
+- **Tab FAQ:** 28 preguntas organizadas en 7 categorías, búsqueda en tiempo real sin API, acordeón con feedback 👍/👎 por pregunta (guardado en `localStorage`)
+- **Tab Chat IA:** chat libre conectado a Groq con system prompt contextual de DocuIA; muestra sugerencias iniciales; manejo de errores con mensaje amigable
+- Pop-up contextual (esquina inferior izquierda) que aparece al cambiar de vista con un consejo relevante; `showOnlyOnce` configurable por vista usando `localStorage`
+- Pop-up de inactividad tras 30 s sin interacción; máximo 2 veces por sesión (`sessionStorage`); auto-dismiss a los 8 s
+- Tooltips con delay de 600 ms en elementos clave del formulario (botón Generar, Guardar plantilla, botones de descarga)
+- Accesible: `aria-label`, `role="dialog"`, `aria-expanded` en acordeón, Escape para cerrar cualquier elemento
+- `api/chat.mjs`: endpoint Groq dedicado para Lucía — sin logging en Supabase, sin SSE (respuestas cortas ≤ 300 tokens), rate-limit 120 msg/IP/hora, fallback de modelo automático
+
 ### Onboarding para nuevos usuarios
 
 - Modal de 3 pasos que se muestra la primera vez que el usuario accede a la app
@@ -312,7 +323,7 @@ npx vercel --prod
 
 O conectar el repo en [vercel.com](https://vercel.com) y agregar las variables de entorno en Settings → Environment Variables.
 
-> **Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **8** funciones en `/api`. Los helpers compartidos están en `lib/server/` y no cuentan como función.
+> **Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **9** funciones en `/api`. Los helpers compartidos están en `lib/server/` y no cuentan como función.
 
 ---
 
@@ -344,9 +355,10 @@ docuia/
 │   ├── login-main.js           ← lógica de auth: guarda access_token + refresh_token
 │   └── login.css
 │
-├── api/                        ← 8 handlers serverless (Vercel en prod, Express en dev)
+├── api/                        ← 9 handlers serverless (Vercel en prod, Express en dev)
 │   ├── auth.js                 ← POST { action: 'login'|'signup'|'recover'|'refresh' }
 │   ├── generate.mjs            ← POST → Groq (streaming SSE o JSON)
+│   ├── chat.mjs                ← POST → Groq para asistente Lucía (JSON, ≤300 tokens, sin Supabase)
 │   ├── cursos.js               ← GET / POST / PATCH / DELETE (borrado lógico)
 │   ├── upload-formato.js       ← POST base64 PDF/Excel → extrae texto
 │   ├── formatos.js             ← GET { mios, compartidos } / PATCH / DELETE
@@ -374,7 +386,20 @@ docuia/
     │   ├── formatoText.js      ← cleanFormatoText, getFormatoPreview, truncateForLLM
     │   └── anim.js             ← hooks Anime.js: useEnter, useStaggerChildren, useCountUp,
     │                              useSplitWordsEnter, useScrollReveal, magneticHover, pop
+    ├── hooks/
+    │   └── useIdleDetector.js  ← detecta N ms sin interacción del usuario
+    ├── data/assistant/
+    │   ├── faq.js              ← 28 preguntas en 7 categorías + searchFAQ()
+    │   └── contextHints.js     ← mensajes proactivos por vista + idle hints
     └── components/
+        ├── assistant/
+        │   ├── AssistantBot.jsx    ← orquestador: FloatingButton + ContextualPopup + IdlePopup
+        │   ├── FloatingButton.jsx  ← botón circular fijo + monta AssistantChat
+        │   ├── AssistantChat.jsx   ← panel con tabs FAQ / Chat IA (Groq)
+        │   ├── ContextualPopup.jsx ← pop-up por vista con delay y showOnlyOnce
+        │   ├── IdlePopup.jsx       ← pop-up tras inactividad, auto-dismiss 8 s, máx 2/sesión
+        │   ├── TooltipHelper.jsx   ← wrapper de tooltip con delay configurable
+        │   └── assistant.css       ← estilos de todos los componentes del asistente
         ├── Navbar.jsx          ← barra superior: Mis cursos (N), Plantillas, Historial, Métricas, Salir
         ├── Navbar.css
         ├── LandingPage.jsx     ← HeroSection, StatsSection, HowItWorksSection,
@@ -447,6 +472,7 @@ Formulario → buildPrompt(type, form)
 | --- | --- | --- |
 | `POST` | `/api/auth` | `action: login\|signup\|recover\|refresh` |
 | `POST` | `/api/generate` | Generación IA (streaming SSE o JSON) |
+| `POST` | `/api/chat` | Chat con asistente Lucía (JSON, ≤300 tokens) |
 | `GET` | `/api/cursos` | Lista cursos del usuario |
 | `POST` | `/api/cursos` | Crear curso |
 | `PATCH` | `/api/cursos?id=` | Actualizar datos del curso |

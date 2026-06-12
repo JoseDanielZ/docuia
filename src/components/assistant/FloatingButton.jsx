@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import AssistantChat from './AssistantChat';
 import './assistant.css';
 
-export default function FloatingButton({ onOpen, chatOpen, onClose, initialFaqId, badgeCount = 0 }) {
+export default function FloatingButton({ onOpen, chatOpen, onClose, initialFaqId, currentView, badgeCount = 0 }) {
   const btnRef = useRef(null);
 
   // Focus management: return focus to button when chat closes
@@ -27,7 +27,7 @@ export default function FloatingButton({ onOpen, chatOpen, onClose, initialFaqId
       </button>
 
       {chatOpen && (
-        <AssistantChat onClose={onClose} initialFaqId={initialFaqId} />
+        <AssistantChat onClose={onClose} initialFaqId={initialFaqId} currentView={currentView} />
       )}
     </>
   );

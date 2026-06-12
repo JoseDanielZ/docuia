@@ -27,6 +27,7 @@ export default function AssistantBot({ currentView }) {
         chatOpen={chatOpen}
         onClose={closeChat}
         initialFaqId={initialFaqId}
+        currentView={currentView}
       />
       <ContextualPopup
         currentView={currentView}

@@ -476,6 +476,168 @@
 .lucia-tooltip-box.left   { right: calc(100% + 8px);  top: 50%;  transform: translateY(-50%); }
 .lucia-tooltip-box.right  { left: calc(100% + 8px);   top: 50%;  transform: translateY(-50%); }
 
+/* ── Tabs ───────────────────────────────────────────── */
+.lucia-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.lucia-tab {
+  flex: 1;
+  padding: var(--space-2) 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.lucia-tab:hover { color: var(--text-secondary); }
+
+.lucia-tab.active {
+  color: var(--jade-500);
+  border-bottom-color: var(--jade-500);
+  font-weight: 600;
+}
+
+/* ── Chat Bubbles ────────────────────────────────────── */
+.lucia-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.lucia-bubble {
+  max-width: 85%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: var(--font-body);
+  line-height: 1.5;
+  animation: lucia-fade-in var(--duration-base) var(--ease-out);
+}
+
+.lucia-bubble.user {
+  align-self: flex-end;
+  background: var(--jade-500);
+  color: #fff;
+  border-radius: var(--radius-md) var(--radius-md) 4px var(--radius-md);
+}
+
+.lucia-bubble.lucia {
+  align-self: flex-start;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 4px;
+}
+
+.lucia-bubble.loading {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.lucia-chat-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font-body);
+  text-align: center;
+}
+
+.lucia-chat-empty-icon { font-size: 28px; }
+
+.lucia-chat-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.lucia-suggestion-btn {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--duration-fast);
+}
+
+.lucia-suggestion-btn:hover {
+  border-color: var(--jade-500);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* ── Chat Input Bar ──────────────────────────────────── */
+.lucia-chat-input-bar {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  align-items: flex-end;
+}
+
+.lucia-chat-input {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  min-height: 36px;
+  max-height: 90px;
+  line-height: 1.4;
+  transition: border-color var(--duration-fast);
+}
+
+.lucia-chat-input:focus { border-color: var(--jade-500); }
+.lucia-chat-input::placeholder { color: var(--text-muted); }
+
+.lucia-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--grad-jade);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity var(--duration-fast);
+}
+
+.lucia-send-btn:hover { opacity: 0.85; }
+.lucia-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
 /* ── Mobile ─────────────────────────────────────────── */
 @media (max-width: 768px) {
   .lucia-chat {
