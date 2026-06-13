@@ -266,6 +266,10 @@ export const FORM_FIELDS = {
     { k: "material_apoyo", label: "Material de apoyo",
       ph: "Ej: Texto MINEDUC 8vo EGB págs. 45-52\nHoja de trabajo adjunta\nVideo tutorial: youtube.com/...",
       area: true, hint: "Liste recursos: páginas del texto, links, materiales físicos" },
+
+    // Grupo: Firmantes
+    { k: "_g3", group: "Firmantes" },
+    { k: "nombre_vicerrector", label: "Vicerrector/a (opcional)", ph: "Ej: Mgs. Ana Mora",             half: true },
   ],
 
 
@@ -364,6 +368,7 @@ export const FORM_FIELDS = {
   informe_tutor: [
     // Grupo: Datos generales del curso
     { k: "_g1", group: "Datos generales del curso" },
+    { k: "año_lectivo",     label: "Año Lectivo",                ph: "Ej: 2025-2026",                   half: true, req: true },
     { k: "trimestre",       label: "Trimestre",                  ph: "Ej: I / II / III",               half: true },
     { k: "fecha",           label: "Fecha del informe",          ph: "Ej: 10 de junio de 2026",         half: true },
     { k: "grado_curso",     label: "Grado / Curso",              ph: "Ej: 3° BT \"A\"",                half: true },
@@ -376,8 +381,8 @@ export const FORM_FIELDS = {
     // Grupo: Aspectos académicos
     { k: "_g2", group: "Aspectos académicos por mejorar" },
     { k: "asignaturas_reporte",      label: "Asignaturas con estudiantes en riesgo",
-      ph: "Ej: Matemáticas — Lcda. Torres — 8 estudiantes en riesgo\nLengua — Lcdo. Vega — 5 estudiantes en riesgo",
-      area: true, hint: "Formato: Asignatura — Docente — N° en riesgo, una asignatura por línea" },
+      ph: "Ej: Matemáticas — Lcda. Torres — 8 estudiantes en riesgo — Compromisos: refuerzo martes y jueves\nLengua — Lcdo. Vega — 5 estudiantes en riesgo — Compromisos: material diferenciado",
+      area: true, hint: "Una asignatura por línea: 'Asignatura — Docente — N° en riesgo — Compromisos del docente'" },
     { k: "compromisos_docentes",     label: "Compromisos adquiridos por docentes",
       ph: "Ej: Lcda. Torres: refuerzo martes y jueves 13:00-13:40\nLcdo. Vega: material diferenciado para los 5 estudiantes",
       area: true },
@@ -435,6 +440,10 @@ export const FORM_FIELDS = {
     { k: "problemas_padres",           label: "Registro de problemas con representantes",
       ph: "Ej: Representante de Juan Pérez no asiste a citaciones. Se intentó contacto el 3 y 7 de junio sin respuesta",
       area: true },
+
+    // Grupo: Firmantes
+    { k: "_g6", group: "Firmantes" },
+    { k: "nombre_rector",  label: "Rector/a (opcional)",         ph: "Ej: Mgs. Roberto Andrade",       half: true },
   ],
 
 
@@ -486,6 +495,7 @@ export const FORM_FIELDS = {
     // Grupo: Firmantes
     { k: "_g4", group: "Firmantes" },
     { k: "nombre_coordinador",  label: "Coordinador/a de Área",   ph: "Ej: Lcdo. Carlos Suárez",   half: true },
+    { k: "nombre_dece",         label: "DECE (opcional)",          ph: "Ej: Psic. Laura Benítez",   half: true },
     { k: "nombre_vicerrector",  label: "Vicerrector/a",           ph: "Ej: Mgs. Ana Mora",          half: true },
   ],
 };
@@ -501,7 +511,7 @@ export function getRequiredFields(type) {
     contingencia:    ["asignatura", "grado_curso", "nombres_estudiantes", "tema_clase"],
     calificaciones:  ["asignatura", "tipoEvaluacion", "promedioGeneral"],
     asistencia:      ["totalPresentes", "totalAusentes"],
-    informe_tutor:   ["trimestre", "grado_curso", "asignaturas_reporte"],
+    informe_tutor:   ["año_lectivo", "trimestre", "grado_curso", "asignaturas_reporte"],
     microcurricular: ["figura_profesional", "nombre_modulo", "objetivo_modulo", "contenido_semanal"],
   };
   return [...common, ...(byType[type] || [])];
@@ -591,7 +601,7 @@ Genera el Plan de Contingencia con estas secciones usando ## para cada título:
 ## DATOS GENERALES — tabla con: fecha, trimestre, asignatura, docente, grado/curso, nombre(s) del estudiante (copia exactamente los nombres del formulario)
 ## PLANIFICACIÓN DE LA ACTIVIDAD — tabla con: tema de la clase, objetivo, instrucciones (redactadas en segunda persona para el estudiante), actividades a realizar, fecha de entrega, observación
 ## MATERIAL DE APOYO — listado de recursos mencionados. Si no se especificaron recursos adicionales, indica "Texto MINEDUC del área correspondiente"
-## FIRMAS — Elaborado por (docente), Aprobado por (vicerrector/a), Recibido por (representante — espacio para firma)
+## FIRMAS — tabla con 3 columnas: "Elaborado por" (docente, con su nombre), "Aprobado por" (Vicerrector/a: usa nombre_vicerrector si está disponible, si no escribe "___________"), "Recibido por" (representante — espacio para firma manual)
 REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "(Sin información proporcionada)". NUNCA inventes nombres de estudiantes ni datos no presentes en el formulario.`;
 
   else if (type === "calificaciones") p += `
@@ -618,12 +628,12 @@ Genera estas secciones exactas usando ## para cada título:
 
   else if (type === "informe_tutor") p += `
 Genera el Informe Académico y Comportamental del Docente Tutor/a con estas secciones usando ## para cada título:
-## 1. DATOS GENERALES — tabla con: tutor/a, trimestre, fecha, grado/curso, paralelo, N° matriculados, N° que asisten, N° retirados, motivos de deserción
+## 1. DATOS GENERALES — tabla con: tutor/a, año lectivo, trimestre, fecha, grado/curso, paralelo, N° matriculados, N° que asisten, N° retirados, motivos de deserción
 ## 2. ASPECTOS ACADÉMICOS POR MEJORAR EN EL SIGUIENTE TRIMESTRE — para cada asignatura reportada: nombre de la asignatura, docente, N° estudiantes en riesgo, compromisos del docente, compromisos de los estudiantes. Al final: lista de estudiantes reincidentes (si los hay)
 ## 3. ASPECTOS COMPORTAMENTALES POR MEJORAR — convivencia general del curso, cumplimiento de normas institucionales, seguimiento tutorial individual (tabla: Estudiante | Razón de seguimiento)
 ## 4. JÓVENES EN MOVIMIENTO — temas abordados en el trimestre, temas sugeridos para el siguiente trimestre (lista)
 ## 5. ASPECTOS COMPLEMENTARIOS — estudiantes con dificultades de convivencia (tabla si hay datos), casos de vulnerabilidad/seguimiento DECE, sugerencias para cada estamento en este orden: DECE, Inspección General, Vicerrectorado, Rectorado (PMF/RL), Docentes de asignatura, problemas con representantes (tabla si hay datos)
-## FIRMAS — Elaborado por (Docente Tutor/a + firma + fecha), Recibido por (Vicerrectorado), Aprobado por (Rectorado)
+## FIRMAS — tabla con 3 columnas: "Elaborado por" (Docente Tutor/a con su nombre + fecha + firma), "Recibido por" (Vicerrectorado — espacio para firma), "Aprobado por" (Rectorado: usa nombre_rector si está disponible, si no escribe "___________")
 REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "Sin novedad" o "No aplica". NUNCA inventes nombres de estudiantes, casos ni datos no presentes en el formulario.`;
 
   else if (type === "microcurricular") p += `
@@ -633,7 +643,7 @@ Genera la Planificación Microcurricular para Bachillerato Técnico de Fe y Aleg
 ## 3. ADAPTACIONES CURRICULARES — tabla: "Estudiante (iniciales)" | "Especificación de la Necesidad Educativa". Si no hay datos, escribe "No se reportan estudiantes con NEE en esta unidad"
 ## 4. ESTRATEGIAS METODOLÓGICAS ACTIVAS POR SEMANA — tabla: "Semana" | "Competencia" | "Estrategias Metodológicas Activas para la Enseñanza y Aprendizaje". Mismas filas que la tabla de desarrollo
 ## 5. OBSERVACIONES DE LA UNIDAD — texto libre con lo que el docente indicó. Si no hay datos escribe "Sin observaciones adicionales"
-## FIRMAS — tabla con 4 firmantes: Docente (elaborado), Coordinador/a de Área (revisado), DECE (aprobado), Vicerrector/a (revisado)
+## FIRMAS — tabla con 4 firmantes: Docente (elaborado, con su nombre), Coordinador/a de Área (revisado, usa nombre_coordinador si disponible, si no "___________"), DECE (aprobado, usa nombre_dece si disponible, si no "___________"), Vicerrector/a (revisado, usa nombre_vicerrector si disponible, si no "___________")
 REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "(Sin información proporcionada)". Genera EXACTAMENTE el número de semanas indicado — no más, no menos.`;
 
   p += `\n\nNOTA FINAL: Al terminar el reporte, agrega una línea separada que diga: "Documento generado con asistencia de DocuIA. El docente responsable debe revisar y validar todos los datos antes de su envío oficial."`;

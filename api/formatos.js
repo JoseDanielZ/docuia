@@ -6,7 +6,7 @@ function supabaseUrl() {
 }
 
 const FORMAT_SELECT =
-  'id,created_at,nombre_archivo,tipo_reporte,tipo_archivo,num_campos_detectados,compartido,institucion,user_id';
+  'id,created_at,nombre_archivo,tipo_reporte,tipo_archivo,num_campos_detectados,compartido,institucion,user_id,contenido_extraido';
 
 function errMsg(error_) {
   return error_ instanceof Error ? error_.message : String(error_);

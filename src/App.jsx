@@ -475,9 +475,8 @@ export default function App() {
         body: JSON.stringify({ prompt: finalPrompt, type: reportType }),
       });
 
-      clearInterval(iv);
-
       if (!res.ok) {
+        clearInterval(iv);
         const errData = await res.json().catch(() => ({}));
         const status  = res.status;
         let msg = errData.error || "No se pudo generar el reporte. Intenta de nuevo.";
@@ -495,6 +494,7 @@ export default function App() {
       if (contentType.includes('text/event-stream')) {
         setStreaming(true);
         setView("report");
+        clearInterval(iv);
 
         const reader  = res.body.getReader();
         const decoder = new TextDecoder();
@@ -529,10 +529,12 @@ export default function App() {
         if (data.text) {
           setReport(data.text);
           setView("report");
+          clearInterval(iv);
           try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
           setDraftRestored(false);
           saveGeneratedReport(data.text);
         } else {
+          clearInterval(iv);
           setError(data.error || "No se pudo generar. Intenta de nuevo.");
           setView("form");
         }
