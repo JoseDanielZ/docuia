@@ -70,7 +70,7 @@
 }
 .cursos-add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(14,77,164,0.3);
+  box-shadow: 0 6px 24px rgba(47,134,201,0.25);
 }
 .cursos-add-btn:hover::after { transform: translateX(100%); }
 .cursos-add-btn:active { transform: translateY(0); }
@@ -111,7 +111,7 @@
 .curso-card:hover {
   transform: translateY(-4px);
   border-color: var(--border-strong);
-  box-shadow: 0 8px 32px rgba(14,77,164,0.15);
+  box-shadow: 0 8px 32px rgba(47,134,201,0.12);
 }
 .curso-card:hover::before { transform: scaleX(1); }
 
@@ -155,7 +155,7 @@
 }
 .curso-card-edit:hover {
   color: var(--jade-500);
-  background: rgba(14,77,164,0.1);
+  background: rgba(47,134,201,0.10);
 }
 
 .curso-card-delete {
@@ -294,8 +294,8 @@
 .curso-modal-form input:focus,
 .curso-modal-form select:focus {
   border-color: var(--jade-500);
-  box-shadow: 0 0 0 3px rgba(14,77,164,0.15);
-  background: rgba(14,77,164,0.04);
+  box-shadow: 0 0 0 3px rgba(47,134,201,0.12);
+  background: rgba(47,134,201,0.04);
 }
 .curso-modal-form input::placeholder { color: var(--text-muted); }
 

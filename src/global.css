@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   global.css — DocuIA / Design tokens, reset, body y aurora de fondo.
-   Importado desde main.jsx para que Vite lo procese con el resto del CSS.
+   global.css — DocuIA / Design tokens "Cielo"
+   Paleta: azul cielo amigable (#2F86C9) + dorado suave (#E0A94B)
+   Modo claro por defecto · Modo oscuro via [data-theme="dark"]
 ═══════════════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after {
@@ -9,67 +10,72 @@
   box-sizing: border-box;
 }
 
-/* ── Design tokens ────────────────────────────────────────────────────────── */
+/* ── Design tokens — MODO CLARO (default) ─────────────────────────────────── */
 
 :root {
-  /* Fondos — derivados de Tory Blue */
-  --bg-base:        #04101E;
-  --bg-surface:     #081839;
-  --bg-elevated:    #0C2156;
-  --bg-hover:       #102A6B;
+  /* Fondos */
+  --bg-base:        #EBF3FB;   /* bg-0: fondo base de la app */
+  --bg-surface:     #FFFFFF;   /* tarjetas, formularios */
+  --bg-elevated:    #F6FBFE;   /* bg-1: navbar, hero */
+  --bg-hover:       #DCECF9;   /* hover sobre superficies */
+  --bg-glass:       rgba(246, 251, 254, 0.92); /* navbar glassmorphism */
 
-  /* Acento primario — Tory Blue */
-  --jade-50:        #EBF0FB;
-  --jade-100:       #C5D3F5;
-  --jade-400:       #4F7EC4;
-  --jade-500:       #0e4da4;
-  --jade-600:       #0B3E87;
-  --jade-700:       #082D62;
+  /* Acento primario — Cielo blue */
+  --jade-50:        #DCECF9;
+  --jade-100:       #BBDAF2;
+  --jade-400:       #5AA9E6;
+  --jade-500:       #2F86C9;
+  --jade-600:       #2070AC;
+  --jade-700:       #1A5A8C;
 
-  /* Acento secundario — Buttercup */
-  --amber-400:      #FFCA4A;
-  --amber-500:      #f5a524;
-  --amber-600:      #D4881A;
+  /* Acento secundario — dorado suave */
+  --amber-400:      #F0C070;
+  --amber-500:      #E0A94B;
+  --amber-600:      #C0892E;
 
   /* Texto */
-  --text-primary:   #f2f2f2;
-  --text-secondary: #A0B2CC;
-  --text-muted:     #527090;
-  --text-inverse:   #3b3b3b;
+  --text-primary:   #1B3A52;
+  --text-secondary: #3D5B73;
+  --text-muted:     #7B94A9;
+  --text-inverse:   #FFFFFF;
 
   /* Bordes */
-  --border-subtle:  rgba(14, 77, 164, 0.12);
-  --border-default: rgba(14, 77, 164, 0.22);
-  --border-strong:  rgba(14, 77, 164, 0.40);
+  --border-subtle:  rgba(212, 229, 242, 0.70);
+  --border-default: #D4E5F2;
+  --border-strong:  #A8C7DF;
 
   /* Estados */
-  --success:  #0e4da4;
+  --success:  #2F86C9;
   --error:    #c92c3c;
-  --warning:  #f5a524;
-  --info:     #3A72C4;
+  --warning:  #E0A94B;
+  --info:     #5AA9E6;
 
   /* Gradientes */
-  --grad-jade:      linear-gradient(135deg, #0e4da4 0%, #0B3E87 100%);
-  --grad-amber:     linear-gradient(135deg, #FFCA4A 0%, #f5a524 100%);
-  --grad-surface:   linear-gradient(135deg, #081839 0%, #0C2156 100%);
-  --grad-glow-jade: 0 0 40px rgba(14, 77, 164, 0.30), 0 0 80px rgba(14, 77, 164, 0.12);
-  --grad-glow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  --grad-jade:      linear-gradient(135deg, #2F86C9 0%, #2070AC 100%);
+  --grad-amber:     linear-gradient(135deg, #F0C070 0%, #E0A94B 100%);
+  --grad-surface:   linear-gradient(135deg, #F6FBFE 0%, #EBF3FB 100%);
+  --grad-glow-jade: 0 10px 24px rgba(47, 134, 201, 0.20);
+  --grad-glow-card: 0 4px 20px rgba(27, 58, 82, 0.08);
+
+  /* Sombras */
+  --shadow:      0 4px 16px rgba(27, 58, 82, 0.10);
+  --shadow-deep: 0 12px 40px rgba(27, 58, 82, 0.15);
 
   /* Espaciado */
   --space-1:  4px;  --space-2:  8px;  --space-3:  12px; --space-4:  16px;
   --space-5:  20px; --space-6:  24px; --space-8:  32px; --space-10: 40px;
   --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
 
-  /* Tipografía */
-  --font-display: 'Syne', sans-serif;
-  --font-body:    'Figtree', sans-serif;
+  /* Tipografía — Cielo */
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-body:    'Source Sans 3', system-ui, -apple-system, sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 
   /* Radios */
   --radius-sm:   6px;
   --radius-md:   12px;
   --radius-lg:   16px;
-  --radius-xl:   24px;
+  --radius-xl:   20px;
   --radius-full: 9999px;
 
   /* Easings */
@@ -83,90 +89,94 @@
   --duration-slow:  400ms;
   --duration-xslow: 600ms;
 
-  /* Aliases de compatibilidad con código existente */
-  --ink:         #f2f2f2;
-  --ink-2:       #A0B2CC;
-  --paper:       #04101E;
-  --paper-2:     #081839;
-  --paper-3:     #0C2156;
-  --line:        rgba(14, 77, 164, 0.22);
-  --muted:       #527090;
-  --text:        #f2f2f2;
-  --accent:      #0e4da4;
-  --accent-soft: rgba(14, 77, 164, 0.1);
-  --accent-ink:  #f2f2f2;
-  --brass:       #f5a524;
-  --danger:      #c92c3c;
-  --ok:          #0e4da4;
-  --warn-bg:     rgba(245, 165, 36, 0.08);
-  --warn-border: rgba(245, 165, 36, 0.30);
-  --warn-text:   #f5a524;
-  --shadow:      0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
-  --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
-}
-
-/* ── Light mode ───────────────────────────────────────────────────────────── */
-
-/* Toggle manual — tiene prioridad sobre el media query del sistema */
-[data-theme="light"] {
-  --bg-base:        #f2f2f2;
-  --bg-surface:     #FFFFFF;
-  --bg-elevated:    #FFFFFF;
-  --bg-hover:       #E5EAF5;
-  --text-primary:   #3b3b3b;
-  --text-secondary: #5B6B7B;
-  --text-muted:     #8B9BB0;
-  --border-subtle:  rgba(59, 59, 59, 0.08);
-  --border-default: rgba(59, 59, 59, 0.14);
-  --border-strong:  rgba(59, 59, 59, 0.28);
-  --grad-glow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-  --ink:         #3b3b3b;
-  --ink-2:       #5B6B7B;
-  --paper:       #f2f2f2;
+  /* Aliases de compatibilidad */
+  --ink:         #1B3A52;
+  --ink-2:       #3D5B73;
+  --paper:       #EBF3FB;
   --paper-2:     #FFFFFF;
-  --paper-3:     #E5EAF5;
-  --line:        rgba(59, 59, 59, 0.14);
-  --muted:       #8B9BB0;
-  --text:        #3b3b3b;
-  --accent-soft: rgba(14, 77, 164, 0.1);
-  --accent-ink:  #f2f2f2;
-  --shadow:      0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-  --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.12);
-  --warn-bg:     rgba(245, 165, 36, 0.08);
-  --warn-border: rgba(245, 165, 36, 0.30);
-  --warn-text:   #92400e;
+  --paper-3:     #F6FBFE;
+  --line:        #D4E5F2;
+  --muted:       #7B94A9;
+  --text:        #1B3A52;
+  --accent:      #2F86C9;
+  --accent-soft: #DCECF9;
+  --accent-ink:  #FFFFFF;
+  --brass:       #E0A94B;
+  --danger:      #c92c3c;
+  --ok:          #2F86C9;
+  --warn-bg:     #F7EBD0;
+  --warn-border: rgba(224, 169, 75, 0.40);
+  --warn-text:   #3A2906;
+  --shadow-deep: 0 12px 40px rgba(27, 58, 82, 0.15);
 }
 
-/* Respeta el sistema cuando el usuario no eligió manualmente */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg-base:        #f2f2f2;
-    --bg-surface:     #FFFFFF;
-    --bg-elevated:    #FFFFFF;
-    --bg-hover:       #E5EAF5;
-    --text-primary:   #3b3b3b;
-    --text-secondary: #5B6B7B;
-    --text-muted:     #8B9BB0;
-    --border-subtle:  rgba(59, 59, 59, 0.08);
-    --border-default: rgba(59, 59, 59, 0.14);
-    --border-strong:  rgba(59, 59, 59, 0.28);
-    --grad-glow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-    --ink:         #3b3b3b;
-    --ink-2:       #5B6B7B;
-    --paper:       #f2f2f2;
-    --paper-2:     #FFFFFF;
-    --paper-3:     #E5EAF5;
-    --line:        rgba(59, 59, 59, 0.14);
-    --muted:       #8B9BB0;
-    --text:        #3b3b3b;
-    --accent-soft: rgba(14, 77, 164, 0.1);
-    --accent-ink:  #f2f2f2;
-    --shadow:      0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-    --shadow-deep: 0 12px 48px rgba(0, 0, 0, 0.12);
-    --warn-bg:     rgba(245, 165, 36, 0.08);
-    --warn-border: rgba(245, 165, 36, 0.30);
-    --warn-text:   #92400e;
-  }
+/* ── Modo oscuro ──────────────────────────────────────────────────────────── */
+
+[data-theme="dark"] {
+  --bg-base:        #0E2740;
+  --bg-surface:     #1B4060;
+  --bg-elevated:    #143452;
+  --bg-hover:       #1F476C;
+  --bg-glass:       rgba(20, 52, 82, 0.90);
+
+  --jade-50:        #1F476C;
+  --jade-100:       #2C5E8A;
+  --jade-400:       #7DC2F0;
+  --jade-500:       #5AA9E6;
+  --jade-600:       #3D8FCA;
+  --jade-700:       #2A6FA8;
+
+  --amber-400:      #F5D08A;
+  --amber-500:      #E8B863;
+  --amber-600:      #D09A45;
+
+  --text-primary:   #EAF3FB;
+  --text-secondary: #BAD2E7;
+  --text-muted:     #7FA1BD;
+  --text-inverse:   #06233B;
+
+  --border-subtle:  rgba(44, 85, 124, 0.60);
+  --border-default: #2C557C;
+  --border-strong:  #3D6F9E;
+
+  --success:  #5AA9E6;
+  --warning:  #E8B863;
+  --info:     #7DC2F0;
+
+  --grad-jade:      linear-gradient(135deg, #5AA9E6 0%, #3D8FCA 100%);
+  --grad-amber:     linear-gradient(135deg, #F5D08A 0%, #E8B863 100%);
+  --grad-surface:   linear-gradient(135deg, #1B4060 0%, #0E2740 100%);
+  --grad-glow-jade: 0 10px 24px rgba(90, 169, 230, 0.25);
+  --grad-glow-card: 0 8px 32px rgba(0, 0, 0, 0.30);
+
+  --shadow:      0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-deep: 0 12px 40px rgba(0, 0, 0, 0.40);
+
+  /* Aliases dark */
+  --ink:         #EAF3FB;
+  --ink-2:       #BAD2E7;
+  --paper:       #0E2740;
+  --paper-2:     #1B4060;
+  --paper-3:     #143452;
+  --line:        #2C557C;
+  --muted:       #7FA1BD;
+  --text:        #EAF3FB;
+  --accent:      #5AA9E6;
+  --accent-soft: #1F476C;
+  --accent-ink:  #06233B;
+  --brass:       #E8B863;
+  --ok:          #5AA9E6;
+  --warn-bg:     #3A3017;
+  --warn-border: rgba(232, 184, 99, 0.40);
+  --warn-text:   #E8B863;
+}
+
+/* ── Dark mode — override del fondo decorativo ────────────────────────────── */
+
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(90, 169, 230, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(232, 184, 99, 0.03) 0%, transparent 55%);
 }
 
 /* ── Accesibilidad — reducir movimiento ───────────────────────────────────── */
@@ -191,24 +201,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Aurora de fondo — capa decorativa fija */
+/* Fondo decorativo estático — sin animación (Cielo: calma visual) */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(14, 77, 164, 0.09) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(245, 165, 36, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 50% 100%, rgba(11, 62, 135, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(47, 134, 201, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 70%, rgba(224, 169, 75, 0.04) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
-  animation: auroraShift 20s ease-in-out infinite alternate;
-}
-
-@keyframes auroraShift {
-  0%   { opacity: 1; transform: scale(1) translateY(0); }
-  50%  { opacity: 0.7; transform: scale(1.05) translateY(-20px); }
-  100% { opacity: 1; transform: scale(0.97) translateY(10px); }
 }
 
 #root { position: relative; z-index: 1; }

@@ -163,7 +163,7 @@
 }
 
 .hist-badge--tutor {
-  background: rgba(14, 77, 164, 0.15);
+  background: rgba(47, 134, 201, 0.12);
   color: var(--jade-500);
 }
 
@@ -243,11 +243,11 @@
 
 .hist-actions__btn--primary {
   color: var(--jade-500);
-  border-color: rgba(14, 77, 164, 0.3);
+  border-color: rgba(47, 134, 201, 0.25);
 }
 
 .hist-actions__btn--primary:hover {
-  background: rgba(14, 77, 164, 0.08);
+  background: rgba(47, 134, 201, 0.08);
   border-color: var(--jade-500);
   color: var(--jade-500);
 }

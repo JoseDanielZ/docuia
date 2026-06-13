@@ -53,8 +53,8 @@
 }
 
 @keyframes orbPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(14,77,164,0.4); }
-  50%       { transform: scale(1.08); box-shadow: 0 0 80px rgba(14,77,164,0.6), 0 0 140px rgba(14,77,164,0.2); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(47,134,201,0.30); }
+  50%       { transform: scale(1.08); box-shadow: 0 0 80px rgba(47,134,201,0.50), 0 0 140px rgba(47,134,201,0.20); }
 }
 
 @keyframes loadingSlide {
@@ -165,7 +165,7 @@
   color: var(--text-inverse);
   border: none;
   font-weight: 600;
-  box-shadow: 0 4px 16px rgba(14,77,164,0.30);
+  box-shadow: 0 4px 16px rgba(47,134,201,0.25);
 }
 .btn-primary::after {
   content: '';
@@ -232,7 +232,7 @@
 }
 .card:hover {
   border-color: var(--border-strong) !important;
-  box-shadow: 0 8px 32px rgba(14,77,164,0.15);
+  box-shadow: 0 8px 32px rgba(47,134,201,0.12);
   transform: translateY(-3px);
 }
 
@@ -242,7 +242,7 @@
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(14,77,164,0.25);
+  border: 2px solid rgba(47,134,201,0.20);
   border-top-color: var(--jade-500);
   border-radius: 50%;
   animation: spin 0.65s linear infinite;

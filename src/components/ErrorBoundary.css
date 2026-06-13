@@ -41,7 +41,7 @@
 }
 .error-boundary__btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(14, 77, 164, 0.3);
+  box-shadow: 0 6px 20px rgba(47, 134, 201, 0.25);
 }
 
 .error-boundary__details {

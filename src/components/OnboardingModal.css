@@ -69,8 +69,8 @@
   width: 72px;
   height: 72px;
   border-radius: var(--radius-xl);
-  background: rgba(14, 77, 164, 0.10);
-  border: 1px solid rgba(14, 77, 164, 0.22);
+  background: rgba(47, 134, 201, 0.10);
+  border: 1px solid rgba(47, 134, 201, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;

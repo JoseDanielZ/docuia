@@ -15,7 +15,7 @@ export function useTheme() {
     try {
       return localStorage.getItem(STORAGE_KEY) || getSystemTheme();
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 

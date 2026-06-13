@@ -188,8 +188,8 @@
 
 .report-note {
   padding: 12px 18px;
-  background: rgba(14, 77, 164, 0.08);
-  border: 1px solid rgba(14, 77, 164, 0.20);
+  background: rgba(47, 134, 201, 0.08);
+  border: 1px solid rgba(47, 134, 201, 0.20);
   border-radius: var(--radius-lg);
   font-size: 13px;
   color: var(--text-secondary);
