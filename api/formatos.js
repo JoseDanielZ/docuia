@@ -6,6 +6,9 @@ function supabaseUrl() {
 }
 
 const FORMAT_SELECT =
+  'id,created_at,nombre_archivo,tipo_reporte,tipo_archivo,num_campos_detectados,compartido,institucion,user_id';
+
+const FORMAT_SELECT_FULL =
   'id,created_at,nombre_archivo,tipo_reporte,tipo_archivo,num_campos_detectados,compartido,institucion,user_id,contenido_extraido';
 
 function errMsg(error_) {
@@ -39,6 +42,25 @@ async function fetchCompartidos(base, institucion, userId) {
     { headers: base }
   );
   return (await r.json()) || [];
+}
+
+async function handleGetById(req, res, user, id) {
+  try {
+    const base = serviceRestHeaders();
+    const r = await fetch(
+      `${supabaseUrl()}/rest/v1/formatos_institucionales` +
+      `?id=eq.${encodeURIComponent(id)}&user_id=eq.${user.id}&activo=eq.true&select=${FORMAT_SELECT_FULL}`,
+      { headers: base }
+    );
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows[0]) {
+      return res.status(404).json({ error: 'Formato no encontrado' });
+    }
+    return res.status(200).json({ formato: rows[0] });
+  } catch (error_) {
+    logger.error('formatos GET by id', { userId: user.id, err: errMsg(error_) });
+    return res.status(500).json({ error: 'Error al obtener formato' });
+  }
 }
 
 async function handleGet(req, res, user) {
@@ -98,7 +120,10 @@ export default async function handler(req, res) {
 
   const { id } = req.query;
 
-  if (req.method === 'GET') return handleGet(req, res, user);
+  if (req.method === 'GET') {
+    if (id) return handleGetById(req, res, user, id);
+    return handleGet(req, res, user);
+  }
   if (req.method === 'PATCH') {
     if (!id) return res.status(400).json({ error: 'Falta id' });
     return handlePatch(req, res, user, id);

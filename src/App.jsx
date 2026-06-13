@@ -242,6 +242,18 @@ export default function App() {
     } catch { /* silencioso */ }
   }
 
+  async function selectFormato(formato) {
+    if (!formato) { setFormatoSubido(null); return; }
+    if (formato.contenido_extraido) { setFormatoSubido(formato); return; }
+    try {
+      const res  = await authFetch(`/api/formatos?id=${formato.id}`);
+      const data = await res.json();
+      setFormatoSubido(data.formato ?? formato);
+    } catch {
+      setFormatoSubido(formato);
+    }
+  }
+
   async function handleFormatoUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -721,7 +733,7 @@ export default function App() {
           selectCurso={selectCurso}
           formatosDisponibles={formatosDisponibles}
           formatoSubido={formatoSubido}
-          selectFormato={setFormatoSubido}
+          selectFormato={selectFormato}
           clearFormato={() => setFormatoSubido(null)}
           uploadingFormato={uploadingFormato}
           handleFormatoUpload={handleFormatoUpload}
