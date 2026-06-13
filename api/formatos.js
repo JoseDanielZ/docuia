@@ -47,12 +47,35 @@ async function fetchCompartidos(base, institucion, userId) {
 async function handleGetById(req, res, user, id) {
   try {
     const base = serviceRestHeaders();
-    const r = await fetch(
+
+    // Try own format first
+    let r = await fetch(
       `${supabaseUrl()}/rest/v1/formatos_institucionales` +
       `?id=eq.${encodeURIComponent(id)}&user_id=eq.${user.id}&activo=eq.true&select=${FORMAT_SELECT_FULL}`,
       { headers: base }
     );
-    const rows = await r.json();
+    let rows = await r.json();
+
+    // Fall back to shared format from same institution
+    if (!Array.isArray(rows) || !rows[0]) {
+      const instRes = await fetch(
+        `${supabaseUrl()}/rest/v1/profiles?id=eq.${user.id}&select=institucion`,
+        { headers: base }
+      );
+      const instRows = await instRes.json();
+      const institucion = instRows?.[0]?.institucion || '';
+
+      if (institucion) {
+        r = await fetch(
+          `${supabaseUrl()}/rest/v1/formatos_institucionales` +
+          `?id=eq.${encodeURIComponent(id)}&compartido=eq.true` +
+          `&institucion=eq.${encodeURIComponent(institucion)}&activo=eq.true&select=${FORMAT_SELECT_FULL}`,
+          { headers: base }
+        );
+        rows = await r.json();
+      }
+    }
+
     if (!Array.isArray(rows) || !rows[0]) {
       return res.status(404).json({ error: 'Formato no encontrado' });
     }

@@ -14,6 +14,7 @@ import plantillasHandler        from './api/plantillas.js';
 import reportesHandler          from './api/reportes.js';
 import telemetryHandler         from './api/telemetry.js';
 import metricasHandler          from './api/metricas.js';
+import chatHandler              from './api/chat.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -44,6 +45,7 @@ app.all('/api/plantillas', (req, res) => plantillasHandler(req, res));
 app.all('/api/reportes', (req, res) => reportesHandler(req, res));
 app.all('/api/telemetry', (req, res) => telemetryHandler(req, res));
 app.all('/api/metricas', (req, res) => metricasHandler(req, res));
+app.all('/api/chat',     (req, res) => chatHandler(req, res));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API server → http://localhost:${PORT}`));

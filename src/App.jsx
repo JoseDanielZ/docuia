@@ -378,7 +378,8 @@ export default function App() {
     await loadReportes(false);
   }
 
-  async function openReportFromHistory(id) {
+  async function openReportFromHistory(reporteOrId) {
+    const id = typeof reporteOrId === 'string' ? reporteOrId : reporteOrId?.id;
     try {
       const res  = await authFetch(`/api/reportes?id=${id}`);
       const data = await res.json();
@@ -578,7 +579,8 @@ export default function App() {
       });
       const saveData = await saveRes.json();
       if (saveData.reporte?.id) setCurrentReporteId(saveData.reporte.id);
-    } catch { /* historial opcional */ }
+      else if (!saveRes.ok) toast.warn('El reporte se generó pero no se pudo guardar en el historial.');
+    } catch { toast.warn('El reporte se generó pero no se pudo guardar en el historial.'); }
   }
 
   const copyReport = () => {
