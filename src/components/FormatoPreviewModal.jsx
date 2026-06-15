@@ -5,22 +5,25 @@ import "./FormatoPreviewModal.css";
 
 export default function FormatoPreviewModal({ open, onClose, initialType }) {
   const bodyRef = useRef(null);
+  const scaleWrapRef = useRef(null);
   const styleRef = useRef(null);
   const [selectedType, setSelectedType] = useState(FE_ALEGRIA_TYPE_IDS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [zoom, setZoom] = useState(0.85);
 
   useEffect(() => {
     if (!open) return;
     setSelectedType(isFeAlegriaType(initialType) ? initialType : FE_ALEGRIA_TYPE_IDS[0]);
     setError("");
+    setZoom(0.85);
   }, [open, initialType]);
 
   useEffect(() => {
     if (!open || !selectedType) return;
 
     let cancelled = false;
-    const container = bodyRef.current;
+    const container = scaleWrapRef.current;
     const styleContainer = styleRef.current;
 
     (async () => {
@@ -35,7 +38,7 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
       }
 
       try {
-        const resp = await fetch(info.path);
+        const resp = await fetch(info.previewPath);
         if (!resp.ok) throw new Error("No se pudo cargar el archivo de formato");
         const blob = await resp.blob();
 
@@ -72,24 +75,33 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
           <h3 className="regen-card__title">Formato oficial Fe y Alegría</h3>
           <button type="button" className="formato-preview-close" onClick={onClose} aria-label="Cerrar">×</button>
         </div>
-        <p className="formato-preview-hint">
-          Referencia del documento oficial. El Word descargable incluye la huella institucional y el contenido generado por IA.
-        </p>
-        <label className="regen-card__label" htmlFor="formato-preview-select">Tipo de formato</label>
-        <select
-          id="formato-preview-select"
-          className="formato-preview-select"
-          value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-        >
-          {FE_ALEGRIA_TYPE_IDS.map((id) => (
-            <option key={id} value={id}>{FORMATOS_FE_ALEGRIA[id].label}</option>
-          ))}
-        </select>
+        <div className="formato-preview-toolbar">
+          <p className="formato-preview-hint">
+            Referencia del formato oficial. La descarga usa la misma plantilla con tus datos.
+          </p>
+          <select
+            id="formato-preview-select"
+            className="formato-preview-select"
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            aria-label="Tipo de formato"
+          >
+            {FE_ALEGRIA_TYPE_IDS.map((id) => (
+              <option key={id} value={id}>{FORMATOS_FE_ALEGRIA[id].label}</option>
+            ))}
+          </select>
+          <div className="formato-preview-zoom">
+            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} aria-label="Reducir zoom">−</button>
+            <span>{Math.round(zoom * 100)}%</span>
+            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.min(1.2, z + 0.1))} aria-label="Aumentar zoom">+</button>
+          </div>
+        </div>
         {loading && <p className="formato-preview-status">Cargando formato…</p>}
         {error && <p className="formato-preview-error">{error}</p>}
         <div ref={styleRef} className="formato-preview-styles" />
-        <div ref={bodyRef} className="formato-preview-body" />
+        <div ref={bodyRef} className="formato-preview-body">
+          <div ref={scaleWrapRef} className="formato-preview-scale-wrap" style={{ transform: `scale(${zoom})` }} />
+        </div>
       </div>
     </div>
   );

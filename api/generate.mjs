@@ -1,6 +1,7 @@
 import { verifyBearerUser, getSupabaseEnv, serviceRestHeaders } from '../lib/server/verifyUser.js';
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 import { getSystemPrompt } from '../src/config.js';
+import { isFeAlegriaType } from '../src/config/feAlegriaSchemas.js';
 import { logger } from '../lib/server/logger.js';
 
 const MAX_PROMPT_CHARS  = 48_000;
@@ -105,10 +106,11 @@ export default async function handler(req, res) {
 
   const hasFormato = detectHasFormato(sanitized);
   const system     = getSystemPrompt({ hasFormato, type });
-  const useStream  = req.headers['accept'] === 'text/event-stream';
+  const isFeA        = isFeAlegriaType(type) && !hasFormato;
+  const useStream    = !isFeA && req.headers['accept'] === 'text/event-stream';
 
   const groqPayload = {
-    max_tokens:  6000,
+    max_tokens:  isFeA ? 10_000 : 6000,
     temperature: 0.3,
     stream:      useStream,
     messages: [
@@ -116,6 +118,11 @@ export default async function handler(req, res) {
       { role: 'user',   content: sanitized },
     ],
   };
+
+  if (isFeA) {
+    groqPayload.response_format = { type: 'json_object' };
+    groqPayload.stream = false;
+  }
 
   const t0 = Date.now();
 
@@ -191,6 +198,23 @@ export default async function handler(req, res) {
 
     // ── Non-streaming (JSON) fallback ─────────────────────────────────────
     const data = await groqRes.json();
+
+    if (isFeA) {
+      const raw = data.choices?.[0]?.message?.content;
+      if (!raw) {
+        logger.error('Groq empty JSON response', { userId: user.id });
+        return res.status(502).json({ error: 'No se pudo generar el reporte. Intenta de nuevo.' });
+      }
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        logger.error('Groq invalid JSON', { userId: user.id, snippet: raw.slice(0, 200) });
+        return res.status(502).json({ error: 'La IA devolvió un formato inválido. Intenta de nuevo.' });
+      }
+      logger.info('generate fea json done', { userId: user.id, ms: Date.now() - t0 });
+      return res.status(200).json({ format: 'fea_v2', type, data: parsed });
+    }
 
     if (data.choices?.[0]?.message?.content) {
       logger.info('generate done', { userId: user.id, ms: Date.now() - t0 });

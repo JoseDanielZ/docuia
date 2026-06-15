@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES } from "../config.js";
 import { downloadPDF, downloadExcel, printReport } from "../utils/download.js";
-import { exportToDocx } from "../utils/docxExporter.js";
+import { exportMarkdownToDocx } from "../utils/docxExporter.js";
 import { pop, magneticHover } from "../utils/anim.js";
 import { useToast } from "./Toast.jsx";
 import { authFetch } from "../utils/auth.js";
@@ -209,7 +209,7 @@ export default function ReportView({
   const handleExportDocx = async () => {
     setExportingDocx(true);
     try {
-      await exportToDocx(report, fileName);
+      await exportMarkdownToDocx(report, fileName);
     } catch {
       toast.error('No se pudo exportar el documento Word.');
     } finally {

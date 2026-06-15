@@ -6,6 +6,10 @@
 // formato (no impone la estructura por defecto).
 // ═══════════════════════════════════════════════════════════════════════════════
 
+import { getJsonSchemaDescription, isFeAlegriaType } from './config/feAlegriaSchemas.js';
+
+export { isFeAlegriaType };
+
 // ── Prompt por defecto (no hay formato del usuario) ─────────────────────────
 const SYSTEM_PROMPT_DEFAULT = `Eres el motor de redacción institucional de DocuIA, una plataforma para docentes en Ecuador. Tu única función es generar reportes educativos completos, profesionales y listos para enviar a coordinación académica, rectorado o al DECE.
 
@@ -168,7 +172,17 @@ REGLAS ESTRICTAS:
  */
 export function getSystemPrompt({ hasFormato = false, type = '' } = {}) {
   if (hasFormato) return SYSTEM_PROMPT_CON_FORMATO;
-  if (SYSTEM_PROMPTS_FEA[type]) return SYSTEM_PROMPTS_FEA[type];
+  if (SYSTEM_PROMPTS_FEA[type]) {
+    return `${SYSTEM_PROMPTS_FEA[type]}
+
+SALIDA OBLIGATORIA — JSON ÚNICO:
+Devuelve EXCLUSIVAMENTE un objeto JSON válido (sin markdown, sin \`\`\`, sin texto antes ni después).
+Copia literalmente los datos de identificación del formulario. DESARROLLA el contenido pedagógico marcado.
+Esquema exacto de claves:
+{
+${getJsonSchemaDescription(type)}
+}`;
+  }
   return SYSTEM_PROMPT_DEFAULT;
 }
 
@@ -554,8 +568,33 @@ function buildAnchorBlock(type, data) {
  *   replique EXACTAMENTE el formato del docente.
  * @param {string} [opts.modo='estricto']  - 'estricto' (replica el formato 1:1) o 'guia' (lo usa como referencia)
  */
+export function buildFeAJsonUserPrompt(type, data) {
+  const rt = REPORT_TYPES.find(r => r.id === type);
+  let p = `Completa el documento institucional "${rt?.label || type}" de Fe y Alegría "La Dolorosa".\n\n`;
+  p += `DATOS DEL FORMULARIO (usa literalmente en campos de identificación; desarrolla el contenido pedagógico):\n`;
+  Object.entries(data).forEach(([k, v]) => {
+    if (k.startsWith('_') || !v?.trim()) return;
+    const allFields = [...FORM_FIELDS.common, ...FORM_FIELDS.common2, ...(FORM_FIELDS[type] || [])];
+    const field = allFields.find(f => f.k === k);
+    p += `- ${field?.label || k}: ${v.trim()}\n`;
+  });
+  if (type === 'microcurricular' && data.num_semanas) {
+    p += `\nGenera exactamente ${data.num_semanas} ítems en "semanas" y ${data.num_semanas} en "estrategias".\n`;
+  }
+  if (type === 'informe_tutor' && data.asignaturas_reporte) {
+    p += `\nParsea asignaturas_reporte en el array "asignaturas" (asignatura, docente, num_riesgo, compromisos).\n`;
+  }
+  p += `\nResponde SOLO con el objeto JSON del esquema indicado en el system prompt.`;
+  return p;
+}
+
 export function buildPrompt(type, data, opts = {}) {
   const { formatoTexto = "", modo = "estricto" } = opts;
+
+  if (isFeAlegriaType(type) && !formatoTexto?.trim()) {
+    return buildFeAJsonUserPrompt(type, data);
+  }
+
   const rt = REPORT_TYPES.find(r => r.id === type);
 
   // ── Caso A: el docente subió SU formato institucional ─────────────────────

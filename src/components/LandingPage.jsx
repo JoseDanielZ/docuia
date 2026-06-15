@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
+import { isFeAlegriaType } from "../config/formatosFeAlegria.js";
 import { getFormatoPreview } from "../utils/formatoText.js";
 import Field from "./Field.jsx";
 import TooltipHelper from "./assistant/TooltipHelper.jsx";
@@ -630,6 +631,11 @@ function FormSection({
             </div>
 
             <div data-form-block>
+              {isFeAlegriaType(reportType) ? (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  Este tipo usa la plantilla oficial Fe y Alegría. Usa «Ver formato Fe y Alegría» para ver la referencia.
+                </p>
+              ) : (
               <FormatoInstitucional
                 reportType={reportType}
                 formatosDisponibles={formatosDisponibles}
@@ -644,6 +650,7 @@ function FormSection({
                 setFormatoModo={setFormatoModo}
                 user={user}
               />
+              )}
             </div>
 
             <div data-form-block>

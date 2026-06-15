@@ -1,33 +1,75 @@
+import PizZip from 'pizzip';
+import Docxtemplater from 'docxtemplater';
+import { renderAsync } from 'docx-preview';
 import {
-  AlignmentType,
-  Document,
-  Header,
-  HeadingLevel,
-  ImageRun,
-  Packer,
-  Paragraph,
-  Table,
-  TableCell,
-  TableRow,
-  TextRun,
-  WidthType,
-} from "docx";
+  Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType,
+} from 'docx';
+import { getTemplatePath, prepareTemplateData, normalizeSemanas } from '../config/feAlegriaSchemas.js';
 
-const HEADER_PNG = "/fe-alegria-header.png";
-const CONTENT_WIDTH = 624;
+/* ── Plantilla Fe y Alegría (docxtemplater) ─────────────────────────────── */
 
-function isTableRow(line) {
-  const t = line.trim();
-  return t.startsWith("|") && t.endsWith("|");
+export async function fillTemplate(type, data, form = {}) {
+  let payload = { ...data };
+  if (type === 'microcurricular' && form?.num_semanas) {
+    payload = normalizeSemanas(payload, form.num_semanas);
+  }
+  payload = prepareTemplateData(type, payload);
+
+  const path = getTemplatePath(type);
+  if (!path) throw new Error('Tipo de plantilla no soportado');
+
+  const resp = await fetch(path);
+  if (!resp.ok) throw new Error('No se pudo cargar la plantilla institucional');
+
+  const buf = await resp.arrayBuffer();
+  const zip = new PizZip(buf);
+  const doc = new Docxtemplater(zip, {
+    paragraphLoop: true,
+    linebreaks: true,
+    delimiters: { start: '{{', end: '}}' },
+  });
+  doc.render(payload);
+  return doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
 
-function isTableSeparator(line) {
-  return /^\|[\s\-:|]+\|$/.test(line.trim());
+export function downloadDocxBlob(blob, fileName) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${fileName}.docx`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
-function splitTableCells(line) {
-  return line.trim().split("|").slice(1, -1).map((c) => c.trim());
+export async function printDocxBlob(blob, title = 'DocuIA') {
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff';
+  document.body.appendChild(host);
+  const styleHost = document.createElement('div');
+  try {
+    await renderAsync(blob, host, styleHost, {
+      className: 'docx-preview-content',
+      inWrapper: true,
+      ignoreWidth: false,
+      renderHeaders: true,
+      renderFooters: true,
+    });
+    const w = window.open('', '_blank');
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+<style>@media print{@page{margin:1.5cm}} body{margin:0;background:#fff} .docx-wrapper{background:#fff;padding:0}</style></head><body></body></html>`);
+    w.document.body.innerHTML = host.innerHTML;
+    if (styleHost.innerHTML) {
+      const st = w.document.createElement('style');
+      st.textContent = styleHost.textContent || styleHost.innerHTML;
+      w.document.head.appendChild(st);
+    }
+    w.document.close();
+    setTimeout(() => { w.print(); w.close(); }, 600);
+  } finally {
+    document.body.removeChild(host);
+  }
 }
+
+/* ── Markdown legacy (tipos no Fe y Alegría) ──────────────────────────── */
 
 function parseInlineRuns(text) {
   const runs = [];
@@ -42,146 +84,25 @@ function parseInlineRuns(text) {
   return runs;
 }
 
-function headingLevel(line) {
-  const t = line.trim();
-  if (t.startsWith("# ")) return { level: HeadingLevel.HEADING_1, text: t.slice(2), center: true };
-  if (t.startsWith("## ")) return { level: HeadingLevel.HEADING_2, text: t.slice(3) };
-  if (/^\d+\.\s/.test(t)) return { level: HeadingLevel.HEADING_2, text: t };
-  if (t.startsWith("**") && t.endsWith("**")) return { level: HeadingLevel.HEADING_2, text: t.replaceAll("**", "") };
-  return null;
-}
-
-function buildTable(tableLines) {
-  const rows = tableLines.map((line) => {
-    const cells = splitTableCells(line);
-    return new TableRow({
-      children: cells.map(
-        (cell) =>
-          new TableCell({
-            children: [new Paragraph({ children: parseInlineRuns(cell), alignment: AlignmentType.JUSTIFIED })],
-          })
-      ),
-    });
-  });
-  const colCount = Math.max(...tableLines.map((l) => splitTableCells(l).length), 1);
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    columnWidths: Array(colCount).fill(Math.floor(9360 / colCount)),
-    rows,
-  });
-}
-
 function markdownToDocxChildren(markdown) {
-  const lines = markdown.split("\n");
   const children = [];
-  let i = 0;
-
-  while (i < lines.length) {
-    const t = lines[i].trim();
-
-    if (!t) {
-      i++;
-      continue;
-    }
-
-    if (isTableRow(t)) {
-      const tableLines = [];
-      while (i < lines.length) {
-        const row = lines[i].trim();
-        if (!row) break;
-        if (isTableSeparator(row)) {
-          i++;
-          continue;
-        }
-        if (!isTableRow(row)) break;
-        tableLines.push(row);
-        i++;
-      }
-      if (tableLines.length) children.push(buildTable(tableLines));
-      continue;
-    }
-
-    if (t === "---") {
-      i++;
-      continue;
-    }
-
-    const h = headingLevel(lines[i]);
-    if (h) {
-      children.push(
-        new Paragraph({
-          text: h.text,
-          heading: h.level,
-          alignment: h.center ? AlignmentType.CENTER : undefined,
-        })
-      );
-      i++;
-      continue;
-    }
-
-    children.push(
-      new Paragraph({
-        children: parseInlineRuns(t),
-        alignment: AlignmentType.JUSTIFIED,
-      })
-    );
-    i++;
+  for (const line of markdown.split('\n')) {
+    const t = line.trim();
+    if (!t || t === '---') continue;
+    if (t.startsWith('# ')) children.push(new Paragraph({ text: t.slice(2), heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER }));
+    else if (t.startsWith('## ') || /^\d+\.\s/.test(t)) children.push(new Paragraph({ text: t.replace(/^#+\s*/, ''), heading: HeadingLevel.HEADING_2 }));
+    else children.push(new Paragraph({ children: parseInlineRuns(t), alignment: AlignmentType.JUSTIFIED }));
   }
-
   return children;
 }
 
-async function loadHeaderImage() {
-  const resp = await fetch(HEADER_PNG);
-  if (!resp.ok) throw new Error("No se pudo cargar el encabezado institucional");
-  const data = await resp.arrayBuffer();
-
-  const dims = await new Promise((resolve, reject) => {
-    const blob = new Blob([data], { type: "image/png" });
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(img.src);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(blob);
-  });
-
-  const height = Math.round(dims.height * (CONTENT_WIDTH / dims.width));
-  return { data, width: CONTENT_WIDTH, height };
+export async function exportMarkdownToDocx(reportMarkdown, fileName) {
+  const doc = new Document({ sections: [{ children: markdownToDocxChildren(reportMarkdown) }] });
+  const blob = await Packer.toBlob(doc);
+  downloadDocxBlob(blob, fileName);
 }
 
+/** @deprecated use fillTemplate + downloadDocxBlob for Fe y Alegría */
 export async function exportToDocx(reportMarkdown, fileName) {
-  const headerImg = await loadHeaderImage();
-  const children = markdownToDocxChildren(reportMarkdown);
-
-  const doc = new Document({
-    sections: [
-      {
-        headers: {
-          default: new Header({
-            children: [
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    type: "png",
-                    data: headerImg.data,
-                    transformation: { width: headerImg.width, height: headerImg.height },
-                  }),
-                ],
-              }),
-            ],
-          }),
-        },
-        children,
-      },
-    ],
-  });
-
-  const blob = await Packer.toBlob(doc);
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${fileName}.docx`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  return exportMarkdownToDocx(reportMarkdown, fileName);
 }

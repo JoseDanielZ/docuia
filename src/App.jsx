@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
 
-import { REPORT_TYPES, FORM_FIELDS, buildPrompt, getRequiredFields } from "./config";
+import { REPORT_TYPES, FORM_FIELDS, buildPrompt, getRequiredFields, isFeAlegriaType } from "./config";
+import {
+  mergeFormIntoTemplateData, serializeFeAReport, normalizeSemanas, parseStoredReport,
+} from "./config/feAlegriaSchemas.js";
 import { recordVisita } from "./utils/telemetry.js";
 import { getUser, getToken, setSession, logout, authFetch, refreshAccessToken } from "./utils/auth.js";
 import { truncateForLLM } from "./utils/formatoText.js";
@@ -10,7 +13,8 @@ import { useToast } from "./components/Toast.jsx";
 import Navbar         from "./components/Navbar.jsx";
 import LandingPage    from "./components/LandingPage.jsx";
 import LoadingView    from "./components/LoadingView.jsx";
-import ReportView     from "./components/ReportView.jsx";
+import ReportView         from "./components/ReportView.jsx";
+import FeAlegriaReportView from "./components/FeAlegriaReportView.jsx";
 import CursosView     from "./components/CursosView.jsx";
 import PlantillasView from "./components/PlantillasView.jsx";
 import HistorialView  from "./components/HistorialView.jsx";
@@ -433,14 +437,18 @@ export default function App() {
     loadReportes(true);
   }
 
-  async function saveReportEdits(newText) {
+  async function saveReportEdits(payload) {
     if (!currentReporteId || !getToken()) return;
+    const text = typeof payload === 'string'
+      ? payload
+      : serializeFeAReport(reportType, payload);
     try {
       await authFetch(`/api/reportes?id=${currentReporteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reporte_generado: newText }),
+        body: JSON.stringify({ reporte_generado: text }),
       });
+      if (typeof payload !== 'string') setReport(text);
     } catch { /* silencioso */ }
   }
 
@@ -477,14 +485,17 @@ export default function App() {
     }, 2200);
 
     try {
-      const formatoTexto = formatoSubido?.contenido_extraido
+      const formatoTexto = (!isFeAlegriaType(reportType) && formatoSubido?.contenido_extraido)
         ? truncateForLLM(formatoSubido.contenido_extraido, 12000) : "";
 
       const finalPrompt = buildPrompt(reportType, form, { formatoTexto, modo: formatoModo });
+      const isFeA = isFeAlegriaType(reportType) && !formatoTexto;
 
       const res = await authFetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+        headers: isFeA
+          ? { "Content-Type": "application/json" }
+          : { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify({ prompt: finalPrompt, type: reportType }),
       });
 
@@ -501,6 +512,38 @@ export default function App() {
       }
 
       const contentType = res.headers.get('content-type') || '';
+
+      // ── Fe y Alegría JSON ────────────────────────────────────────────────
+      if (isFeA || contentType.includes('application/json')) {
+        const data = await res.json();
+        if (data.format === 'fea_v2' && data.data && typeof data.data === 'object') {
+          let merged = mergeFormIntoTemplateData(reportType, form, data.data);
+          if (reportType === 'microcurricular') {
+            merged = normalizeSemanas(merged, form.num_semanas);
+          }
+          const serialized = serializeFeAReport(reportType, merged);
+          setReport(serialized);
+          setView("report");
+          clearInterval(iv);
+          try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
+          setDraftRestored(false);
+          saveGeneratedReport(serialized);
+          return;
+        }
+        if (data.text?.trim()) {
+          setReport(data.text);
+          setView("report");
+          clearInterval(iv);
+          try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
+          setDraftRestored(false);
+          saveGeneratedReport(data.text);
+          return;
+        }
+        clearInterval(iv);
+        setError(data.error || "No se pudo generar. Intenta de nuevo.");
+        setView("form");
+        return;
+      }
 
       // ── Streaming SSE ──────────────────────────────────────────────────
       if (contentType.includes('text/event-stream')) {
@@ -774,22 +817,43 @@ export default function App() {
 
       {view === "loading" && <LoadingView loadMsg={loadMsg} />}
 
-      {view === "report" && (
-        <ReportView
-          report={report}
-          streaming={streaming}
-          reportType={reportType}
-          form={form}
-          fileName={fileName}
-          reset={reset}
-          copyReport={copyReport}
-          copied={copied}
-          onSaveEdits={currentReporteId ? saveReportEdits : null}
-          onReferralShare={recordReferralShare}
-          reporteId={currentReporteId}
-          feedbackInicial={currentReporteFeedback}
-        />
-      )}
+      {view === "report" && (() => {
+        const stored = parseStoredReport(report);
+        if (stored.format === 'fea_v2' && isFeAlegriaType(stored.type || reportType)) {
+          return (
+            <FeAlegriaReportView
+              reportType={stored.type || reportType}
+              form={form}
+              fileName={fileName}
+              data={stored.data}
+              streaming={streaming}
+              reset={reset}
+              copyReport={copyReport}
+              copied={copied}
+              onSaveEdits={currentReporteId ? saveReportEdits : null}
+              onDataChange={(d) => setReport(serializeFeAReport(stored.type || reportType, d))}
+              reporteId={currentReporteId}
+              feedbackInicial={currentReporteFeedback}
+            />
+          );
+        }
+        return (
+          <ReportView
+            report={report}
+            streaming={streaming}
+            reportType={reportType}
+            form={form}
+            fileName={fileName}
+            reset={reset}
+            copyReport={copyReport}
+            copied={copied}
+            onSaveEdits={currentReporteId ? saveReportEdits : null}
+            onReferralShare={recordReferralShare}
+            reporteId={currentReporteId}
+            feedbackInicial={currentReporteFeedback}
+          />
+        );
+      })()}
     </div>
   );
 }
