@@ -4,6 +4,9 @@
 
 .formato-preview-card {
   width: min(1200px, 96vw);
+  /* override the inherited `max-width: 460px` from .regen-card — that cap is what
+     kept the card narrow so the A4 page overflowed with horizontal scroll. */
+  max-width: min(1200px, 96vw);
   max-height: 95vh;
   display: flex;
   flex-direction: column;
@@ -125,7 +128,8 @@
 }
 
 .formato-preview-scale-wrap {
-  transform-origin: top center;
+  /* uses CSS `zoom` (set inline) instead of `transform: scale` so the scaled
+     content shrinks its layout footprint too — no phantom horizontal scroll. */
   margin: 0 auto;
   width: fit-content;
 }

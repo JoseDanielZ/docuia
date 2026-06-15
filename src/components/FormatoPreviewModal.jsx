@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { renderAsync } from "docx-preview";
 import { FORMATOS_FE_ALEGRIA, FE_ALEGRIA_TYPE_IDS, isFeAlegriaType } from "../config/formatosFeAlegria.js";
 import "./FormatoPreviewModal.css";
@@ -11,6 +12,26 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(0.85);
+
+  // Mantener el zoom aplicado en un ref para poder "des-escalar" la medición.
+  const zoomRef = useRef(zoom);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  // Ajustar a ancho: calcula el zoom para que la página entre completa sin
+  // scroll horizontal. Mide el ancho renderizado y lo divide por el zoom aplicado.
+  const computeFit = useCallback(() => {
+    const wrap = scaleWrapRef.current;
+    const body = bodyRef.current;
+    if (!wrap || !body) return;
+    const inner = wrap.querySelector(".docx-wrapper") || wrap.firstElementChild;
+    if (!inner) return;
+    const applied = zoomRef.current || 1;
+    const naturalW = inner.getBoundingClientRect().width / applied;
+    if (!naturalW) return;
+    const avail = body.clientWidth - 8;
+    const fit = Math.min(1.1, Math.max(0.35, avail / naturalW));
+    setZoom(Number(fit.toFixed(3)));
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -53,6 +74,8 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
           renderHeaders: true,
           renderFooters: true,
         });
+
+        if (!cancelled) requestAnimationFrame(() => { if (!cancelled) computeFit(); });
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Error al renderizar el formato");
@@ -63,11 +86,19 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
     })();
 
     return () => { cancelled = true; };
-  }, [open, selectedType]);
+  }, [open, selectedType, computeFit]);
+
+  // Recalcular el ajuste a ancho cuando cambia el tamaño de la ventana.
+  useEffect(() => {
+    if (!open) return;
+    const onResize = () => computeFit();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open, computeFit]);
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="regen-overlay formato-preview-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Vista previa del formato Fe y Alegría">
       <div className="regen-card formato-preview-card" onClick={(e) => e.stopPropagation()}>
         <div className="regen-card__bar" />
@@ -91,18 +122,20 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
             ))}
           </select>
           <div className="formato-preview-zoom">
-            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} aria-label="Reducir zoom">−</button>
+            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.35, Number((z - 0.1).toFixed(3))))} aria-label="Reducir zoom">−</button>
             <span>{Math.round(zoom * 100)}%</span>
-            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.min(1.2, z + 0.1))} aria-label="Aumentar zoom">+</button>
+            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.min(1.5, Number((z + 0.1).toFixed(3))))} aria-label="Aumentar zoom">+</button>
+            <button type="button" className="formato-preview-zoom-btn formato-preview-zoom-fit" onClick={computeFit} aria-label="Ajustar a ancho" title="Ajustar a ancho">⤢</button>
           </div>
         </div>
         {loading && <p className="formato-preview-status">Cargando formato…</p>}
         {error && <p className="formato-preview-error">{error}</p>}
         <div ref={styleRef} className="formato-preview-styles" />
         <div ref={bodyRef} className="formato-preview-body">
-          <div ref={scaleWrapRef} className="formato-preview-scale-wrap" style={{ transform: `scale(${zoom})` }} />
+          <div ref={scaleWrapRef} className="formato-preview-scale-wrap" style={{ zoom }} />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
