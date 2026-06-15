@@ -28,7 +28,7 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
     const applied = zoomRef.current || 1;
     const naturalW = inner.getBoundingClientRect().width / applied;
     if (!naturalW) return;
-    const avail = body.clientWidth - 8;
+    const avail = body.clientWidth - 28;
     const fit = Math.min(1.1, Math.max(0.35, avail / naturalW));
     setZoom(Number(fit.toFixed(3)));
   }, []);
@@ -39,6 +39,20 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
     setError("");
     setZoom(0.85);
   }, [open, initialType]);
+
+  // Bloquear el scroll de la página de fondo mientras el modal está abierto:
+  // evita que su scrollbar vertical se vea como una "tira" en el borde de la pantalla.
+  useEffect(() => {
+    if (!open) return;
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open || !selectedType) return;
