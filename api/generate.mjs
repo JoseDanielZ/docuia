@@ -8,7 +8,9 @@ const GEN_PER_USER_HOUR = 45;
 const GEN_PER_IP_HOUR   = 120;
 const MODEL_PRIMARY     = 'llama-3.3-70b-versatile';
 const MODEL_FALLBACK    = 'llama-3.1-8b-instant';
-const GROQ_TIMEOUT_MS   = 30_000;
+const GROQ_TIMEOUT_MS   = 55_000;
+
+export const config = { maxDuration: 60 };
 
 function detectHasFormato(prompt) {
   return typeof prompt === 'string' && prompt.includes('FORMATO INSTITUCIONAL DEL DOCENTE');

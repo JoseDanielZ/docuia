@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, createTimeline, stagger, utils } from "animejs";
 import { REPORT_TYPES } from "../config.js";
-import { downloadWord, downloadPDF, downloadExcel, printReport } from "../utils/download.js";
+import { downloadPDF, downloadExcel, printReport } from "../utils/download.js";
+import { exportToDocx } from "../utils/docxExporter.js";
 import { pop, magneticHover } from "../utils/anim.js";
 import { useToast } from "./Toast.jsx";
 import { authFetch } from "../utils/auth.js";
 import TooltipHelper from "./assistant/TooltipHelper.jsx";
+import FormatoPreviewModal from "./FormatoPreviewModal.jsx";
 import "./ReportView.css";
 
 /* ── Utilidades puras ──────────────────────────────────────────────────── */
@@ -78,6 +80,8 @@ export default function ReportView({
   const [instruccionRegeneracion, setInstruccionRegeneracion] = useState('');
   const [mostrarModalRegen,       setMostrarModalRegen]       = useState(false);
   const [regenerandoSeccion,      setRegenerandoSeccion]      = useState(false);
+  const [showFormatoPreview,      setShowFormatoPreview]      = useState(false);
+  const [exportingDocx,           setExportingDocx]           = useState(false);
 
   const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label;
 
@@ -181,7 +185,11 @@ export default function ReportView({
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: promptRegen, type: reportType }),
       });
-      if (!res.ok) { toast.error('No se pudo regenerar la sección.'); return; }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'No se pudo regenerar la sección.');
+        return;
+      }
       const data = await res.json();
       if (data.text) {
         const idx = report.indexOf(contenidoPrevio);
@@ -195,6 +203,17 @@ export default function ReportView({
       setRegenerandoSeccion(false);
       setInstruccionRegeneracion('');
       setSeccionSeleccionada(null);
+    }
+  };
+
+  const handleExportDocx = async () => {
+    setExportingDocx(true);
+    try {
+      await exportToDocx(report, fileName);
+    } catch {
+      toast.error('No se pudo exportar el documento Word.');
+    } finally {
+      setExportingDocx(false);
     }
   };
 
@@ -231,6 +250,12 @@ export default function ReportView({
         </div>
       )}
 
+      <FormatoPreviewModal
+        open={showFormatoPreview}
+        onClose={() => setShowFormatoPreview(false)}
+        initialType={reportType}
+      />
+
       {/* Header */}
       <div ref={headerRef} className="report-header" style={{ willChange: "transform, opacity" }}>
         <div>
@@ -248,9 +273,21 @@ export default function ReportView({
           </h2>
           <p className="report-meta">{form.curso} · {form.periodo}</p>
         </div>
-        <button className="btn btn-ghost" onClick={reset} disabled={streaming} style={{ fontSize: 13, padding: "9px 18px" }}>
-          Nuevo reporte
-        </button>
+        <div className="report-header__actions">
+          {!streaming && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setShowFormatoPreview(true)}
+              style={{ fontSize: 13, padding: "9px 18px" }}
+            >
+              👁 Ver formato Fe y Alegría
+            </button>
+          )}
+          <button className="btn btn-ghost" onClick={reset} disabled={streaming} style={{ fontSize: 13, padding: "9px 18px" }}>
+            Nuevo reporte
+          </button>
+        </div>
       </div>
 
       {/* Descargas */}
@@ -262,14 +299,15 @@ export default function ReportView({
         <p className="report-dl-bar__label">Descargar reporte</p>
         <div className="dl-grid">
           {[
-            { label: "Word (.doc)",  action: () => downloadWord(report, fileName),  tip: "Descarga el documento en formato .docx compatible con Word" },
+            { label: exportingDocx ? "Exportando…" : "Word (.docx)", action: handleExportDocx, tip: "Descarga el documento Word con encabezado institucional Fe y Alegría", disabled: exportingDocx },
             { label: "PDF",          action: () => downloadPDF(report, fileName),    tip: "Descarga el documento en formato PDF listo para imprimir" },
             { label: "Excel (.csv)", action: () => downloadExcel(report, fileName),  tip: null },
             { label: "Imprimir",     action: () => printReport(report),              tip: null },
-          ].map(({ label, action, tip }) => (
+          ].map(({ label, action, tip, disabled }) => (
             <TooltipHelper key={label} text={tip} position="top">
               <button
                 className="dl-btn"
+                disabled={disabled}
                 onClick={(e) => { action(); pop(e.currentTarget, { scale: 1.06, duration: 360 }); }}
                 onMouseEnter={dlHover}
                 onMouseLeave={dlLeave}

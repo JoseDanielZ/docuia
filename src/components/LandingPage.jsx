@@ -4,6 +4,7 @@ import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
 import { getFormatoPreview } from "../utils/formatoText.js";
 import Field from "./Field.jsx";
 import TooltipHelper from "./assistant/TooltipHelper.jsx";
+import FormatoPreviewModal from "./FormatoPreviewModal.jsx";
 import "./LandingPage.css";
 import {
   useEnter,
@@ -520,6 +521,7 @@ function FormSection({
 }) {
   const cardsRef = useRef(null);
   const formInnerRef = useRef(null);
+  const [showFormatoPreview, setShowFormatoPreview] = useState(false);
 
   useStaggerChildren(cardsRef, { y: 18, delay: 60, duration: 600, deps: [reportType] });
 
@@ -576,10 +578,25 @@ function FormSection({
                 <span className="form-card-header__dot" />
                 {REPORT_TYPES.find(r => r.id === reportType)?.label}
               </div>
-              <button className="form-card-header__change" onClick={() => setReportType(null)}>
-                Cambiar tipo
-              </button>
+              <div className="form-card-header__actions">
+                <button
+                  type="button"
+                  className="form-card-header__preview"
+                  onClick={() => setShowFormatoPreview(true)}
+                >
+                  👁 Ver formato Fe y Alegría
+                </button>
+                <button className="form-card-header__change" onClick={() => setReportType(null)}>
+                  Cambiar tipo
+                </button>
+              </div>
             </div>
+
+            <FormatoPreviewModal
+              open={showFormatoPreview}
+              onClose={() => setShowFormatoPreview(false)}
+              initialType={reportType}
+            />
 
             {error && (
               <div data-form-block className="form-error">{error}</div>

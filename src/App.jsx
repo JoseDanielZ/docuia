@@ -495,7 +495,6 @@ export default function App() {
         let msg = errData.error || "No se pudo generar el reporte. Intenta de nuevo.";
         if (status === 401) msg = "Tu sesión expiró. Recarga la página e inicia sesión nuevamente.";
         else if (status === 429) msg = "Alcanzaste el límite de reportes por hora. Espera unos minutos e intenta de nuevo.";
-        else if (status === 500) msg = "Error en el servidor. Nuestro equipo fue notificado. Intenta en unos momentos.";
         setError(msg);
         setView("form");
         return;
@@ -532,6 +531,12 @@ export default function App() {
         }
 
         setStreaming(false);
+        if (!fullText.trim()) {
+          setReport("");
+          setError("La IA no devolvió contenido. Verifica la configuración del servidor e intenta de nuevo.");
+          setView("form");
+          return;
+        }
         try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignorar */ }
         setDraftRestored(false);
         saveGeneratedReport(fullText);
@@ -539,7 +544,7 @@ export default function App() {
       // ── JSON fallback ──────────────────────────────────────────────────
       } else {
         const data = await res.json();
-        if (data.text) {
+        if (data.text?.trim()) {
           setReport(data.text);
           setView("report");
           clearInterval(iv);

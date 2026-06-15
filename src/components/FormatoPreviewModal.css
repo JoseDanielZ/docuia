@@ -1,0 +1,81 @@
+.formato-preview-overlay {
+  padding: 16px;
+}
+
+.formato-preview-card {
+  width: min(920px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.formato-preview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.formato-preview-header .regen-card__title {
+  margin: 0;
+}
+
+.formato-preview-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-muted, #666);
+  padding: 0 4px;
+}
+
+.formato-preview-hint {
+  margin: 8px 0 12px;
+  font-size: 13px;
+  color: var(--text-muted, #666);
+  line-height: 1.5;
+}
+
+.formato-preview-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border, #ddd);
+  background: var(--paper, #fff);
+  color: var(--ink, #1a1a1a);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.formato-preview-status {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-muted, #666);
+}
+
+.formato-preview-error {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.formato-preview-styles {
+  display: none;
+}
+
+.formato-preview-body {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: var(--radius-md, 8px);
+  background: #fff;
+  padding: 8px;
+  min-height: 320px;
+}
+
+.formato-preview-body .docx-wrapper {
+  background: #fff;
+  padding: 12px;
+}
