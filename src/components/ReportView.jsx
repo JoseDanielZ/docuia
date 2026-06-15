@@ -175,11 +175,11 @@ export default function ReportView({
     const contenidoPrevio = seccionSeleccionada.contenido;
     setMostrarModalRegen(false);
     setRegenerandoSeccion(true);
-    const promptRegen = `Contexto del reporte completo:\n${report}\n\nSección a regenerar: ${seccionSeleccionada.titulo}\nContenido actual:\n${contenidoPrevio}\n\nInstrucción adicional: ${instruccionRegeneracion || 'Mejora esta sección manteniendo el mismo estilo y datos.'}\n\nGenera SOLO el contenido de esta sección. No incluyas otras secciones.`;
+    const promptRegen = `Contexto del reporte completo:\n${report}\n\nSección a regenerar: ${seccionSeleccionada.titulo}\nContenido actual:\n${contenidoPrevio}\n\nInstrucción adicional: ${instruccionRegeneracion || 'Mejora esta sección manteniendo el mismo estilo y datos.'}\n\nGenera SOLO el contenido de esta sección, conservando EXACTAMENTE el mismo formato (si es una tabla markdown, devuelve una tabla markdown; si es lista, devuelve lista). No incluyas otras secciones ni encabezados de otras secciones.`;
     try {
       const res = await authFetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: promptRegen }),
+        body: JSON.stringify({ prompt: promptRegen, type: reportType }),
       });
       if (!res.ok) { toast.error('No se pudo regenerar la sección.'); return; }
       const data = await res.json();

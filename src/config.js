@@ -130,11 +130,18 @@ Estructura obligatoria:
 3. MATERIAL DE APOYO (listado de recursos: páginas del texto, materiales, links si se mencionan)
 4. FIRMAS (docente, vicerrector/a, representante)
 
+DISTINCIÓN CLAVE — el docente solo ingresa ideas breves; tu trabajo es DESARROLLARLAS, no copiarlas:
+- DATOS DE IDENTIFICACIÓN (fecha, trimestre, asignatura, docente, grado/curso, nombres de estudiantes, fechas de entrega): cópialos EXACTAMENTE como están en el formulario, sin cambiarlos.
+- CONTENIDO PEDAGÓGICO (objetivo, instrucciones, actividades, observación): el docente escribe una frase corta como semilla. NO la copies tal cual; DESARRÓLLALA en contenido profesional, claro y detallado:
+   • objetivo: redáctalo como un objetivo de aprendizaje completo (qué logrará el estudiante y para qué), partiendo del tema y de la idea del docente.
+   • instrucciones: conviértelas en pasos claros y numerados, en segunda persona, que el estudiante pueda seguir de forma autónoma sin el docente presente.
+   • actividades: descríbelas de forma concreta y secuenciada, ampliando la idea del docente (qué hace, con qué, en qué orden y cómo entrega).
+   Ejemplo: si el docente escribe "resolver problemas con el libro", desarrolla algo como "1) Abre tu libro en el tema indicado. 2) Lee el ejemplo resuelto. 3) Resuelve los ejercicios propuestos paso a paso, mostrando tu procedimiento en cada uno."
+
 REGLAS ESTRICTAS:
-- Usa los datos exactos del formulario sin modificarlos.
-- Las actividades deben ser claras, concretas y ejecutables de forma autónoma por el estudiante.
 - Tono formal; las instrucciones y actividades se redactan en segunda persona para el estudiante.
-- No inventes datos que no figuren en el formulario; si falta un campo escribe "(Sin información proporcionada)".`,
+- Desarrollar contenido pedagógico NO es inventar datos. Lo prohibido es inventar HECHOS: nombres, fechas, calificaciones o números que no estén en el formulario.
+- Si un campo de contenido está totalmente vacío, escribe "(Sin información proporcionada)".`,
 
   microcurricular: `Eres el motor de redacción institucional de DocuIA para la Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa" — Bachillerato Técnico. Genera la Planificación Microcurricular con el formato oficial del año lectivo 2025-2026.
 Estructura obligatoria:
@@ -599,10 +606,10 @@ export function buildPrompt(type, data, opts = {}) {
   if (type === "contingencia") p += `
 Genera el Plan de Contingencia con estas secciones usando ## para cada título:
 ## DATOS GENERALES — tabla con: fecha, trimestre, asignatura, docente, grado/curso, nombre(s) del estudiante (copia exactamente los nombres del formulario)
-## PLANIFICACIÓN DE LA ACTIVIDAD — tabla con: tema de la clase, objetivo, instrucciones (redactadas en segunda persona para el estudiante), actividades a realizar, fecha de entrega, observación
+## PLANIFICACIÓN DE LA ACTIVIDAD — tabla con: tema de la clase, objetivo, instrucciones, actividades a realizar, fecha de entrega, observación. IMPORTANTE: en objetivo, instrucciones y actividades el docente solo escribió una idea breve. NO la copies literalmente: DESARRÓLLALA en contenido completo y profesional. El objetivo debe quedar como un objetivo de aprendizaje redactado; las instrucciones como pasos claros y numerados en segunda persona que el estudiante siga de forma autónoma; las actividades como una descripción concreta y secuenciada. Mantén la fecha de entrega y los datos de identificación exactamente como los dio el docente.
 ## MATERIAL DE APOYO — listado de recursos mencionados. Si no se especificaron recursos adicionales, indica "Texto MINEDUC del área correspondiente"
 ## FIRMAS — tabla con 3 columnas: "Elaborado por" (docente, con su nombre), "Aprobado por" (Vicerrector/a: usa nombre_vicerrector si está disponible, si no escribe "___________"), "Recibido por" (representante — espacio para firma manual)
-REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "(Sin información proporcionada)". NUNCA inventes nombres de estudiantes ni datos no presentes en el formulario.`;
+REGLA ANTI-ALUCINACIÓN: Desarrolla el contenido pedagógico, pero NUNCA inventes HECHOS (nombres de estudiantes, fechas, números) que no estén en el formulario. Si un campo de identificación no fue proporcionado, escribe "(Sin información proporcionada)".`;
 
   else if (type === "calificaciones") p += `
 Genera estas secciones exactas usando ## para cada título:
