@@ -2,6 +2,15 @@
 
 Plataforma web que convierte datos del docente en informes institucionales completos usando IA generativa. Diseñada para docentes de Fe y Alegría Ecuador.
 
+## Estado actual
+- SPA React + Vite 5 con backend servido por Express en desarrollo y Serverless en producción.
+- Autenticación con Supabase Auth y refresh token gestionado desde `public/login-main.js`.
+- Generación IA en `api/generate` usando Groq, con fallback automático a `llama-3.1-8b-instant` ante timeout o errores 5xx.
+- Soporte de 10 endpoints API actuales: `auth`, `generate`, `chat`, `cursos`, `upload-formato`, `formatos`, `plantillas`, `reportes`, `telemetry` y `metricas`.
+- RLS y seguridad reforzada con CSP, X-Frame-Options y rate limiting en el backend.
+- Scripts añadidos en `package.json` para construir y validar plantillas FE Alegría: `build:templates` y `validate:templates`.
+- `README` actualizado para reflejar el estado actual sin eliminar el contenido existente.
+
 ## Stack
 
 | Capa | Tecnología |
@@ -323,7 +332,7 @@ npx vercel --prod
 
 O conectar el repo en [vercel.com](https://vercel.com) y agregar las variables de entorno en Settings → Environment Variables.
 
-> **Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **9** funciones en `/api`. Los helpers compartidos están en `lib/server/` y no cuentan como función.
+> **Vercel Hobby (límite 12 Serverless Functions):** el proyecto expone **10** funciones en `/api`. Los helpers compartidos están en `lib/server/` y no cuentan como función.
 
 ---
 
@@ -334,6 +343,8 @@ O conectar el repo en [vercel.com](https://vercel.com) y agregar las variables d
 | `npm run dev` | Inicia Vite (frontend + proxy /api) |
 | `npm run api` | Inicia Express local para las rutas de API |
 | `npm run build` | Compila el frontend para producción |
+| `npm run build:templates` | Construye plantillas FE Alegría desde `scripts/build-fea-templates.mjs` |
+| `npm run validate:templates` | Valida las plantillas FE Alegría desde `scripts/validate-fea-templates.mjs` |
 | `npm run preview` | Previsualiza el build de producción |
 
 ---
