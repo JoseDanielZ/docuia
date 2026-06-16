@@ -23,13 +23,11 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
     const wrap = scaleWrapRef.current;
     const body = bodyRef.current;
     if (!wrap || !body) return;
-    const inner = wrap.querySelector(".docx-wrapper") || wrap.firstElementChild;
-    if (!inner) return;
     const applied = zoomRef.current || 1;
-    const naturalW = inner.getBoundingClientRect().width / applied;
-    if (!naturalW) return;
+    const contentW = Math.max(wrap.scrollWidth, wrap.getBoundingClientRect().width) / applied;
+    if (!contentW) return;
     const avail = body.clientWidth - 28;
-    const fit = Math.min(1.1, Math.max(0.35, avail / naturalW));
+    const fit = Math.min(1.1, Math.max(0.25, avail / contentW));
     setZoom(Number(fit.toFixed(3)));
   }, []);
 
@@ -130,7 +128,7 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
             ))}
           </select>
           <div className="formato-preview-zoom">
-            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.35, Number((z - 0.1).toFixed(3))))} aria-label="Reducir zoom">−</button>
+            <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.25, Number((z - 0.1).toFixed(3))))} aria-label="Reducir zoom">−</button>
             <span>{Math.round(zoom * 100)}%</span>
             <button type="button" className="formato-preview-zoom-btn" onClick={() => setZoom(z => Math.min(1.5, Number((z + 0.1).toFixed(3))))} aria-label="Aumentar zoom">+</button>
             <button type="button" className="formato-preview-zoom-btn formato-preview-zoom-fit" onClick={computeFit} aria-label="Ajustar a ancho" title="Ajustar a ancho">⤢</button>
