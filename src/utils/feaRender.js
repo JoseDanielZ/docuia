@@ -1,18 +1,22 @@
 import { renderAsync } from 'docx-preview';
 import { fillTemplate } from './docxExporter.js';
+import { stripPicBullets } from './docxSanitize.js';
 
-/** Renderiza un .docx llenado en un contenedor DOM */
+const RENDER_OPTS = {
+  className: 'docx-preview-content',
+  inWrapper: true,
+  ignoreWidth: false,
+  renderHeaders: true,
+  renderFooters: true,
+};
+
+/** Renderiza un .docx en pantalla (sanitizado para docx-preview). */
 export async function renderDocxBlob(container, styleContainer, blob) {
   if (!container) return;
   container.innerHTML = '';
   if (styleContainer) styleContainer.innerHTML = '';
-  await renderAsync(blob, container, styleContainer, {
-    className: 'docx-preview-content',
-    inWrapper: true,
-    ignoreWidth: false,
-    renderHeaders: true,
-    renderFooters: true,
-  });
+  const safeBlob = await stripPicBullets(blob);
+  await renderAsync(safeBlob, container, styleContainer, RENDER_OPTS);
 }
 
 export async function renderFeAReport(container, styleContainer, type, data, form) {

@@ -5,6 +5,7 @@ import {
   Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType,
 } from 'docx';
 import { getTemplatePath, prepareTemplateData, normalizeSemanas } from '../config/feAlegriaSchemas.js';
+import { stripPicBullets } from './docxSanitize.js';
 
 /* ── Plantilla Fe y Alegría (docxtemplater) ─────────────────────────────── */
 
@@ -46,7 +47,8 @@ export async function printDocxBlob(blob, title = 'DocuIA') {
   document.body.appendChild(host);
   const styleHost = document.createElement('div');
   try {
-    await renderAsync(blob, host, styleHost, {
+    const safeBlob = await stripPicBullets(blob);
+    await renderAsync(safeBlob, host, styleHost, {
       className: 'docx-preview-content',
       inWrapper: true,
       ignoreWidth: false,

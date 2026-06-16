@@ -148,3 +148,8 @@
 .formato-preview-body .docx-wrapper > section.docx {
   margin: 0 auto;
 }
+
+.formato-preview-body .docx-wrapper table {
+  max-width: 100%;
+  box-sizing: border-box;
+}

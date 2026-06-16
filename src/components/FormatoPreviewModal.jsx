@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { renderAsync } from "docx-preview";
+import { renderDocxBlob } from "../utils/feaRender.js";
 import { FORMATOS_FE_ALEGRIA, FE_ALEGRIA_TYPE_IDS, isFeAlegriaType } from "../config/formatosFeAlegria.js";
 import "./FormatoPreviewModal.css";
 
@@ -81,13 +81,7 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
         container.innerHTML = "";
         if (styleContainer) styleContainer.innerHTML = "";
 
-        await renderAsync(blob, container, styleContainer, {
-          className: "docx-preview-content",
-          inWrapper: true,
-          ignoreWidth: false,
-          renderHeaders: true,
-          renderFooters: true,
-        });
+        await renderDocxBlob(container, styleContainer, blob);
 
         if (!cancelled) requestAnimationFrame(() => { if (!cancelled) computeFit(); });
       } catch (err) {

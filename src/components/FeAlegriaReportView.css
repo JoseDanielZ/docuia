@@ -59,6 +59,11 @@
   margin: 0 auto;
 }
 
+.fea-preview-body .docx-wrapper table {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .fea-editor-pane {
   display: flex;
   flex-direction: column;
