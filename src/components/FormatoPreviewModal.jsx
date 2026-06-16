@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { renderDocxBlob } from "../utils/feaRender.js";
-import { computeFitZoom } from "../utils/docxPreviewFit.js";
+import { fitDocxToWidth } from "../utils/docxPreviewFit.js";
 import { FORMATOS_FE_ALEGRIA, FE_ALEGRIA_TYPE_IDS, isFeAlegriaType } from "../config/formatosFeAlegria.js";
 import "./FormatoPreviewModal.css";
 
@@ -14,17 +14,14 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(0.85);
 
-  // Mantener el zoom aplicado en un ref para poder "des-escalar" la medición.
-  const zoomRef = useRef(zoom);
-  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
-
-  // Ajustar a ancho: calcula el zoom para que la página entre completa sin
-  // scroll horizontal. Mide el ancho renderizado y lo divide por el zoom aplicado.
+  // Ajustar a ancho: mide el ancho natural del docx (incluido el desborde de la
+  // tabla) reseteando el zoom en el momento, sin depender de un valor previo.
   const computeFit = useCallback(() => {
     const wrap = scaleWrapRef.current;
     const body = bodyRef.current;
     if (!wrap || !body) return;
-    const fit = computeFitZoom(wrap, body, zoomRef.current || 1);
+    const fit = fitDocxToWidth(wrap, body);
+    if (fit == null) return;
     setZoom(Number(fit.toFixed(3)));
   }, []);
 

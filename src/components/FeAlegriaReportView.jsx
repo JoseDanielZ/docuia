@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSchema } from '../config/feAlegriaSchemas.js';
 import { fillTemplate, downloadDocxBlob, printDocxBlob } from '../utils/docxExporter.js';
 import { renderDocxBlob } from '../utils/feaRender.js';
-import { computeFitZoom } from '../utils/docxPreviewFit.js';
+import { fitDocxToWidth } from '../utils/docxPreviewFit.js';
 import { useToast } from './Toast.jsx';
 import FormatoPreviewModal from './FormatoPreviewModal.jsx';
 import './FeAlegriaReportView.css';
@@ -82,20 +82,20 @@ export default function FeAlegriaReportView({
   const [exporting, setExporting] = useState(false);
   const [showFormatoPreview, setShowFormatoPreview] = useState(false);
   const [zoom, setZoom] = useState(0.85);
+  const [containFallback, setContainFallback] = useState(false);
   const paneRef = useRef(null);
   const scaleWrapRef = useRef(null);
   const previewRef = useRef(null);
   const styleRef = useRef(null);
   const debounceRef = useRef(null);
-  const zoomRef = useRef(zoom);
-
-  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
 
   const computeFit = useCallback(() => {
     const wrap = scaleWrapRef.current;
     const pane = paneRef.current;
     if (!wrap || !pane) return;
-    const fit = computeFitZoom(wrap, pane, zoomRef.current || 1);
+    const fit = fitDocxToWidth(wrap, pane);
+    if (fit == null) { setContainFallback(true); return; }
+    setContainFallback(false);
     setZoom(Number(fit.toFixed(3)));
   }, []);
 
@@ -111,6 +111,7 @@ export default function FeAlegriaReportView({
       setDocxBlob(blob);
       await renderDocxBlob(previewRef.current, styleRef.current, blob);
       requestAnimationFrame(() => computeFit());
+      setTimeout(() => computeFit(), 180);
     } catch {
       toast.error('No se pudo renderizar la vista previa del documento.');
     } finally {
@@ -123,7 +124,12 @@ export default function FeAlegriaReportView({
     if (!pane) return;
     const ro = new ResizeObserver(() => computeFit());
     ro.observe(pane);
-    return () => ro.disconnect();
+    const onResize = () => computeFit();
+    window.addEventListener('resize', onResize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', onResize);
+    };
   }, [computeFit]);
 
   useEffect(() => {
@@ -197,7 +203,7 @@ export default function FeAlegriaReportView({
       <p className="fea-hint">La vista previa coincide con el Word descargado. Edita los campos a la derecha.</p>
 
       <div className="fea-split">
-        <div ref={paneRef} className="fea-preview-pane">
+        <div ref={paneRef} className={`fea-preview-pane${containFallback ? ' fea-preview-contained' : ''}`}>
           <div className="fea-preview-toolbar">
             <div className="fea-preview-zoom">
               <button type="button" className="fea-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.25, Number((z - 0.1).toFixed(3))))} aria-label="Reducir zoom">−</button>

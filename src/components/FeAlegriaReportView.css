@@ -29,12 +29,12 @@
 
 .fea-split {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
   gap: 16px;
   align-items: start;
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1024px) {
   .fea-split {
     grid-template-columns: 1fr 1fr;
   }
@@ -110,6 +110,18 @@
 
 .fea-preview-body .docx-wrapper > section.docx {
   overflow: visible !important;
+}
+
+/* Red de seguridad: si el escalado JS no pudo medir, contener el documento al
+   ancho del panel para que nunca se recorte (la descarga .docx no se ve afectada). */
+.fea-preview-contained .docx-wrapper,
+.fea-preview-contained section.docx {
+  max-width: 100% !important;
+}
+
+.fea-preview-contained section.docx table {
+  max-width: 100% !important;
+  table-layout: fixed;
 }
 
 .fea-editor-pane {

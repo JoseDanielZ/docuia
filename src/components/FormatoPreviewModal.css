@@ -150,3 +150,15 @@
   margin: 0 auto;
   overflow: visible !important;
 }
+
+/* Red de seguridad: contener el documento al ancho del contenedor si el
+   escalado JS no pudo medir, para que nunca se recorte. */
+.formato-preview-contained .docx-wrapper,
+.formato-preview-contained section.docx {
+  max-width: 100% !important;
+}
+
+.formato-preview-contained section.docx table {
+  max-width: 100% !important;
+  table-layout: fixed;
+}
