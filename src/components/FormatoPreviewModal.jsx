@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { renderDocxBlob } from "../utils/feaRender.js";
+import { computeFitZoom } from "../utils/docxPreviewFit.js";
 import { FORMATOS_FE_ALEGRIA, FE_ALEGRIA_TYPE_IDS, isFeAlegriaType } from "../config/formatosFeAlegria.js";
 import "./FormatoPreviewModal.css";
 
@@ -23,11 +24,7 @@ export default function FormatoPreviewModal({ open, onClose, initialType }) {
     const wrap = scaleWrapRef.current;
     const body = bodyRef.current;
     if (!wrap || !body) return;
-    const applied = zoomRef.current || 1;
-    const contentW = Math.max(wrap.scrollWidth, wrap.getBoundingClientRect().width) / applied;
-    if (!contentW) return;
-    const avail = body.clientWidth - 28;
-    const fit = Math.min(1.1, Math.max(0.25, avail / contentW));
+    const fit = computeFitZoom(wrap, body, zoomRef.current || 1);
     setZoom(Number(fit.toFixed(3)));
   }, []);
 

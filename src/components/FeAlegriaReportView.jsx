@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSchema } from '../config/feAlegriaSchemas.js';
 import { fillTemplate, downloadDocxBlob, printDocxBlob } from '../utils/docxExporter.js';
 import { renderDocxBlob } from '../utils/feaRender.js';
+import { computeFitZoom } from '../utils/docxPreviewFit.js';
 import { useToast } from './Toast.jsx';
 import FormatoPreviewModal from './FormatoPreviewModal.jsx';
 import './FeAlegriaReportView.css';
@@ -80,9 +81,23 @@ export default function FeAlegriaReportView({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showFormatoPreview, setShowFormatoPreview] = useState(false);
+  const [zoom, setZoom] = useState(0.85);
+  const paneRef = useRef(null);
+  const scaleWrapRef = useRef(null);
   const previewRef = useRef(null);
   const styleRef = useRef(null);
   const debounceRef = useRef(null);
+  const zoomRef = useRef(zoom);
+
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  const computeFit = useCallback(() => {
+    const wrap = scaleWrapRef.current;
+    const pane = paneRef.current;
+    if (!wrap || !pane) return;
+    const fit = computeFitZoom(wrap, pane, zoomRef.current || 1);
+    setZoom(Number(fit.toFixed(3)));
+  }, []);
 
   const schema = getSchema(reportType);
 
@@ -95,12 +110,21 @@ export default function FeAlegriaReportView({
       const blob = await fillTemplate(reportType, payload, form);
       setDocxBlob(blob);
       await renderDocxBlob(previewRef.current, styleRef.current, blob);
+      requestAnimationFrame(() => computeFit());
     } catch {
       toast.error('No se pudo renderizar la vista previa del documento.');
     } finally {
       setPreviewLoading(false);
     }
-  }, [reportType, form, streaming, toast]);
+  }, [reportType, form, streaming, toast, computeFit]);
+
+  useEffect(() => {
+    const pane = paneRef.current;
+    if (!pane) return;
+    const ro = new ResizeObserver(() => computeFit());
+    ro.observe(pane);
+    return () => ro.disconnect();
+  }, [computeFit]);
 
   useEffect(() => {
     if (streaming || !data) return;
@@ -173,10 +197,20 @@ export default function FeAlegriaReportView({
       <p className="fea-hint">La vista previa coincide con el Word descargado. Edita los campos a la derecha.</p>
 
       <div className="fea-split">
-        <div className="fea-preview-pane">
+        <div ref={paneRef} className="fea-preview-pane">
+          <div className="fea-preview-toolbar">
+            <div className="fea-preview-zoom">
+              <button type="button" className="fea-preview-zoom-btn" onClick={() => setZoom(z => Math.max(0.25, Number((z - 0.1).toFixed(3))))} aria-label="Reducir zoom">−</button>
+              <span>{Math.round(zoom * 100)}%</span>
+              <button type="button" className="fea-preview-zoom-btn" onClick={() => setZoom(z => Math.min(1.5, Number((z + 0.1).toFixed(3))))} aria-label="Aumentar zoom">+</button>
+              <button type="button" className="fea-preview-zoom-btn" onClick={computeFit} aria-label="Ajustar a ancho" title="Ajustar a ancho">⤢</button>
+            </div>
+          </div>
           {previewLoading && <p className="fea-preview-loading">Actualizando vista…</p>}
           <div ref={styleRef} className="formato-preview-styles" />
-          <div ref={previewRef} className="fea-preview-body" />
+          <div ref={scaleWrapRef} className="fea-preview-scale-wrap" style={{ zoom }}>
+            <div ref={previewRef} className="fea-preview-body" />
+          </div>
         </div>
 
         <div className="fea-editor-pane">

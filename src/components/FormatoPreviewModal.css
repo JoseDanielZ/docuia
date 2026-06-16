@@ -143,6 +143,7 @@
   background: #fff;
   padding: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: visible !important;
 }
 
 .formato-preview-body .docx-wrapper > section.docx {

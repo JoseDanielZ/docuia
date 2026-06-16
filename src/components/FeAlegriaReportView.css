@@ -1,5 +1,6 @@
 .fea-report-view {
-  max-width: 1280px;
+  max-width: min(100%, 1600px);
+  width: 100%;
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
@@ -28,9 +29,15 @@
 
 .fea-split {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr);
   gap: 16px;
   align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .fea-split {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 960px) {
@@ -47,6 +54,47 @@
   padding: 12px;
 }
 
+.fea-preview-scale-wrap {
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.fea-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.fea-preview-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fea-preview-zoom-btn {
+  all: unset;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  line-height: 1;
+  background: var(--paper);
+}
+
+.fea-preview-zoom-btn:hover {
+  background: color-mix(in srgb, var(--jade-500) 10%, var(--paper));
+}
+
 .fea-preview-loading {
   font-size: 12px;
   color: var(--text-muted);
@@ -57,6 +105,7 @@
   background: #fff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   margin: 0 auto;
+  overflow: visible !important;
 }
 
 .fea-preview-body .docx-wrapper > section.docx {
