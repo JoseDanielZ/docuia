@@ -48,6 +48,18 @@ export default async function handler(req, res) {
     }
     const fileExt = safeName.toLowerCase().split('.').pop();
 
+    // Verificar magic bytes para evitar que archivos renombrados sean parseados
+    // %PDF = 25 50 44 46  |  ZIP/XLSX = 50 4B 03 04
+    const PDF_MAGIC  = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+    const XLSX_MAGIC = Buffer.from([0x50, 0x4B, 0x03, 0x04]);
+
+    if (fileExt === 'pdf' && buffer.length >= 4 && !buffer.slice(0, 4).equals(PDF_MAGIC)) {
+      return res.status(400).json({ error: 'El archivo no es un PDF válido' });
+    }
+    if ((fileExt === 'xlsx' || fileExt === 'xls') && buffer.length >= 4 && !buffer.slice(0, 4).equals(XLSX_MAGIC)) {
+      return res.status(400).json({ error: 'El archivo no es un Excel válido' });
+    }
+
     let textoExtraido = '';
     let numCampos = 0;
 

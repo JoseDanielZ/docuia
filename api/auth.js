@@ -1,11 +1,37 @@
 /**
  * Auth unificado para Vercel Hobby (1 Serverless Function en lugar de 3).
- * POST /api/auth  body: { action: 'login'|'signup'|'recover', ... }
+ * POST /api/auth  body: { action: 'login'|'signup'|'recover'|'refresh'|'logout', ... }
  */
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+const SECURE = isProd ? '; Secure' : '';
+
+function setAuthCookies(res, access_token, refresh_token) {
+  const cookies = [
+    `access_token=${access_token}; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=3600`,
+  ];
+  if (refresh_token) {
+    cookies.push(`refresh_token=${refresh_token}; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=2592000`);
+  }
+  res.setHeader('Set-Cookie', cookies);
+}
+
+function clearAuthCookies(res) {
+  res.setHeader('Set-Cookie', [
+    `access_token=; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=0`,
+    `refresh_token=; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=0`,
+  ]);
+}
+
+function parseCookieValue(req, name) {
+  const raw = req.headers.cookie || '';
+  const match = raw.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+  return match ? match[1].trim() : null;
+}
 
 async function handleLogin(req, res) {
   const ip = clientIp(req);
@@ -56,12 +82,8 @@ async function handleLogin(req, res) {
       } catch { /* no bloqueamos el login si falla el enriquecimiento */ }
     }
 
-    return res.status(200).json({
-      success: true,
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      user: data.user,
-    });
+    setAuthCookies(res, data.access_token, data.refresh_token);
+    return res.status(200).json({ success: true, user: data.user });
   } catch (e) {
     return res.status(500).json({ error: 'Error del servidor' });
   }
@@ -126,20 +148,20 @@ async function handleSignup(req, res) {
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      user: authData.user,
-      session: authData.session,
-    });
+    if (authData.session?.access_token) {
+      setAuthCookies(res, authData.session.access_token, authData.session.refresh_token);
+    }
+    return res.status(200).json({ success: true, user: authData.user, session: authData.session });
   } catch (e) {
     return res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
 async function handleRefresh(req, res) {
-  const { refresh_token } = req.body;
+  // Lee el refresh token de la cookie HttpOnly (preferido) o del body (compatibilidad)
+  const refresh_token = parseCookieValue(req, 'refresh_token') || req.body?.refresh_token;
   if (!refresh_token || typeof refresh_token !== 'string') {
-    return res.status(400).json({ error: 'refresh_token es obligatorio' });
+    return res.status(401).json({ error: 'No hay sesión activa. Inicia sesión nuevamente.' });
   }
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -153,16 +175,19 @@ async function handleRefresh(req, res) {
     });
     const data = await r.json();
     if (data.error) {
+      clearAuthCookies(res);
       return res.status(401).json({ error: 'Sesión expirada. Inicia sesión nuevamente.' });
     }
-    return res.status(200).json({
-      access_token:  data.access_token,
-      refresh_token: data.refresh_token,
-      user:          data.user,
-    });
+    setAuthCookies(res, data.access_token, data.refresh_token);
+    return res.status(200).json({ success: true, user: data.user });
   } catch {
     return res.status(500).json({ error: 'Error del servidor' });
   }
+}
+
+async function handleLogout(req, res) {
+  clearAuthCookies(res);
+  return res.status(200).json({ success: true });
 }
 
 async function handleRecover(req, res) {
@@ -175,7 +200,9 @@ async function handleRecover(req, res) {
   }
 
   const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email es obligatorio' });
+  if (!email || typeof email !== 'string' || !EMAIL_RE.test(email.trim())) {
+    return res.status(400).json({ error: 'Correo no válido' });
+  }
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_KEY;
@@ -204,6 +231,7 @@ export default async function handler(req, res) {
   if (action === 'signup')  return handleSignup(req, res);
   if (action === 'recover') return handleRecover(req, res);
   if (action === 'refresh') return handleRefresh(req, res);
+  if (action === 'logout')  return handleLogout(req, res);
 
   return res.status(400).json({ error: 'action debe ser login, signup, recover o refresh' });
 }

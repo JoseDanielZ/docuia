@@ -6,7 +6,7 @@ import {
   mergeFormIntoTemplateData, serializeFeAReport, normalizeSemanas, parseStoredReport,
 } from "./config/feAlegriaSchemas.js";
 import { recordVisita } from "./utils/telemetry.js";
-import { getUser, getToken, setSession, logout, authFetch, refreshAccessToken } from "./utils/auth.js";
+import { fetchMe, logout, authFetch } from "./utils/auth.js";
 import { truncateForLLM } from "./utils/formatoText.js";
 import { useToast } from "./components/Toast.jsx";
 
@@ -97,26 +97,21 @@ export default function App() {
   const [currentReporteFeedback, setCurrentReporteFeedback] = useState(null);
   const [showOnboarding,  setShowOnboarding]  = useState(false);
   const [erroresForm,     setErroresForm]     = useState({});
-
-  const user = getUser();
+  const [user,            setUser]            = useState(null);
 
   useEffect(() => {
-    if (user) {
-      // H6: Pre-rellenar todos los campos del perfil disponibles
-      setFormState(p => ({
-        ...p,
-        docente:     user.user_metadata?.name        || "",
-        email:       user.email                       || "",
-        institucion: user.user_metadata?.institucion  || p.institucion || "",
-        cargo:       user.user_metadata?.cargo        || p.cargo       || "",
-      }));
-      loadCursos();
-      loadFormatos();
-      loadPlantillas();
-      loadReportes(true);
-      loadMetricas();
-      refreshAccessToken().catch(() => {});
-    }
+    fetchMe().then(me => {
+      setUser(me);
+      if (me) {
+        setFormState(p => ({
+          ...p,
+          docente:     me.name        || me.user_metadata?.name        || "",
+          email:       me.email       || "",
+          institucion: me.institucion || me.user_metadata?.institucion || p.institucion || "",
+          cargo:       me.cargo       || me.user_metadata?.cargo       || p.cargo       || "",
+        }));
+      }
+    });
     recordVisita(document.referrer || "directo");
 
     try {
@@ -134,6 +129,17 @@ export default function App() {
       }
     } catch { /* borrador corrupto */ }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cargar datos cuando el usuario esté disponible (evita el problema de closure
+  // donde setUser() no actualiza user en el mismo tick del effect anterior)
+  useEffect(() => {
+    if (!user) return;
+    loadCursos();
+    loadFormatos();
+    loadPlantillas();
+    loadReportes(true);
+    loadMetricas();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-guardar borrador (debounce 800ms, con límite de tamaño)
   useEffect(() => {
@@ -158,7 +164,7 @@ export default function App() {
 
   // ===== CURSOS =====
   async function loadCursos() {
-    if (!getToken()) return;
+    if (!user) return;
     try {
       const res  = await authFetch('/api/cursos');
       const data = await res.json();
@@ -232,13 +238,13 @@ export default function App() {
       asignatura:     curso.asignatura,
       numEstudiantes: curso.num_estudiantes?.toString() || '',
       jornadaTurno:   curso.jornada || '',
-      institucion:    user?.user_metadata?.institucion || p.institucion || '',
+      institucion:    user?.institucion || user?.user_metadata?.institucion || p.institucion || '',
     }));
   }
 
   // ===== FORMATOS =====
   async function loadFormatos() {
-    if (!getToken()) return;
+    if (!user) return;
     try {
       const res  = await authFetch('/api/formatos');
       const data = await res.json();
@@ -301,7 +307,7 @@ export default function App() {
 
   // ===== PLANTILLAS =====
   async function loadPlantillas() {
-    if (!getToken()) return;
+    if (!user) return;
     try {
       const res  = await authFetch('/api/plantillas');
       const data = await res.json();
@@ -310,7 +316,7 @@ export default function App() {
   }
 
   async function saveAsTemplate() {
-    if (!getToken()) { toast.warning('Inicia sesión para guardar plantillas'); return; }
+    if (!user) { toast.warning('Inicia sesión para guardar plantillas'); return; }
     if (!reportType) { toast.warning('Selecciona un tipo de reporte primero'); return; }
     const nombre = await toast.prompt('Nombre de la plantilla:', { placeholder: 'Ej: Semana 1 - 8vo B' });
     if (!nombre) return;
@@ -351,7 +357,7 @@ export default function App() {
 
   // ===== MÉTRICAS =====
   async function loadMetricas() {
-    if (!getToken()) return;
+    if (!user) return;
     try {
       const res  = await authFetch('/api/metricas');
       const data = await res.json();
@@ -361,7 +367,7 @@ export default function App() {
 
   // ===== HISTORIAL (paginado) =====
   async function loadReportes(reset = true) {
-    if (!getToken()) return;
+    if (!user) return;
     setHistorialLoading(true);
     const offset = reset ? 0 : historialOffset;
     try {
@@ -438,7 +444,7 @@ export default function App() {
   }
 
   async function saveReportEdits(payload) {
-    if (!currentReporteId || !getToken()) return;
+    if (!currentReporteId || !user) return;
     const text = typeof payload === 'string'
       ? payload
       : serializeFeAReport(reportType, payload);
@@ -454,7 +460,7 @@ export default function App() {
 
   // ===== GENERAR REPORTE (con streaming SSE) =====
   const generate = async () => {
-    if (!getToken()) { setError("Inicia sesión para generar reportes."); return; }
+    if (!user) { setError("Inicia sesión para generar reportes."); return; }
     const requiredFields = reportType ? getRequiredFields(reportType) : ["docente", "curso", "periodo"];
     const errores = {};
     requiredFields.forEach(k => { if (!form[k]?.trim()) errores[k] = 'Campo requerido'; });
@@ -635,7 +641,7 @@ export default function App() {
     navigator.clipboard.writeText(report);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    if (getToken()) {
+    if (user) {
       authFetch("/api/telemetry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -645,7 +651,7 @@ export default function App() {
   };
 
   const recordReferralShare = () => {
-    if (!getToken()) return;
+    if (!user) return;
     authFetch("/api/telemetry", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -658,7 +664,7 @@ export default function App() {
     setReportType(null);
     setReport("");
     setError("");
-    setFormState(user ? { docente: user.user_metadata?.name || "", email: user.email || "" } : {});
+    setFormState(user ? { docente: user.name || user.user_metadata?.name || "", email: user.email || "" } : {});
     setSelectedCurso(null);
     setFormatoSubido(null);
     setCurrentReporteId(null);

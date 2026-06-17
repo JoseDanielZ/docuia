@@ -110,6 +110,8 @@ async function handlePatch(req, res, user, id) {
   if (feedback_nota !== undefined) {
     if (typeof feedback_nota !== 'string' && feedback_nota !== null)
       return res.status(400).json({ error: 'feedback_nota debe ser string o null' });
+    if (typeof feedback_nota === 'string' && feedback_nota.length > 2000)
+      return res.status(400).json({ error: 'feedback_nota demasiado larga (máx 2000 caracteres)' });
     updateFields.feedback_nota = feedback_nota;
   }
 

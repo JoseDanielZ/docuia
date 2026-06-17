@@ -1,22 +1,8 @@
 (function () {
-  function tokenIsValid(t) {
-    try {
-      const payload = JSON.parse(atob(t.split('.')[1]));
-      return payload.exp > Date.now() / 1000;
-    } catch {
-      return false;
-    }
-  }
-
-  const token = localStorage.getItem('docuia_token');
-  if (token) {
-    if (tokenIsValid(token)) {
-      window.location.href = '/';
-    } else {
-      localStorage.removeItem('docuia_token');
-      localStorage.removeItem('docuia_user');
-    }
-  }
+  // Comprobar si ya hay sesión activa vía cookie (sin exponer el token a JS)
+  fetch('/api/me', { credentials: 'include' })
+    .then(r => { if (r.ok) window.location.href = '/'; })
+    .catch(() => {});
 
   const titles = {
     login: ['Bienvenida de <em>vuelta</em>, Prof.', 'Tu espacio de trabajo tiene informes esperándote.'],
@@ -82,9 +68,7 @@
       const data = await res.json();
 
       if (data.success) {
-        localStorage.setItem('docuia_token', data.access_token);
-        if (data.refresh_token) localStorage.setItem('docuia_refresh', data.refresh_token);
-        localStorage.setItem('docuia_user', JSON.stringify(data.user));
+        // Las cookies HttpOnly ya fueron seteadas por el backend
         window.location.href = '/';
       } else {
         showMsg('login-msg', data.error || 'Credenciales incorrectas.', 'error');
@@ -136,9 +120,7 @@
 
       if (data.success) {
         if (data.session?.access_token) {
-          localStorage.setItem('docuia_token', data.session.access_token);
-          if (data.session.refresh_token) localStorage.setItem('docuia_refresh', data.session.refresh_token);
-          localStorage.setItem('docuia_user', JSON.stringify(data.user));
+          // Cookies ya seteadas por el backend
           window.location.href = '/';
         } else {
           showMsg('signup-msg', 'Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.', 'success');

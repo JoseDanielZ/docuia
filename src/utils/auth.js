@@ -1,77 +1,48 @@
-const TOKEN_KEY   = 'docuia_token';
-const REFRESH_KEY = 'docuia_refresh';
-const USER_KEY    = 'docuia_user';
-
-export function getUser() {
-  try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch { return null; }
+export async function fetchMe() {
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.user || null;
+  } catch {
+    return null;
+  }
 }
 
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setSession(access_token, refresh_token, user) {
-  localStorage.setItem(TOKEN_KEY, access_token);
-  if (refresh_token) localStorage.setItem(REFRESH_KEY, refresh_token);
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-
-export function logout() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_KEY);
-  localStorage.removeItem(USER_KEY);
+export async function logout() {
+  await fetch('/api/auth', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'logout' }),
+  }).catch(() => {});
   globalThis.location.href = '/login.html';
 }
 
 let _refreshing = null;
 
-export async function refreshAccessToken() {
-  const refreshToken = localStorage.getItem(REFRESH_KEY);
-  if (!refreshToken) return null;
-
+async function doRefresh() {
   if (_refreshing) return _refreshing;
-
   _refreshing = fetch('/api/auth', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'refresh', refresh_token: refreshToken }),
+    body: JSON.stringify({ action: 'refresh' }),
   })
-    .then(r => r.json())
-    .then(data => {
-      if (data.access_token) {
-        setSession(data.access_token, data.refresh_token ?? refreshToken, data.user ?? getUser());
-        return data.access_token;
-      }
-      return null;
-    })
-    .catch(() => null)
+    .then(r => r.ok)
+    .catch(() => false)
     .finally(() => { _refreshing = null; });
-
   return _refreshing;
 }
 
-/**
- * Makes an authenticated fetch, automatically refreshing the token on 401.
- * Use this instead of raw fetch() for all authenticated API calls.
- */
 export async function authFetch(url, options = {}) {
-  const token = getToken();
-  const headers = {
-    ...options.headers,
-    Authorization: `Bearer ${token}`,
-  };
+  const res = await fetch(url, { ...options, credentials: 'include' });
+  if (res.status !== 401) return res;
 
-  let res = await fetch(url, { ...options, headers });
-
-  if (res.status === 401) {
-    const newToken = await refreshAccessToken();
-    if (newToken) {
-      const retryHeaders = { ...options.headers, Authorization: `Bearer ${newToken}` };
-      res = await fetch(url, { ...options, headers: retryHeaders });
-    } else {
-      logout();
-    }
+  const refreshed = await doRefresh();
+  if (!refreshed) {
+    logout();
+    return res;
   }
-
-  return res;
+  return fetch(url, { ...options, credentials: 'include' });
 }

@@ -43,7 +43,12 @@ async function handlePost(req, res, user) {
         jornada:             jornada     ? String(jornada).slice(0, 50)     : '',
         año_lectivo:         año_lectivo ? String(año_lectivo).slice(0, 20) : '',
         periodo_actual:      periodo_actual ? String(periodo_actual).slice(0, 100) : '',
-        nombres_estudiantes: Array.isArray(nombres_estudiantes) ? nombres_estudiantes : [],
+        nombres_estudiantes: Array.isArray(nombres_estudiantes)
+          ? nombres_estudiantes
+              .filter(n => typeof n === 'string')
+              .map(n => n.trim().slice(0, 200))
+              .slice(0, 100)
+          : [],
         observaciones:       observaciones ? String(observaciones).slice(0, 2000) : '',
         activo: true,
       }),

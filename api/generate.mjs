@@ -109,13 +109,17 @@ export default async function handler(req, res) {
   const isFeA        = isFeAlegriaType(type) && !hasFormato;
   const useStream    = !isFeA && req.headers['accept'] === 'text/event-stream';
 
+  // Delimitar el input del usuario con etiquetas XML para que el modelo no
+  // interprete su contenido como instrucciones del sistema (prompt injection).
+  const userContent = `<datos_del_docente>\n${sanitized}\n</datos_del_docente>`;
+
   const groqPayload = {
     max_tokens:  isFeA ? 10_000 : 6000,
     temperature: 0.3,
     stream:      useStream,
     messages: [
       { role: 'system', content: system },
-      { role: 'user',   content: sanitized },
+      { role: 'user',   content: userContent },
     ],
   };
 

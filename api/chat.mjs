@@ -1,3 +1,4 @@
+import { verifyBearerUser } from '../lib/server/verifyUser.js';
 import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 import { logger } from '../lib/server/logger.js';
 
@@ -59,6 +60,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const { user, error: authErr, status: authStatus } = await verifyBearerUser(req);
+  if (authErr || !user) {
+    return res.status(authStatus || 401).json({ error: authErr || 'No autorizado' });
+  }
+
   const { message, context = '' } = req.body || {};
 
   if (!message || typeof message !== 'string' || !message.trim()) {
@@ -77,7 +83,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Servicio de IA no configurado' });
   }
 
-  const contextHint = context ? `\n[Vista actual del docente: ${context}]` : '';
+  // Sanitizar context: eliminar saltos de línea que permiten inyectar nuevas
+  // "instrucciones" al LLM fuera del bloque de datos del usuario.
+  const safeContext = typeof context === 'string'
+    ? context.replace(/[\n\r]/g, ' ').slice(0, 200)
+    : '';
+  const contextHint = safeContext ? ` [Vista: ${safeContext}]` : '';
   const messages = [
     { role: 'system', content: LUCIA_SYSTEM },
     { role: 'user',   content: trimmed + contextHint },

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { FAQ_CATEGORIES, searchFAQ } from '../../data/assistant/faq';
-import { getToken } from '../../utils/auth';
 import './assistant.css';
 
 const SUGGESTIONS = [
@@ -32,13 +31,10 @@ function ChatTab({ currentView, onSwitchToFaq }) {
     setLoading(true);
 
     try {
-      const token = getToken();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg, context: currentView }),
       });
 
