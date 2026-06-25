@@ -1,0 +1,137 @@
+.nee-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.nee-table__header {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--jade-500) 8%, var(--bg-elevated));
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nee-table__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--jade-500);
+  letter-spacing: 0.02em;
+}
+
+.nee-table__cols-label {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 10px;
+  padding: 6px 12px 6px 12px;
+  background: color-mix(in srgb, var(--paper) 95%, var(--jade-500) 5%);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.nee-table__row {
+  display: grid;
+  grid-template-columns: 130px 1fr 28px;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--paper) 98%, var(--jade-500) 2%);
+}
+
+.nee-table__row:last-of-type {
+  border-bottom: none;
+}
+
+.nee-table__iniciales,
+.nee-table__necesidad {
+  all: unset;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth);
+  display: block;
+}
+
+.nee-table__iniciales::placeholder,
+.nee-table__necesidad::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.nee-table__iniciales:focus,
+.nee-table__necesidad:focus {
+  outline: none;
+  border-color: var(--jade-500);
+  box-shadow: 0 0 0 3px rgba(0, 212, 168, 0.12);
+}
+
+.nee-table__iniciales:disabled,
+.nee-table__necesidad:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nee-table__necesidad {
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.5;
+}
+
+.nee-table__remove {
+  all: unset;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-muted);
+  line-height: 1;
+  text-align: center;
+  padding: 4px;
+  margin-top: 4px;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast);
+}
+
+.nee-table__remove:hover:not(:disabled) {
+  color: var(--error, #e74c3c);
+}
+
+.nee-table__remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.nee-table__add {
+  all: unset;
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jade-500);
+  background: color-mix(in srgb, var(--paper) 97%, var(--jade-500) 3%);
+  border-top: 1px solid var(--border-subtle);
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: background var(--duration-fast);
+}
+
+.nee-table__add:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--jade-500) 10%, var(--paper));
+}
+
+.nee-table__add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

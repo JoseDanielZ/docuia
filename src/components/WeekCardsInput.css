@@ -1,0 +1,130 @@
+.week-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.week-cards--empty {
+  padding: 14px 16px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.week-cards__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.week-cards__title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.week-cards__badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--jade-500) 15%, transparent);
+  color: var(--jade-500);
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.week-cards__card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.week-cards__card-header {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--jade-500) 8%, var(--bg-elevated));
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--jade-500);
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.week-cards__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--paper) 97%, var(--jade-500) 3%);
+}
+
+/* Recursos, Criterios, Técnicas — full width para dar más espacio */
+.week-cards__field:nth-child(5),
+.week-cards__field:nth-child(6),
+.week-cards__field:nth-child(7) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .week-cards__fields {
+    grid-template-columns: 1fr;
+  }
+  .week-cards__field:nth-child(n) {
+    grid-column: auto;
+  }
+}
+
+.week-cards__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-cards__field-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.week-cards__textarea {
+  all: unset;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.5;
+  transition: border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth);
+  display: block;
+}
+
+.week-cards__textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.week-cards__textarea:focus {
+  outline: none;
+  border-color: var(--jade-500);
+  box-shadow: 0 0 0 3px rgba(0, 212, 168, 0.12);
+  background: rgba(0, 212, 168, 0.02);
+}
+
+.week-cards__textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

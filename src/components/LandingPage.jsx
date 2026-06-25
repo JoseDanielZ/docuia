@@ -4,6 +4,8 @@ import { REPORT_TYPES, FORM_FIELDS } from "../config.js";
 import { isFeAlegriaType } from "../config/formatosFeAlegria.js";
 import { getFormatoPreview } from "../utils/formatoText.js";
 import Field from "./Field.jsx";
+import WeekCardsInput from "./WeekCardsInput.jsx";
+import NeeTableInput from "./NeeTableInput.jsx";
 import TooltipHelper from "./assistant/TooltipHelper.jsx";
 import FormatoPreviewModal from "./FormatoPreviewModal.jsx";
 import "./LandingPage.css";
@@ -670,7 +672,30 @@ function FormSection({
             <div data-form-block>
               <SectionLabel>Información del reporte</SectionLabel>
               <div className="form-fields-grid">
-                {(FORM_FIELDS[reportType] || []).map(f => <Field key={f.k} {...f} form={form} set={set} error={erroresForm?.[f.k]} />)}
+                {(FORM_FIELDS[reportType] || []).map(f => {
+                  if (f.type === 'week-cards') {
+                    return (
+                      <WeekCardsInput
+                        key={f.k}
+                        numSemanas={form.num_semanas}
+                        value={form[f.k] || []}
+                        onChange={v => set(f.k, v)}
+                        disabled={generating}
+                      />
+                    );
+                  }
+                  if (f.type === 'nee-table') {
+                    return (
+                      <NeeTableInput
+                        key={f.k}
+                        value={form[f.k] || []}
+                        onChange={v => set(f.k, v)}
+                        disabled={generating}
+                      />
+                    );
+                  }
+                  return <Field key={f.k} {...f} form={form} set={set} error={erroresForm?.[f.k]} />;
+                })}
               </div>
             </div>
 

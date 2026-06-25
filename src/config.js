@@ -159,7 +159,7 @@ FIRMAS (docente, coordinador/a de área, DECE, vicerrector/a)
 REGLAS ESTRICTAS:
 - Usa EXACTAMENTE la figura profesional, módulo, fechas y número de horas indicados.
 - Genera exactamente el número de filas de semanas que el docente especificó en "num_semanas".
-- Si el docente no desglosó cada semana individualmente, distribuye los contenidos de forma progresiva a partir del contenido_semanal.
+- Los contenidos de cada semana vienen en el campo "Desarrollo semanal" del formulario, ya desglosados por semana. Úsalos como base y enriquécelos pedagógicamente.
 - Encabezado institucional obligatorio: Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa" — "Ser más para servir mejor".
 - Escala de calificaciones ecuatoriana: Sobresaliente 9-10, Muy Buena 8-8.99, Buena 7-7.99, Regular 5-6.99, Insuficiente <5.`,
 };
@@ -509,13 +509,9 @@ export const FORM_FIELDS = {
 
     // Grupo: Desarrollo curricular
     { k: "_g3", group: "Desarrollo curricular semanal" },
-    { k: "num_semanas",         label: "Número de semanas de la unidad", ph: "Ej: 8 / 10 / 12",   half: true },
-    { k: "contenido_semanal",   label: "Contenido semanal (un bloque por semana)",
-      ph: "Semana 1: Contenidos procedimentales: crear clases simples. Conceptuales: definición de clase, atributo y método. Actitudinales: responsabilidad en el trabajo. Actividades: ejercicios guiados. Recursos: IDE NetBeans. Criterios: crea correctamente una clase con al menos 3 atributos. Técnicas: lista de cotejo\n\nSemana 2: ...",
-      area: true, hint: "Un bloque de texto por semana. La IA generará la tabla oficial con 7 columnas a partir de este contenido" },
-    { k: "adaptaciones_curriculares", label: "Adaptaciones curriculares (estudiantes con NEE)",
-      ph: "Ej: J.P. — TDAH Grado 2: instrucciones fragmentadas, 25% tiempo adicional\nM.L. — Discapacidad visual leve: materiales en fuente 16pt",
-      area: true, hint: "Iniciales del estudiante — tipo de NEE y ajuste curricular. Un estudiante por línea" },
+    { k: "num_semanas",       label: "Número de semanas de la unidad", ph: "Ej: 8 / 10 / 12", half: true },
+    { k: "semanas_input",     label: "Desarrollo semanal",             type: "week-cards" },
+    { k: "adaptaciones_input",label: "Adaptaciones curriculares (NEE)", type: "nee-table" },
     { k: "estrategias_metodologicas", label: "Estrategias metodológicas activas generales",
       ph: "Ej: Aprendizaje basado en proyectos. Trabajo colaborativo en grupos de 3. Clase invertida con tutoriales en video. Exposición entre pares en la semana final",
       area: true },
@@ -543,7 +539,7 @@ export function getRequiredFields(type) {
     calificaciones:  ["asignatura", "tipoEvaluacion", "promedioGeneral"],
     asistencia:      ["totalPresentes", "totalAusentes"],
     informe_tutor:   ["año_lectivo", "trimestre", "grado_curso", "asignaturas_reporte"],
-    microcurricular: ["figura_profesional", "nombre_modulo", "objetivo_modulo", "contenido_semanal"],
+    microcurricular: ["figura_profesional", "nombre_modulo", "num_semanas"],
   };
   return [...common, ...(byType[type] || [])];
 }
@@ -582,14 +578,55 @@ export function buildFeAJsonUserPrompt(type, data) {
   const rt = REPORT_TYPES.find(r => r.id === type);
   let p = `Completa el documento institucional "${rt?.label || type}" de Fe y Alegría "La Dolorosa".\n\n`;
   p += `DATOS DEL FORMULARIO (usa literalmente en campos de identificación; desarrolla el contenido pedagógico):\n`;
+  const allFields = [...FORM_FIELDS.common, ...FORM_FIELDS.common2, ...(FORM_FIELDS[type] || [])];
+
+  let semanaCount = 0;
+
   Object.entries(data).forEach(([k, v]) => {
-    if (k.startsWith('_') || !v?.trim()) return;
-    const allFields = [...FORM_FIELDS.common, ...FORM_FIELDS.common2, ...(FORM_FIELDS[type] || [])];
+    if (k.startsWith('_')) return;
+
+    // Desarrollo semanal estructurado (nuevo formato)
+    if (k === 'semanas_input' && Array.isArray(v) && v.length) {
+      semanaCount = v.length;
+      p += `\nDesarrollo semanal (${v.length} semanas):\n`;
+      v.forEach((sem, i) => {
+        p += `Semana ${i + 1}:`;
+        if (sem.proc)        p += ` Procedimentales: ${sem.proc}.`;
+        if (sem.conc)        p += ` Conceptuales: ${sem.conc}.`;
+        if (sem.act)         p += ` Actitudinales: ${sem.act}.`;
+        if (sem.actividades) p += ` Actividades: ${sem.actividades}.`;
+        if (sem.recursos)    p += ` Recursos: ${sem.recursos}.`;
+        if (sem.criterios)   p += ` Criterios: ${sem.criterios}.`;
+        if (sem.tecnicas)    p += ` Técnicas: ${sem.tecnicas}.`;
+        p += '\n';
+      });
+      return;
+    }
+
+    // Adaptaciones NEE estructuradas (nuevo formato)
+    if (k === 'adaptaciones_input' && Array.isArray(v)) {
+      const filas = v.filter(r => r.iniciales || r.necesidad);
+      if (filas.length) {
+        p += `\nAdaptaciones NEE:\n`;
+        filas.forEach(r => { p += `- ${r.iniciales || '(?)'}: ${r.necesidad || ''}\n`; });
+      }
+      return;
+    }
+
+    // Compatibilidad hacia atrás: contenido_semanal como bloque de texto
+    if (k === 'contenido_semanal' && typeof v === 'string' && v.trim()) {
+      p += `- Contenido semanal: ${v.trim()}\n`;
+      return;
+    }
+
+    if (!v?.trim?.()) return;
     const field = allFields.find(f => f.k === k);
     p += `- ${field?.label || k}: ${v.trim()}\n`;
   });
-  if (type === 'microcurricular' && data.num_semanas) {
-    p += `\nGenera exactamente ${data.num_semanas} ítems en "semanas" y ${data.num_semanas} en "estrategias".\n`;
+
+  if (type === 'microcurricular') {
+    const n = semanaCount || data.num_semanas;
+    if (n) p += `\nGenera exactamente ${n} ítems en "semanas" y ${n} en "estrategias".\n`;
   }
   if (type === 'informe_tutor' && data.asignaturas_reporte) {
     p += `\nParsea asignaturas_reporte en el array "asignaturas" (asignatura, docente, num_riesgo, compromisos).\n`;
@@ -695,7 +732,7 @@ REGLA ANTI-ALUCINACIÓN: Si un campo no fue proporcionado, escribe "Sin novedad"
   else if (type === "microcurricular") p += `
 Genera la Planificación Microcurricular para Bachillerato Técnico de Fe y Alegría con estas secciones usando ## para cada título. El encabezado institucional obligatorio es: Unidad Educativa Fiscomisional Fe y Alegría "La Dolorosa" — "Ser más para servir mejor"
 ## 1. DATOS DE REFERENCIA — tabla con todos los campos del formulario: figura profesional, docente, área, curso, año lectivo, trimestre N°, nombre del módulo formativo, N° de horas, fecha de inicio, fecha de finalización, objetivo del módulo, N° y nombre de la unidad de trabajo, objetivo de la unidad de trabajo, ejes transversales
-## 2. DESARROLLO DE LA UNIDAD DE TRABAJO — tabla con estas 7 columnas exactas: "Contenidos Procedimentales" | "Contenidos Conceptuales" | "Contenidos Actitudinales" | "Actividades de Aprendizaje (Estrategias Metodológicas)" | "Recursos" | "Criterios de Evaluación" | "Técnicas e Instrumentos de Evaluación". Genera EXACTAMENTE el número de filas indicado en num_semanas. Distribuye el contenido_semanal del formulario en esas filas.
+## 2. DESARROLLO DE LA UNIDAD DE TRABAJO — tabla con estas 7 columnas exactas: "Contenidos Procedimentales" | "Contenidos Conceptuales" | "Contenidos Actitudinales" | "Actividades de Aprendizaje (Estrategias Metodológicas)" | "Recursos" | "Criterios de Evaluación" | "Técnicas e Instrumentos de Evaluación". Genera EXACTAMENTE el número de filas del "Desarrollo semanal" recibido en el formulario. Usa los contenidos de cada semana como base y enriquécelos pedagógicamente.
 ## 3. ADAPTACIONES CURRICULARES — tabla: "Estudiante (iniciales)" | "Especificación de la Necesidad Educativa". Si no hay datos, escribe "No se reportan estudiantes con NEE en esta unidad"
 ## 4. ESTRATEGIAS METODOLÓGICAS ACTIVAS POR SEMANA — tabla: "Semana" | "Competencia" | "Estrategias Metodológicas Activas para la Enseñanza y Aprendizaje". Mismas filas que la tabla de desarrollo
 ## 5. OBSERVACIONES DE LA UNIDAD — texto libre con lo que el docente indicó. Si no hay datos escribe "Sin observaciones adicionales"
