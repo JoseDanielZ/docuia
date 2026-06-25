@@ -62,6 +62,7 @@
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'login', email, password: pw }),
       });
@@ -105,6 +106,7 @@
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'signup',

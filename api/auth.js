@@ -7,23 +7,24 @@ import { allowRateLimit, clientIp } from '../lib/server/rateLimit.js';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
-const SECURE = isProd ? '; Secure' : '';
+const isProd   = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+const SECURE   = isProd ? '; Secure'         : '';
+const SAMESITE = isProd ? 'SameSite=Strict'  : 'SameSite=Lax';
 
 function setAuthCookies(res, access_token, refresh_token) {
   const cookies = [
-    `access_token=${access_token}; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=3600`,
+    `access_token=${access_token}; HttpOnly${SECURE}; ${SAMESITE}; Path=/; Max-Age=3600`,
   ];
   if (refresh_token) {
-    cookies.push(`refresh_token=${refresh_token}; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=2592000`);
+    cookies.push(`refresh_token=${refresh_token}; HttpOnly${SECURE}; ${SAMESITE}; Path=/; Max-Age=2592000`);
   }
   res.setHeader('Set-Cookie', cookies);
 }
 
 function clearAuthCookies(res) {
   res.setHeader('Set-Cookie', [
-    `access_token=; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=0`,
-    `refresh_token=; HttpOnly${SECURE}; SameSite=Strict; Path=/; Max-Age=0`,
+    `access_token=; HttpOnly${SECURE}; ${SAMESITE}; Path=/; Max-Age=0`,
+    `refresh_token=; HttpOnly${SECURE}; ${SAMESITE}; Path=/; Max-Age=0`,
   ]);
 }
 
