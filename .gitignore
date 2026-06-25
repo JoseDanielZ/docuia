@@ -7,3 +7,6 @@ dist
 
 # Archivos generados por scripts de validación (no son fuente)
 public/formatos/_test-*.docx
+
+# ZIPs de assets originales (los PNG ya están en public/)
+*.zip
