@@ -96,11 +96,94 @@ function buildContingenciaTemplate() {
   console.log('✓ plan-contingencia.template.docx');
 }
 
+/** Texto plano de una fila (concatena todos los <w:t>), normalizado. */
+function rowText(row) {
+  return [...row.matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)]
+    .map(m => m[1]).join('').replace(/\s+/g, ' ').trim();
+}
+
+/** Vacía la celda banner (1 celda) y deja un único run con el tag, conservando el formato del párrafo. */
+function setBannerCell(row, tag) {
+  const out = row.replace(/<w:r\b[\s\S]*?<\/w:r>/g, '');
+  return out.replace('</w:p>', `${RUN.replace('{{TAG}}', tag)}</w:p>`);
+}
+
+/** Inyecta un run-tag en el primer párrafo vacío de cada <w:tc>, en orden. */
+function fillCells(row, tags) {
+  let ci = 0;
+  return row.replace(/<w:tc>[\s\S]*?<\/w:tc>/g, (tc) => {
+    if (ci >= tags.length) return tc;
+    const tag = tags[ci++];
+    if (!tag) return tc;
+    let done = false;
+    return tc.replace(/(<w:p\b[^>]*>(?:<w:pPr>[\s\S]*?<\/w:pPr>)?)(<\/w:p>)/, (m, open, close) => {
+      if (done) return m;
+      done = true;
+      return `${open}${RUN.replace('{{TAG}}', tag)}${close}`;
+    });
+  });
+}
+
+/** Inserta un run-tag justo después del run cuyo texto es `runText` (para firmas en celda compartida). */
+function appendTagAfterRunText(xml, runText, tag) {
+  const tIdx = xml.indexOf(`>${runText}</w:t>`);
+  if (tIdx === -1) { console.warn(`  micro firma "${runText}": run no encontrado`); return xml; }
+  const rEnd = xml.indexOf('</w:r>', tIdx);
+  if (rEnd === -1) return xml;
+  const at = rEnd + '</w:r>'.length;
+  return xml.slice(0, at) + RUN.replace('{{TAG}}', tag) + xml.slice(at);
+}
+
+/**
+ * Tabla microcurricular = 1 tabla, filas tipo "banner + contenido":
+ *  - Semanas:   fila banner "Semana N:" (1 celda) + fila contenido (7 celdas) → loop {{#semanas}}
+ *  - Adaptaciones: 1 fila contenido (2 celdas) tras el encabezado → loop {{#adaptaciones}}
+ *  - Estrategias: fila banner "SEMANA N:" (1 celda) + fila contenido (2 celdas) → loop {{#estrategias}}
+ * Se procesa fila por fila con una máquina de estados; se eliminan las filas 2..N de cada bloque.
+ */
+function injectMicrocurricularLoops(xml) {
+  const WEEK = ['{{proc}}', '{{conc}}', '{{act}}', '{{actividades}}', '{{recursos}}', '{{criterios}}', '{{tecnicas}}{{/semanas}}'];
+  const ESTR = ['{{competencia}}', '{{estrategia}}{{/estrategias}}'];
+  const ADAPT = ['{{#adaptaciones}}{{iniciales}}', '{{necesidad}}{{/adaptaciones}}'];
+  const seen = { semanas: false, estrategias: false, adaptaciones: false };
+  let pending = null; // week-fill | week-drop | estr-fill | estr-drop | adapt-fill
+
+  const out = xml.replace(/<w:tr\b[\s\S]*?<\/w:tr>/g, (row) => {
+    const t = rowText(row);
+
+    // 1) consumir la fila de contenido que sigue a un banner/encabezado
+    if (pending === 'week-fill')  { pending = null; return fillCells(row, WEEK); }
+    if (pending === 'week-drop')  { pending = null; return ''; }
+    if (pending === 'estr-fill')  { pending = null; return fillCells(row, ESTR); }
+    if (pending === 'estr-drop')  { pending = null; return ''; }
+    if (pending === 'adapt-fill') { pending = null; seen.adaptaciones = true; return fillCells(row, ADAPT); }
+
+    // 2) banners semanales
+    if (/^Semana 1:/.test(t))                  { pending = 'week-fill'; seen.semanas = true; return setBannerCell(row, '{{#semanas}}{{semana_label}}'); }
+    if (/^Semana (?:[2-9]|1[0-4]):/.test(t))   { pending = 'week-drop'; return ''; }
+
+    // 3) banners de estrategias
+    if (/^SEMANA 1:/.test(t))                  { pending = 'estr-fill'; seen.estrategias = true; return setBannerCell(row, '{{#estrategias}}{{semana_label}}'); }
+    if (/^SEMANA (?:[2-9]|1[0-2]):/.test(t))   { pending = 'estr-drop'; return ''; }
+
+    // 4) encabezado de adaptaciones → la siguiente fila es la fila de contenido
+    if (/^Estudiante: solo poner iniciales/.test(t)) { pending = 'adapt-fill'; return row; }
+
+    return row;
+  });
+
+  for (const k of Object.keys(seen)) {
+    if (!seen[k]) console.warn(`  micro loop "${k}": fila ancla no encontrada`);
+  }
+  return out;
+}
+
 function buildMicrocurricularTemplate() {
   const src = path.join(FORMATOS, 'planificacion-microcurricular.docx');
   const zip = new PizZip(fs.readFileSync(src));
   let xml = zip.file('word/document.xml').asText();
 
+  // 1) Escalares: DATOS DE REFERENCIA + trimestre + fechas
   const scalars = [
     ['FIGURA PROFESIONAL', '{{figura_profesional}}'],
     ['NOMBRE DEL DOCENTE', '{{nombre_docente}}'],
@@ -114,66 +197,25 @@ function buildMicrocurricularTemplate() {
     ['OBJETIVO DE LA UNIDAD DE TRABAJO', '{{objetivo_unidad_trabajo}}'],
     ['EJES TRANSVERSALES ', '{{ejes_transversales}}'],
     ['TRIMEMESTRE N', '{{numero_trimestre}}'],
+    ['FECHA DE INICIO ', '{{fecha_inicio}}'],
+    ['FECHA DE FINALIZACIÓN ', '{{fecha_fin}}'],
   ];
-
   for (const [label, tag] of scalars) {
-    try { xml = injectTagInEmptyCellAfterLabel(xml, label, tag); } catch { /* some merged cells */ }
+    try { xml = injectTagInEmptyCellAfterLabel(xml, label, tag); }
+    catch (e) { console.warn(`  micro scalar "${label}": ${e.message}`); }
   }
 
-  try {
-    xml = injectTagInEmptyCellAfterLabel(xml, 'FECHA DE INICIO ', '{{fecha_inicio}}');
-    xml = injectTagInEmptyCellAfterLabel(xml, 'FECHA DE FINALIZACIÓN ', '{{fecha_fin}}');
-  } catch { /* ignore */ }
+  // 2) Loops: semanas, adaptaciones, estrategias (fila por fila)
+  xml = injectMicrocurricularLoops(xml);
 
-  // Loop row: first "Semana" data row in desarrollo table — tag with semanas loop
-  const loopRowStart = xml.indexOf('Semana ');
-  if (loopRowStart !== -1) {
-    const trStart = xml.lastIndexOf('<w:tr', loopRowStart);
-    const trEnd = xml.indexOf('</w:tr>', loopRowStart) + 7;
-    if (trStart !== -1 && trEnd > trStart) {
-      const row = xml.slice(trStart, trEnd);
-      let loopRow = row
-        .replace(/Semana[\s\S]*?del 202[\s\S]*?<\/w:p>/, RUN.replace('{{TAG}}', '{{#semanas}}{{semana_label}}'))
-        .replace(/<\/w:tr>$/, '');
-      const cells = ['{{proc}}', '{{conc}}', '{{act}}', '{{actividades}}', '{{recursos}}', '{{criterios}}', '{{tecnicas}}'];
-      let ci = 0;
-      loopRow = loopRow.replace(/<w:pPr>[\s\S]*?<\/w:pPr><\/w:p>/g, (m) => {
-        if (ci >= cells.length) return m;
-        const t = cells[ci++];
-        return m.replace('</w:p>', `${RUN.replace('{{TAG}}', t)}</w:p>`);
-      });
-      loopRow += `${RUN.replace('{{TAG}}', '{{/semanas}}')}</w:tr>`;
-      xml = xml.slice(0, trStart) + loopRow + xml.slice(trEnd);
-      // Remove duplicate Semana 2..12 rows (rough: rows containing "Semana 2:" etc.)
-      xml = xml.replace(/<w:tr[^>]*>[\s\S]*?Semana [2-9][\s\S]*?<\/w:tr>/g, '');
-      xml = xml.replace(/<w:tr[^>]*>[\s\S]*?Semana 1[0-2][\s\S]*?<\/w:tr>/g, '');
-    }
-  }
-
-  // Estrategias loop row
-  xml = xml.replace(
-    /<w:tr[^>]*>[\s\S]*?\*\*Semana 1\*\*[\s\S]*?<\/w:tr>/,
-    (row) => row.replace('**Semana 1**', '{{#estrategias}}{{semana_label}}')
-  ).replace(/Semana 2[\s\S]*?estrategia_sem2[\s\S]*?<\/w:tr>/, '{{/estrategias}}');
-
-  // Simpler estrategias: replace first estrategia row pattern
-  const estIdx = xml.indexOf('ESTRATEGIAS METODOLÓGICAS');
-  if (estIdx !== -1) {
-    const sub = xml.slice(estIdx);
-    const tr1 = sub.match(/<w:tr[^>]*>[\s\S]*?Semana[\s\S]*?<\/w:tr>/);
-    if (tr1) {
-      let lr = tr1[0]
-        .replace(/Semana[^<]*/, '{{#estrategias}}{{semana_label}}')
-        .replace(/<w:pPr>[\s\S]*?<\/w:pPr><\/w:p>/g, (m, offset) => {
-          if (m.includes('{{#estrategias}}')) return m;
-          return m.replace('</w:p>', `${RUN.replace('{{TAG}}', '{{competencia}}')}</w:p>`);
-        });
-      lr = lr.replace(/<\/w:tr>$/, `${RUN.replace('{{TAG}}', '{{estrategia}}')}${RUN.replace('{{TAG}}', '{{/estrategias}}')}</w:tr>`);
-      xml = xml.slice(0, estIdx + sub.indexOf(tr1[0])) + lr + xml.slice(estIdx + sub.indexOf(tr1[0]) + tr1[0].length);
-    }
-  }
-
+  // 3) Observaciones de la unidad
   xml = insertAfterParagraphContaining(xml, 'OBSERVACIONES DE LA UNIDAD', RUN.replace('{{TAG}}', '{{observaciones_unidad}}'));
+
+  // 4) Firmas (nombres dinámicos)
+  xml = replaceText(xml, 'LIC. MARCO SALAZAR', '{{nombre_coordinador}}');
+  xml = replaceText(xml, 'MSC. JAVIER CASTILLO', '{{nombre_vicerrector}}');
+  xml = appendTagAfterRunText(xml, 'Docente: ', '{{nombre_docente}}');
+  xml = appendTagAfterRunText(xml, 'DECE: ', '{{nombre_dece}}');
 
   zip.file('word/document.xml', xml);
   fs.writeFileSync(path.join(FORMATOS, 'planificacion-microcurricular.template.docx'), zip.generate({ type: 'nodebuffer' }));
