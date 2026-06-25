@@ -208,7 +208,10 @@ docuia/
 ├── vercel.json                 # Configuración de despliegue Vercel
 ├── vite.config.js              # Configuración de Vite
 ├── package.json
-└── supabase-rls-hardening.sql  # Script SQL de políticas RLS
+├── database/
+│   ├── schema.sql              # CREATE TABLE + RLS completo
+│   ├── rls-hardening.sql       # Script de endurecimiento adicional de RLS
+│   └── seed.sql                # Datos de prueba
 ```
 
 ---
@@ -289,7 +292,7 @@ GROQ_API_KEY=gsk_...
 En el **SQL Editor** del panel de Supabase, ejecutar el contenido completo de:
 
 ```
-supabase-rls-hardening.sql
+database/rls-hardening.sql
 ```
 
 Este script habilita RLS en todas las tablas y crea las políticas de acceso por `user_id`.
@@ -366,9 +369,9 @@ Logger JSON estructurado para funciones serverless. Métodos: `logger.info()`, `
 
 Función `applySecurityHeaders(res)` que aplica las mismas cabeceras de seguridad que `vercel.json` en el servidor Express local, garantizando paridad de seguridad entre entornos.
 
-### 6.9 `supabase-rls-hardening.sql`
+### 6.9 `database/rls-hardening.sql`
 
-Script SQL que habilita Row Level Security en todas las tablas del proyecto. Define políticas que restringen cada operación (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) a registros donde `user_id = auth.uid()`. Debe ejecutarse antes del primer uso en producción.
+Script SQL que endurece las políticas de Row Level Security existentes. Define restricciones adicionales que limitan las inserciones anónimas a las tablas de telemetría. Debe ejecutarse después de `schema.sql` antes del primer uso en producción.
 
 ---
 
@@ -615,7 +618,7 @@ Eventos registrados desde el frontend via `POST /api/telemetry`: visitas de pág
 
 ### 11.1 Row Level Security (RLS)
 
-Todas las tablas de Supabase tienen RLS habilitado. Las políticas garantizan que `auth.uid() = user_id` para toda operación. El script `supabase-rls-hardening.sql` debe ejecutarse antes del primer uso en producción.
+Todas las tablas de Supabase tienen RLS habilitado. Las políticas garantizan que `auth.uid() = user_id` para toda operación. El script `database/rls-hardening.sql` debe ejecutarse después de `database/schema.sql` antes del primer uso en producción.
 
 ### 11.2 Content Security Policy (CSP)
 

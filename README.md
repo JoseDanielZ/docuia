@@ -310,7 +310,7 @@ CREATE POLICY "user_manage"  ON formatos_institucionales FOR ALL USING (auth.uid
 CREATE POLICY "user_manage"  ON plantillas        FOR ALL USING (auth.uid() = user_id);
 ```
 
-Luego ejecuta `supabase-rls-hardening.sql` para cerrar inserciones anónimas en tablas que solo debe escribir el backend.
+Luego ejecuta `database/rls-hardening.sql` para cerrar inserciones anónimas en tablas que solo debe escribir el backend.
 
 ### 4. Correr en desarrollo (dos terminales)
 
@@ -358,7 +358,6 @@ docuia/
 ├── server.js                   ← servidor Express local (desarrollo)
 ├── package.json
 ├── vercel.json                 ← CSP, cabeceras de seguridad, rutas
-├── supabase-rls-hardening.sql  ← cierra inserciones anónimas en tablas protegidas
 ├── .env                        ← claves privadas (no se sube al repo)
 │
 ├── public/
@@ -377,6 +376,18 @@ docuia/
 │   ├── reportes.js             ← GET (paginado) / POST / PATCH / DELETE
 │   ├── telemetry.js            ← POST { kind: 'visita'|'reporte_copiado'|'referral' }
 │   └── metricas.js             ← GET agregaciones server-side (evita cálculo sobre 20 reportes paginados)
+│
+├── database/
+│   ├── schema.sql              ← CREATE TABLE + RLS para todas las tablas
+│   ├── rls-hardening.sql       ← endurecimiento adicional de políticas RLS
+│   └── seed.sql                ← datos de prueba para poblar la BD vacía
+│
+├── docs/
+│   ├── plan_de_negocio.md      ← Plan de Negocio completo (8 secciones)
+│   ├── analisis_financiero.md  ← Flujo de caja 6 meses, VAN, TIR
+│   ├── arquitectura.md         ← Diagrama de componentes + justificación del stack
+│   ├── diccionario_datos.md    ← Descripción de cada tabla y campo
+│   └── referencias/            ← Formatos originales de Fe y Alegría (referencia)
 │
 ├── lib/server/
 │   ├── verifyUser.js           ← verifyBearerUser(), serviceRestHeaders()
@@ -549,6 +560,66 @@ SELECT COUNT(DISTINCT user_id) AS docentes_con_cursos FROM cursos;
 - Migrar tokens de `localStorage` a cookies `httpOnly` (requiere cambios en Supabase Auth config)
 - Tabla `instituciones` para multi-tenancy
 - Tests con Vitest + Playwright
+
+---
+
+## Librerías de terceros y licencias
+
+Todo el código fuente de DocuIA (componentes React, endpoints serverless, lógica de BD) es código original del equipo. Las librerías de terceros usadas como dependencias se declaran en `package.json` y se listan a continuación con su licencia verificada:
+
+| Librería | Versión | Licencia | Uso |
+| --- | --- | --- | --- |
+| `react` | ^18.3.1 | MIT | Framework UI principal |
+| `react-dom` | ^18.3.1 | MIT | Renderizado en el DOM |
+| `vite` | ^5.4.2 | MIT | Bundler y servidor de desarrollo |
+| `@vitejs/plugin-react` | ^4.3.1 | MIT | Plugin React para Vite |
+| `express` | ^4.19.2 | MIT | Servidor de desarrollo local |
+| `animejs` | ^4.3.6 | MIT | Animaciones de UI |
+| `docx` | ^9.7.1 | MIT | Generación de archivos `.docx` |
+| `docx-preview` | ^0.3.7 | MIT | Vista previa de documentos Word en el navegador |
+| `docxtemplater` | ^3.68.7 | MIT | Motor de plantillas para `.docx` |
+| `pizzip` | ^3.2.0 | MIT | Compresión ZIP (dependencia de docxtemplater) |
+| `pdf-parse` | ^1.1.1 | MIT | Extracción de texto de PDFs |
+| `xlsx` | ^0.18.5 | Apache 2.0 | Lectura y escritura de archivos Excel |
+| `dotenv` | ^16.4.5 | BSD-2-Clause | Variables de entorno en desarrollo |
+| `prop-types` | ^15.8.1 | MIT | Validación de props en React |
+
+**Servicios externos:**
+
+| Servicio | Rol | Licencia / Términos |
+| --- | --- | --- |
+| Supabase | BaaS (PostgreSQL + Auth) | Términos Supabase; SDK Apache 2.0 |
+| Groq API | IA generativa (LLaMA 3.3) | Términos Groq |
+| Vercel | Hosting serverless | Términos Vercel |
+| Google Fonts | Tipografías (Syne, Figtree, JetBrains Mono) | SIL OFL 1.1 |
+
+**Uso de herramientas de IA en el desarrollo:** partes del código base fueron asistidas por Claude (Anthropic) como herramienta de desarrollo (generación de código, depuración, documentación). Las decisiones de diseño, arquitectura, prompts del sistema y validación con usuarios son propias del equipo.
+
+---
+
+## Plan de Sostenibilidad (≥ 6 meses sin costos significativos)
+
+### Infraestructura gratuita actual
+
+| Servicio | Capa gratuita | Límite aproximado | Plan B si se supera |
+| --- | --- | --- | --- |
+| **Vercel Hobby** | 100 GB bandwidth/mes | 100 GB/mes | Migrar frontend a Cloudflare Pages (gratuito) + funciones a Render |
+| **Supabase Free** | 500 MB DB · 2 GB storage | 500 MB DB | Archivar reportes antiguos; migrar a PlanetScale free tier |
+| **Groq API Free** | ~14 400 req/día (rate limit por minuto) | Rate limit RPM | Cambiar modelo a `gemini-2.0-flash` o `gpt-4o-mini` (costo ~$0.15/1M tokens) |
+| **Google Fonts** | Ilimitado CDN | — | Sin alternativa necesaria |
+
+### Continuidad tras la graduación del equipo
+
+1. El repositorio estará bajo la cuenta/organización genérica del proyecto, no cuentas personales, para que Fe y Alegría pueda asignar un nuevo equipo sin dependencia de los autores originales.
+2. La documentación completa (`MANUAL_TECNICO.md`, `docs/arquitectura.md`, `database/schema.sql`, diccionario de datos) permite que cualquier desarrollador retome el proyecto sin asesoría de los autores.
+3. Las variables de entorno están documentadas en el README (sin valores reales) para que la institución pueda rotar credenciales de forma independiente.
+4. El proyecto usa licencia **MIT**, lo que permite que Fe y Alegría, PUCE u otras instituciones lo usen, modifiquen y redistribuyan sin restricciones.
+
+### Plan B por servicio crítico
+
+- **Si Groq deja de ser gratuito:** el modelo se configura en una sola variable en `api/generate.mjs`; migrar a Gemini o a llama.cpp local requiere ~2 h de trabajo.
+- **Si Vercel cambia términos:** el build de Vite produce archivos estáticos desplegables en GitHub Pages o Netlify sin cambios de código; las funciones serverless migran a Render o Railway (ambos con free tier en 2026).
+- **Si Supabase elimina el free tier:** la BD es PostgreSQL estándar; migrar a Neon o Railway PostgreSQL requiere solo cambiar las variables de entorno.
 
 ---
 
