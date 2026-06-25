@@ -730,6 +730,64 @@ function FormSection({
   );
 }
 
+// ── Credits ───────────────────────────────────────────────────────────────────
+function CreditsSection() {
+  return (
+    <section className="credits-section">
+      <div className="credits-section__header">
+        <img src="/logo-puce.png" alt="PUCE" className="credits-section__logo" />
+        <div className="credits-section__project">
+          <h2 className="credits-section__title">DocuIA</h2>
+          <p className="credits-section__subtitle">Generador de Informes Educativos con Inteligencia Artificial</p>
+        </div>
+      </div>
+      <div className="credits-section__body">
+        <p className="credits-section__item">
+          <strong>Equipo:</strong> Jose Daniel Zumarraga · Matheo Iza · Kelvin Piñero · Jonathan Heredia
+        </p>
+        <p className="credits-section__item">
+          <strong>Tutor:</strong> Ing. Francisco Rodríguez
+        </p>
+        <p className="credits-section__item">
+          <strong>Asignatura:</strong> Emprendimiento Tecnológico · Facultad de Ingeniería
+        </p>
+        <p className="credits-section__item">
+          Pontificia Universidad Católica del Ecuador — Metodología Aprendizaje-Servicio (A-S) · 2026
+        </p>
+        <p className="credits-section__item">
+          <strong>Agradecimientos:</strong> A la Coordinación de Aprendizaje-Servicio (A-S) de la PUCE
+          y a la Unidad Educativa Fiscomisional Fe y Alegría «La Dolorosa» por su colaboración.
+        </p>
+        <p className="credits-section__item">
+          <strong>Docente validador (Fe y Alegría):</strong> Marco Salazar
+        </p>
+      </div>
+      <div className="credits-section__links">
+        <a
+          href="https://github.com/JoseDanielZ/docuia/blob/main/MANUAL_USUARIO.md"
+          className="credits-section__link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Manual de usuario
+        </a>
+        {/* TODO: reemplazar "#" con la URL del video una vez grabado */}
+        <a href="#" className="credits-section__link">
+          Video tutorial
+        </a>
+        <a
+          href="https://github.com/JoseDanielZ/docuia"
+          className="credits-section__link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Repositorio GitHub
+        </a>
+      </div>
+    </section>
+  );
+}
+
 // ── CTA ───────────────────────────────────────────────────────────────────────
 function CtaSection() {
   const ref = useRef(null);
@@ -750,6 +808,8 @@ function CtaSection() {
           </a>
         </div>
       </section>
+
+      <CreditsSection />
 
       <footer className="site-footer">
         <a
