@@ -88,6 +88,7 @@ export default function ReportView({
   const rootRef    = useRef(null);
   const headerRef  = useRef(null);
   const actionsRef = useRef(null);
+  const aiNoticeRef = useRef(null);
   const warnRef    = useRef(null);
   const editorRef  = useRef(null);
   const bottomRef  = useRef(null);
@@ -98,7 +99,7 @@ export default function ReportView({
 
   useEffect(() => {
     if (streaming) return;
-    const blocks = [headerRef, actionsRef, warnRef, editorRef, bottomRef, shareRef]
+    const blocks = [headerRef, actionsRef, aiNoticeRef, warnRef, editorRef, bottomRef, shareRef]
       .map(r => r.current).filter(Boolean);
     if (!blocks.length) return;
     const tl = createTimeline({ defaults: { ease: "outExpo", duration: 560 } });
@@ -317,6 +318,14 @@ export default function ReportView({
             </TooltipHelper>
           ))}
         </div>
+      </div>
+
+      {/* Aviso contenido IA */}
+      <div ref={aiNoticeRef} className="report-ai-notice" style={{ willChange: "transform, opacity" }}>
+        <span className="report-ai-notice__icon">✦</span>
+        <span className="report-ai-notice__text">
+          <strong>Contenido generado por IA.</strong> Verifica los datos antes de usar este reporte — la IA puede cometer errores o incluir información inexacta.
+        </span>
       </div>
 
       {/* Banner inconsistencia */}

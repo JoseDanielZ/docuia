@@ -191,6 +191,31 @@
 }
 .report-inconsistency-banner__close:hover { opacity: 0.7; }
 
+/* ── Aviso contenido IA ───────────────────────────────────────────────────── */
+
+.report-ai-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+  margin-bottom: 12px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  color: var(--warn-text);
+  line-height: 1.55;
+}
+
+.report-ai-notice__icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.85;
+}
+
+.report-ai-notice__text { flex: 1; }
+
 /* ── Aviso nota ───────────────────────────────────────────────────────────── */
 
 .report-note {

@@ -202,6 +202,13 @@ export default function FeAlegriaReportView({
 
       <p className="fea-hint">La vista previa coincide con el Word descargado. Edita los campos a la derecha.</p>
 
+      <div className="fea-ai-notice">
+        <span className="fea-ai-notice__icon">✦</span>
+        <span className="fea-ai-notice__text">
+          <strong>Contenido generado por IA.</strong> Verifica los datos antes de usar este documento — la IA puede cometer errores o incluir información inexacta.
+        </span>
+      </div>
+
       <div className="fea-split">
         <div ref={paneRef} className={`fea-preview-pane${containFallback ? ' fea-preview-contained' : ''}`}>
           <div className="fea-preview-toolbar">
