@@ -408,6 +408,17 @@ body::before {
   }
 }
 
+.field select option {
+  background-color: #1B4060;
+  color: #EAF3FB;
+}
+@media (prefers-color-scheme: light) {
+  .field select option {
+    background-color: #FFFFFF;
+    color: #1B3A52;
+  }
+}
+
 /* Password toggle */
 .toggle-pw {
   position: absolute;
